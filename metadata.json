@@ -1,0 +1,5 @@
+{
+  "name": "Vida em Dia (Web MVP)",
+  "description": "A mobile-first React web application for personal bureaucratic management. Features status dashboards, document organization, and a mock AI assistant, adapted from the Phase 1 Mobile App specification.",
+  "requestFramePermissions": []
+}
