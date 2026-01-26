@@ -46,25 +46,25 @@ export const MOCK_TASKS: Task[] = [
 
 export const STATUS_CONFIG = {
   [StatusLevel.SAFE]: {
-    color: 'bg-emerald-500',
-    lightColor: 'bg-emerald-100',
-    textColor: 'text-emerald-700',
+    color: 'bg-success-500',
+    lightColor: 'bg-success-100',
+    textColor: 'text-success-700',
     icon: 'check-circle',
     label: 'Tudo em dia',
     description: 'Você não possui pendências urgentes.'
   },
   [StatusLevel.WARNING]: {
-    color: 'bg-amber-500',
-    lightColor: 'bg-amber-100',
-    textColor: 'text-amber-700',
+    color: 'bg-warning-500',
+    lightColor: 'bg-warning-100',
+    textColor: 'text-warning-700',
     icon: 'alert-triangle',
     label: 'Atenção Necessária',
     description: 'Existem prazos se aproximando.'
   },
   [StatusLevel.RISK]: {
-    color: 'bg-rose-500',
-    lightColor: 'bg-rose-100',
-    textColor: 'text-rose-700',
+    color: 'bg-danger-500',
+    lightColor: 'bg-danger-100',
+    textColor: 'text-danger-700',
     icon: 'x-circle',
     label: 'Situação de Risco',
     description: 'Você possui itens vencidos ou críticos.'
