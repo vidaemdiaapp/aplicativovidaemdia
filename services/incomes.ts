@@ -78,19 +78,102 @@ export const incomesService = {
      * Send a reminder notification to the partner to fill their income
      */
     notifyPartner: async (partnerUserId: string): Promise<boolean> => {
-        // This would integrate with notificationsService
-        // For now, we'll log it as implemented in Sprint 5 logic
         try {
             const { error } = await supabase.from('notifications').insert({
                 user_id: partnerUserId,
                 title: '💰 Cadastro de Renda',
                 body: 'Sua parceria quer organizar o financeiro! Cadastre sua renda mensal.',
-                type: 'financial',
-                data: { screen: 'Finance' }
+                type: 'info',
+                data: { screen: 'FinancialDashboard' }
             });
             return !error;
         } catch (e) {
             return false;
         }
+    },
+
+    /**
+     * Request a change to partner's income
+     */
+    requestIncomeChange: async (partnerUserId: string, amount: number, type?: string): Promise<boolean> => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return false;
+
+        const household = await tasksService.getHousehold();
+        if (!household) return false;
+
+        const { error } = await supabase
+            .from('income_change_requests')
+            .insert({
+                household_id: household.id,
+                requested_by: user.id,
+                target_user_id: partnerUserId,
+                proposed_amount: amount,
+                proposed_type: type,
+                status: 'pending'
+            });
+
+        if (error) {
+            console.error('[Incomes] Request failed:', error);
+            return false;
+        }
+
+        // Notify partner
+        await supabase.from('notifications').insert({
+            user_id: partnerUserId,
+            title: '📝 Solicitação de Ajuste',
+            body: `${user.user_metadata?.full_name || 'Seu parceiro(a)'} sugeriu um ajuste na sua renda registrada.`,
+            type: 'attention',
+            data: { screen: 'FinancialDashboard' }
+        });
+
+        return true;
+    },
+
+    /**
+     * Get pending requests for the current user to approve
+     */
+    getPendingRequests: async (): Promise<any[]> => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return [];
+
+        const { data, error } = await supabase
+            .from('income_change_requests')
+            .select(`
+                *,
+                requester:profiles!requested_by(full_name)
+            `)
+            .eq('target_user_id', user.id)
+            .eq('status', 'pending');
+
+        return data || [];
+    },
+
+    /**
+     * Resolve a request (approve/reject)
+     */
+    resolveIncomeRequest: async (requestId: string, status: 'approved' | 'rejected'): Promise<boolean> => {
+        const { data: request, error: fetchError } = await supabase
+            .from('income_change_requests')
+            .select('*')
+            .eq('id', requestId)
+            .single();
+
+        if (fetchError || !request) return false;
+
+        if (status === 'approved') {
+            await incomesService.upsertIncome({
+                user_id: request.target_user_id,
+                amount_monthly: request.proposed_amount,
+                income_type: request.proposed_type as any
+            });
+        }
+
+        const { error } = await supabase
+            .from('income_change_requests')
+            .update({ status, resolved_at: new Date().toISOString() })
+            .eq('id', requestId);
+
+        return !error;
     }
 };
