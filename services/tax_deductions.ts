@@ -12,6 +12,7 @@ export interface TaxDeductibleExpense {
     provider_name: string | null;
     amount: number;
     date: string;
+    confidence_score?: number;
     is_shared: boolean;
     created_at: string;
 }

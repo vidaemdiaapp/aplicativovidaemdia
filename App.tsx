@@ -12,6 +12,7 @@ import { AssistantScreen } from './screens/AssistantScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { InviteAcceptScreen } from './screens/InviteAcceptScreen';
 import { CreateTaskScreen } from './screens/CreateTaskScreen';
+import { FiscalFolderScreen } from './screens/FiscalFolderScreen';
 import { FinancialDashboardScreen } from './screens/FinancialDashboardScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
@@ -101,6 +102,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/invite/:token" element={<InviteAcceptScreen />} />
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
         <Route path="/edit-task/:id" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
+        <Route path="/fiscal-folder" element={<ProtectedRoute><FiscalFolderScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

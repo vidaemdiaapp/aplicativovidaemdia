@@ -29,14 +29,8 @@ export const Sidebar: React.FC = () => {
     return (
         <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-slate-100 min-h-screen sticky top-0 p-6">
             {/* Brand Header */}
-            <div className="flex items-center gap-3 mb-10 px-2 cursor-pointer" onClick={() => navigate('/home')}>
-                <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary-200">
-                    <ShieldCheck className="w-6 h-6" />
-                </div>
-                <div>
-                    <h1 className="text-lg font-bold text-slate-900 leading-tight">Vida em Dia</h1>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Dashboard Casa</p>
-                </div>
+            <div className="mb-10 px-2 cursor-pointer" onClick={() => navigate('/home')}>
+                <img src="/assets/logo.png" alt="Vida em Dia" className="w-32 h-auto" />
             </div>
 
             {/* Main Nav */}

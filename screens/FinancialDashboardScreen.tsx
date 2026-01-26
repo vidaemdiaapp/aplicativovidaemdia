@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService, Task } from '../services/tasks';
 import { taxService } from '../services/tax';
+import { taxDeductionsService } from '../services/tax_deductions';
 import { IRPFEstimate } from '../types';
 import { IncomeRegistrationModal } from '../components/IncomeRegistrationModal';
 import { IRPFEstimateCard } from '../components/IRPFEstimateCard';
+import { DeductionsCard } from '../components/DeductionsCard';
 
 export const FinancialDashboardScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -19,6 +21,7 @@ export const FinancialDashboardScreen: React.FC = () => {
     } | null>(null);
     const [monthlyTasks, setMonthlyTasks] = useState<Task[]>([]);
     const [irEstimate, setIrEstimate] = useState<IRPFEstimate | null>(null);
+    const [totalDeductions, setTotalDeductions] = useState(0);
     const [showIR, setShowIR] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
@@ -30,14 +33,18 @@ export const FinancialDashboardScreen: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [reportData, tasksData, irPref] = await Promise.all([
+            const [reportData, tasksData, irPref, deductionsData] = await Promise.all([
                 tasksService.computeFinancialStatus(),
                 tasksService.getUserTasks(),
-                taxService.getUserTaxPreference()
+                taxService.getUserTaxPreference(),
+                taxDeductionsService.getDeductions()
             ]);
 
             setReport(reportData);
             setShowIR(irPref);
+
+            const total = deductionsData.reduce((sum, d) => sum + d.amount, 0);
+            setTotalDeductions(total);
 
             if (irPref) {
                 const estimate = await taxService.getIRPFEstimate();
@@ -123,8 +130,13 @@ export const FinancialDashboardScreen: React.FC = () => {
 
             {/* IRPF Module (Sprint 11) */}
             {showIR && irEstimate && (
-                <div className="px-6 -mt-8 mb-10">
+                <div className="px-6 -mt-8 mb-10 space-y-6">
                     <IRPFEstimateCard estimate={irEstimate} />
+                    <DeductionsCard
+                        totalDeductions={totalDeductions}
+                        estimatedSaving={totalDeductions * 0.275}
+                        onOpenPastaFiscal={() => navigate('/fiscal-folder')}
+                    />
                 </div>
             )}
 
