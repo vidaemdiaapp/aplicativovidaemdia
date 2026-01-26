@@ -5,7 +5,16 @@ import { ActionPlan, ACTION_PLAYBOOKS, DEFAULT_PLAN } from '../constants/playboo
 
 export type { Task, Category, Household, HouseholdInvite, HouseholdMember, ActionPlan };
 
+let householdCache: Household | null = null;
+
 export const tasksService = {
+    /**
+     * Clear household cache (useful for logout or multi-household apps)
+     */
+    clearCache: () => {
+        householdCache = null;
+    },
+
     /**
      * Get Decision Action Plan for a task
      */
@@ -19,34 +28,33 @@ export const tasksService = {
     },
 
     /**
-     * Get all tasks for the current user
-     */
-    /**
      * Get all tasks for the current user's active household
      */
     getUserTasks: async (): Promise<Task[]> => {
-        const household = await tasksService.getHousehold();
-        if (!household) return [];
+        try {
+            const household = await tasksService.getHousehold();
+            if (!household) return [];
 
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('household_id', household.id)
-            .order('due_date', { ascending: true });
+            const { data, error } = await supabase
+                .from('tasks')
+                .select('*')
+                .eq('household_id', household.id)
+                .order('due_date', { ascending: true });
 
-        if (error) {
+            if (error) throw error;
+
+            // Auto-update overdue status
+            const today = new Date().toISOString().split('T')[0];
+            return (data || []).map(task => ({
+                ...task,
+                status: task.status === 'pending' && task.due_date && task.due_date < today
+                    ? 'overdue'
+                    : task.status
+            })) as Task[];
+        } catch (error) {
             console.error('[Tasks] Failed to fetch tasks:', error);
             return [];
         }
-
-        // Auto-update overdue status
-        const today = new Date().toISOString().split('T')[0];
-        return (data || []).map(task => ({
-            ...task,
-            status: task.status === 'pending' && task.due_date && task.due_date < today
-                ? 'overdue'
-                : task.status
-        })) as Task[];
     },
 
     /**
@@ -209,6 +217,8 @@ export const tasksService = {
      * Get user's household with members
      */
     getHousehold: async (): Promise<Household | null> => {
+        if (householdCache) return householdCache;
+
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
 
@@ -256,7 +266,8 @@ export const tasksService = {
             return null;
         }
 
-        return household as any;
+        householdCache = household as any;
+        return householdCache;
     },
 
     /**

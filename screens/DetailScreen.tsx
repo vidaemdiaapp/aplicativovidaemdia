@@ -90,7 +90,13 @@ export const DetailScreen: React.FC = () => {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full -ml-2">
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-lg font-bold">Detalhes do Item</h1>
+          <h1 className="text-lg font-bold flex-1">Detalhes do Item</h1>
+          <button
+            onClick={() => navigate(`/edit-task/${id}`)}
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold backdrop-blur-md border border-white/10 transition-colors"
+          >
+            Editar
+          </button>
         </div>
       </div>
 

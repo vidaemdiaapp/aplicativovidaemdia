@@ -100,6 +100,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
         <Route path="/invite/:token" element={<InviteAcceptScreen />} />
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
+        <Route path="/edit-task/:id" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

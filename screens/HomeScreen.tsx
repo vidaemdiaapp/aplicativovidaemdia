@@ -51,6 +51,7 @@ export const HomeScreen: React.FC = () => {
     setLoading(true);
     try {
       // Load essential data first
+      // getHousehold already has a cache mechanism now to prevent infinite loop/redundancy
       const householdData = await tasksService.getHousehold();
       setHousehold(householdData);
 
@@ -83,7 +84,8 @@ export const HomeScreen: React.FC = () => {
     } catch (error) {
       console.error('[HomeScreen] Fatal loading error:', error);
     } finally {
-      setLoading(false);
+      // Small timeout to ensure state transitions are smooth and don't flicker
+      setTimeout(() => setLoading(false), 100);
     }
   };
 
