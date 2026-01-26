@@ -70,9 +70,18 @@ export const IRPFEstimateCard: React.FC<Props> = ({ estimate, loading }) => {
 
                     <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex gap-4 items-start">
                         <Info className="w-5 h-5 text-primary-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                            {getHumanMessage()}
-                        </p>
+                        <div className="space-y-2">
+                            <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                                {getHumanMessage()}
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <span className="px-2 py-0.5 bg-white/10 rounded text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                    {estimate.confidence === 'medium' ? 'Estimativa com dados básicos' : 'Estimativa Simplificada'}
+                                </span>
+                                <span className="text-[9px] text-slate-500">•</span>
+                                <span className="text-[9px] text-slate-500 font-bold uppercase">{estimate.year}</span>
+                            </div>
+                        </div>
                     </div>
 
                     {!estimate.is_exempt && (
