@@ -42,7 +42,7 @@ export const Sidebar: React.FC = () => {
             {/* Main Nav */}
             <nav className="flex-1 space-y-2">
                 <NavItem path="/home" icon={Home} label="Início" />
-                <NavItem path="/finance" icon={Wallet} label="Financeiro" />
+                <NavItem path="/financial-dashboard" icon={Wallet} label="Financeiro" />
                 <NavItem path="/categories" icon={Grid} label="Categorias" />
                 <NavItem path="/assistant" icon={MessageSquare} label="Assistente" />
                 <NavItem path="/settings" icon={Settings} label="Ajustes" />

@@ -147,7 +147,7 @@ export const HomeScreen: React.FC = () => {
         {/* Financial Summary Card (Sprint 10) */}
         <FinancialSummaryCard
           report={financialReport}
-          onClick={() => navigate('/finance')}
+          onClick={() => navigate('/financial-dashboard')}
         />
 
         {/* Couple Dashboard Engine (Sprint 9) */}

@@ -95,7 +95,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/detail/:id" element={<ProtectedRoute><DetailScreen /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadScreen /></ProtectedRoute>} />
         <Route path="/assistant" element={<ProtectedRoute><AssistantScreen /></ProtectedRoute>} />
-        <Route path="/finance" element={<ProtectedRoute><FinancialDashboardScreen /></ProtectedRoute>} />
+        <Route path="/financial-dashboard" element={<ProtectedRoute><FinancialDashboardScreen /></ProtectedRoute>} />
+        <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />
         <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
         <Route path="/invite/:token" element={<InviteAcceptScreen />} />
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />

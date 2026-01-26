@@ -11,7 +11,7 @@ export const BottomNav: React.FC = () => {
   // Custom tab definition for clarity
   const tabs = [
     { path: '/home', icon: Home, label: 'Início' },
-    { path: '/finance', icon: Wallet, label: 'Finanças' },
+    { path: '/financial-dashboard', icon: Wallet, label: 'Finanças' },
     { path: '/categories', icon: List, label: 'Lista' },
     { path: '/assistant', icon: MessageSquare, label: 'Chat' },
     { path: '/settings', icon: User, label: 'Perfil' },
