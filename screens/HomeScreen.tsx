@@ -7,8 +7,9 @@ import { useAuth } from '../hooks/useAuth';
 import { tasksService, Task, Category, Household, HouseholdMember } from '../services/tasks';
 import { CouplePanel } from '../components/CouplePanel';
 import { ResponsibilityBadge } from '../components/ResponsibilityBadge';
+import { FinancialSummaryCard } from '../components/FinancialSummaryCard';
 
-type ResponsibilityFilter = 'me' | 'partner' | 'unassigned';
+type ResponsibilityFilter = 'me' | 'partner' | 'unassigned' | 'joint';
 
 // Icon mapping for categories
 const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
@@ -33,6 +34,12 @@ export const HomeScreen: React.FC = () => {
     top_priorities: Task[];
   } | null>(null);
   const [forecast, setForecast] = useState<{ pending_total: number; items: Task[]; month_name: string } | null>(null);
+  const [financialReport, setFinancialReport] = useState<{
+    total_income: number;
+    total_commitments: number;
+    balance: number;
+    status: 'surplus' | 'warning' | 'deficit';
+  } | null>(null);
   const [activities, setActivities] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,23 +49,42 @@ export const HomeScreen: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const [tasksData, categoriesData, statsData, statusResult, forecastResult, householdData, activityData] = await Promise.all([
-      tasksService.getUserTasks(),
-      tasksService.getCategories(),
-      tasksService.getCategoryStats(),
-      tasksService.computeHouseholdStatus(),
-      tasksService.getMonthlyForecast(),
-      tasksService.getHousehold(),
-      tasksService.getRecentActivity()
-    ]);
-    setTasks(tasksData);
-    setCategories(categoriesData);
-    setCategoryStats(statsData);
-    setStatusData(statusResult);
-    setForecast(forecastResult);
-    setHousehold(householdData);
-    setActivities(activityData);
-    setLoading(false);
+    try {
+      // Load essential data first
+      const householdData = await tasksService.getHousehold();
+      setHousehold(householdData);
+
+      // Load other data in parallel, but handle each one individually to avoid blocking
+      const [
+        tasksData,
+        categoriesData,
+        statsData,
+        statusResult,
+        forecastResult,
+        activityData,
+        finReport
+      ] = await Promise.all([
+        tasksService.getUserTasks().catch(e => { console.error('Tasks fail:', e); return []; }),
+        tasksService.getCategories().catch(e => { console.error('Categories fail:', e); return []; }),
+        tasksService.getCategoryStats().catch(e => { console.error('Stats fail:', e); return {}; }),
+        tasksService.computeHouseholdStatus().catch(e => { console.error('Status fail:', e); return null; }),
+        tasksService.getMonthlyForecast().catch(e => { console.error('Forecast fail:', e); return null; }),
+        tasksService.getRecentActivity().catch(e => { console.error('Activity fail:', e); return []; }),
+        tasksService.computeFinancialStatus().catch(e => { console.error('FinReport fail:', e); return null; })
+      ]);
+
+      setTasks(tasksData);
+      setCategories(categoriesData);
+      setCategoryStats(statsData);
+      setStatusData(statusResult);
+      setForecast(forecastResult);
+      setActivities(activityData);
+      setFinancialReport(finReport);
+    } catch (error) {
+      console.error('[HomeScreen] Fatal loading error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // derived from Status Engine
@@ -118,41 +144,11 @@ export const HomeScreen: React.FC = () => {
       <div className="p-6 space-y-8">
         <StatusCard status={currentStatus} percentage={getPercentage()} />
 
-        {/* Month Forecast */}
-        {forecast && (
-          <section className="bg-primary-600 rounded-3xl p-6 text-white overflow-hidden relative shadow-lg shadow-primary-100">
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-primary-100 text-xs font-bold uppercase tracking-wider mb-1">Previsão {forecast.month_name}</p>
-                  <h3 className="text-3xl font-black">R$ {forecast.pending_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</h3>
-                </div>
-                <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
-                  <DollarSign className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <div className="space-y-3">
-                {forecast.items.slice(0, 2).map(item => (
-                  <div key={item.id} className="flex justify-between items-center bg-white/10 rounded-xl p-3 backdrop-blur-md">
-                    <div className="flex items-center gap-3">
-                      {item.auto_generated && <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>}
-                      <p className="text-sm font-medium truncate max-w-[150px]">{item.title}</p>
-                    </div>
-                    <p className="text-sm font-bold">{item.amount || 'R$ 0,00'}</p>
-                  </div>
-                ))}
-                {forecast.items.length > 2 && (
-                  <button onClick={() => navigate('/categories')} className="w-full text-center text-xs font-bold py-1 text-primary-100 hover:text-white transition-colors">
-                    + {forecast.items.length - 2} outros itens previstos
-                  </button>
-                )}
-              </div>
-            </div>
-            {/* Abstract Background Decor */}
-            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute right-10 top-0 w-16 h-16 bg-white/5 rounded-full blur-xl"></div>
-          </section>
-        )}
+        {/* Financial Summary Card (Sprint 10) */}
+        <FinancialSummaryCard
+          report={financialReport}
+          onClick={() => navigate('/finance')}
+        />
 
         {/* Couple Dashboard Engine (Sprint 9) */}
         <section>
@@ -172,7 +168,8 @@ export const HomeScreen: React.FC = () => {
             <h3 className="font-bold text-slate-900 text-sm opacity-60 uppercase tracking-widest">
               {responsibilityFilter === 'me' ? 'Minhas Pendências' :
                 responsibilityFilter === 'partner' ? `Com ${partnerName.split(' ')[0]}` :
-                  'Itens Pendentes'}
+                  responsibilityFilter === 'joint' ? 'Nossas Pendências' :
+                    'Itens Pendentes'}
             </h3>
             <button onClick={() => navigate('/categories')} className="text-xs text-primary-600 font-bold hover:underline py-1">Ver tudo</button>
           </div>
@@ -214,6 +211,7 @@ export const HomeScreen: React.FC = () => {
                         isCurrentUser={task.owner_user_id === user?.id}
                         ownerName={owner?.profile?.full_name}
                         isUnassigned={!task.owner_user_id}
+                        isJoint={task.is_joint}
                       />
                     </div>
                   </div>

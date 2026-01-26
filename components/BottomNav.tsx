@@ -1,6 +1,6 @@
 import React from 'react';
+import { Home, List, User, PlusCircle, MessageSquare, Wallet } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid, PlusCircle, MessageSquare, Settings } from 'lucide-react';
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -8,38 +8,41 @@ export const BottomNav: React.FC = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const NavItem = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => (
-    <button
-      onClick={() => navigate(path)}
-      className={`flex flex-col items-center justify-center gap-1 w-full h-full ${isActive(path) ? 'text-primary-600' : 'text-slate-400 hover:text-slate-600'
-        }`}
-    >
-      <Icon className={`w-6 h-6 ${isActive(path) ? 'fill-current' : ''}`} />
-      <span className="text-[10px] font-medium">{label}</span>
-    </button>
-  );
+  // Custom tab definition for clarity
+  const tabs = [
+    { path: '/home', icon: Home, label: 'Início' },
+    { path: '/finance', icon: Wallet, label: 'Finanças' },
+    { path: '/categories', icon: List, label: 'Lista' },
+    { path: '/assistant', icon: MessageSquare, label: 'Chat' },
+    { path: '/settings', icon: User, label: 'Perfil' },
+  ];
 
   if (['/', '/login', '/register', '/recover', '/onboarding'].includes(location.pathname)) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-slate-100 pb-safe pt-2 px-6 h-[80px] z-50">
+    <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white/80 backdrop-blur-xl border-t border-slate-100 pb-safe pt-2 px-4 h-[85px] z-50">
       <div className="flex justify-between items-center h-full pb-2">
-        <NavItem path="/home" icon={Home} label="Início" />
-        <NavItem path="/categories" icon={Grid} label="Categorias" />
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = isActive(tab.path);
 
-        <div className="relative -top-5">
-          <button
-            onClick={() => navigate('/upload')}
-            className="bg-primary-600 text-white rounded-full p-4 shadow-lg shadow-primary-200 hover:bg-primary-700 transition-colors active:scale-95"
-          >
-            <PlusCircle className="w-7 h-7" />
-          </button>
-        </div>
-
-        <NavItem path="/assistant" icon={MessageSquare} label="Assistente" />
-        <NavItem path="/settings" icon={Settings} label="Ajustes" />
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-all active:scale-90 ${active ? 'text-primary-600' : 'text-slate-400'}`}
+            >
+              <div className={`p-1.5 rounded-xl transition-colors ${active ? 'bg-primary-50' : ''}`}>
+                <Icon className={`w-6 h-6 ${active ? 'fill-primary-600/10' : ''}`} />
+              </div>
+              <span className={`text-[10px] font-black tracking-tight ${active ? 'opacity-100' : 'opacity-60'}`}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

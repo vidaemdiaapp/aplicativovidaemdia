@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid, Plus, MessageSquare, Settings, ShieldCheck, UploadCloud } from 'lucide-react';
+import { Home, Grid, Plus, MessageSquare, Settings, ShieldCheck, UploadCloud, Wallet } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
     const location = useLocation();
@@ -42,6 +42,7 @@ export const Sidebar: React.FC = () => {
             {/* Main Nav */}
             <nav className="flex-1 space-y-2">
                 <NavItem path="/home" icon={Home} label="Início" />
+                <NavItem path="/finance" icon={Wallet} label="Financeiro" />
                 <NavItem path="/categories" icon={Grid} label="Categorias" />
                 <NavItem path="/assistant" icon={MessageSquare} label="Assistente" />
                 <NavItem path="/settings" icon={Settings} label="Ajustes" />

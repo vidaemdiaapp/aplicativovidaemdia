@@ -27,6 +27,8 @@ export interface Task {
   auto_generated?: boolean;
   recurrence_group_id?: string;
   confidence_score?: number;
+  is_joint?: boolean;
+  user_id?: string;
 }
 
 export interface Household {
@@ -43,6 +45,7 @@ export interface HouseholdMember {
   profile?: {
     full_name: string;
     avatar_url?: string;
+    recognition_muted?: boolean;
   };
 }
 

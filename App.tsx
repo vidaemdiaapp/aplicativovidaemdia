@@ -12,6 +12,7 @@ import { AssistantScreen } from './screens/AssistantScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { InviteAcceptScreen } from './screens/InviteAcceptScreen';
 import { CreateTaskScreen } from './screens/CreateTaskScreen';
+import { FinancialDashboardScreen } from './screens/FinancialDashboardScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -94,6 +95,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/detail/:id" element={<ProtectedRoute><DetailScreen /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadScreen /></ProtectedRoute>} />
         <Route path="/assistant" element={<ProtectedRoute><AssistantScreen /></ProtectedRoute>} />
+        <Route path="/finance" element={<ProtectedRoute><FinancialDashboardScreen /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
         <Route path="/invite/:token" element={<InviteAcceptScreen />} />
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />

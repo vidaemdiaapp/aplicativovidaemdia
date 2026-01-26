@@ -390,7 +390,7 @@ export const tasksService = {
         }
 
         const total = (data || []).reduce((acc, curr) => {
-            const val = parseFloat(curr.amount?.replace(/[^\d.,]/g, '').replace(',', '.') || '0');
+            const val = typeof curr.amount === 'number' ? curr.amount : parseFloat(curr.amount || '0');
             return acc + val;
         }, 0);
 
@@ -424,5 +424,28 @@ export const tasksService = {
         }
 
         return data as Task[];
+    },
+
+    /**
+     * Compute full financial status for the dashboard
+     */
+    computeFinancialStatus: async (): Promise<{
+        total_income: number;
+        total_commitments: number;
+        balance: number;
+        status: 'surplus' | 'warning' | 'deficit';
+    } | null> => {
+        const household = await tasksService.getHousehold();
+        if (!household) return null;
+
+        const { data, error } = await supabase
+            .rpc('get_full_financial_report', { target_household_id: household.id });
+
+        if (error) {
+            console.error('[Tasks] Financial report failed:', error);
+            return null;
+        }
+
+        return data;
     }
 };
