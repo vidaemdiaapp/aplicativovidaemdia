@@ -73,6 +73,25 @@ export interface Category {
   pendingCount: number;
 }
 
+export interface IRPFEstimate {
+  user_id: string;
+  year: number;
+  income_monthly: number;
+  is_exempt: boolean;
+  estimated_tax_monthly: number;
+  estimated_tax_yearly: number;
+  confidence: 'high' | 'medium' | 'low';
+  tax_rate: number;
+}
+
+export interface Profile {
+  id: string;
+  full_name: string;
+  avatar_url?: string;
+  active_household_id?: string;
+  estimate_ir?: boolean;
+}
+
 export interface Message {
   id: string;
   text: string;

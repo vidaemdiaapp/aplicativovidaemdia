@@ -87,8 +87,9 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
 
             onSuccess();
             onClose();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving incomes:', error);
+            alert('Erro ao salvar as informações de renda: ' + (error.message || 'Erro desconhecido'));
         } finally {
             setSaving(false);
         }
@@ -141,7 +142,7 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                             value={myIncome.amount}
                                             onChange={e => setMyIncome({ ...myIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg focus:border-primary-500 outline-none transition-colors"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg text-slate-900 focus:border-primary-500 outline-none transition-colors"
                                         />
                                     </div>
                                     <select
@@ -182,7 +183,7 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                             value={partnerIncome.amount}
                                             onChange={e => setPartnerIncome({ ...partnerIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg focus:border-primary-500 outline-none transition-colors"
+                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg text-slate-900 focus:border-primary-500 outline-none transition-colors"
                                         />
                                     </div>
                                     {(!partnerIncome.amount || partnerIncome.amount === '0') && (

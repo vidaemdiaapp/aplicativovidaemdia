@@ -1,26 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Bell, Shield, LogOut, ChevronRight, Moon, Heart, Users, Plus, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, LogOut, ChevronRight, Moon, Heart, Users, Plus, Loader2, Calculator } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService, Household } from '../services/tasks';
+import { taxService } from '../services/tax';
+import { Profile } from '../types';
 
 export const SettingsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const [household, setHousehold] = useState<Household | null>(null);
+  const [estimateIR, setEstimateIR] = useState(false);
   const [loading, setLoading] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [showInviteInput, setShowInviteInput] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
 
   useEffect(() => {
-    loadHousehold();
+    loadInitialData();
   }, []);
 
-  const loadHousehold = async () => {
+  const loadInitialData = async () => {
     setLoading(true);
-    const data = await tasksService.getHousehold();
-    setHousehold(data);
+    const [hhData, irPreference] = await Promise.all([
+      tasksService.getHousehold(),
+      taxService.getUserTaxPreference()
+    ]);
+    setHousehold(hhData);
+    setEstimateIR(irPreference);
     setLoading(false);
   };
 
@@ -42,6 +49,16 @@ export const SettingsScreen: React.FC = () => {
       setShowInviteInput(false);
     } else {
       alert('Erro ao enviar convite: ' + (error || 'Desconhecido'));
+    }
+  };
+
+  const handleToggleIR = async () => {
+    const newValue = !estimateIR;
+    setEstimateIR(newValue);
+    const success = await taxService.updateTaxPreference(newValue);
+    if (!success) {
+      setEstimateIR(!newValue);
+      alert('Erro ao atualizar preferência de Imposto de Renda.');
     }
   };
 
@@ -161,7 +178,27 @@ export const SettingsScreen: React.FC = () => {
         </section>
 
         <section>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-2">App</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-2">Preferências</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Calculator className="w-5 h-5 text-primary-600" />
+                <div className="text-left">
+                  <span className="font-medium block text-slate-700">Estimar Imposto de Renda</span>
+                  <span className="text-xs text-slate-400">Ver projeção anual no Dashboard Financeiro</span>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleIR}
+                className={`w-12 h-6 rounded-full transition-colors relative ${estimateIR ? 'bg-primary-600' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${estimateIR ? 'left-7' : 'left-1'}`}></div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section>
           <div className="rounded-2xl shadow-sm border border-slate-100">
             <SettingItem icon={Moon} label="Aparência" />
             <SettingItem

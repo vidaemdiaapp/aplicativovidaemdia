@@ -3,7 +3,10 @@ import { Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Calendar, ChevronRight, T
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService, Task } from '../services/tasks';
+import { taxService } from '../services/tax';
+import { IRPFEstimate } from '../types';
 import { IncomeRegistrationModal } from '../components/IncomeRegistrationModal';
+import { IRPFEstimateCard } from '../components/IRPFEstimateCard';
 
 export const FinancialDashboardScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -15,6 +18,8 @@ export const FinancialDashboardScreen: React.FC = () => {
         status: 'surplus' | 'warning' | 'deficit';
     } | null>(null);
     const [monthlyTasks, setMonthlyTasks] = useState<Task[]>([]);
+    const [irEstimate, setIrEstimate] = useState<IRPFEstimate | null>(null);
+    const [showIR, setShowIR] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
 
@@ -25,12 +30,19 @@ export const FinancialDashboardScreen: React.FC = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [reportData, tasksData] = await Promise.all([
+            const [reportData, tasksData, irPref] = await Promise.all([
                 tasksService.computeFinancialStatus(),
-                tasksService.getUserTasks()
+                tasksService.getUserTasks(),
+                taxService.getUserTaxPreference()
             ]);
 
             setReport(reportData);
+            setShowIR(irPref);
+
+            if (irPref) {
+                const estimate = await taxService.getIRPFEstimate();
+                setIrEstimate(estimate);
+            }
 
             // Filter tasks for current month that are not completed
             const now = new Date();
@@ -108,6 +120,13 @@ export const FinancialDashboardScreen: React.FC = () => {
                 <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary-600/20 rounded-full blur-[80px]"></div>
                 <div className="absolute bottom-0 left-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-[40px]"></div>
             </div>
+
+            {/* IRPF Module (Sprint 11) */}
+            {showIR && irEstimate && (
+                <div className="px-6 -mt-8 mb-10">
+                    <IRPFEstimateCard estimate={irEstimate} />
+                </div>
+            )}
 
             {/* Actions & Setup */}
             <div className="px-6 -mt-6 relative z-20 flex gap-3">
