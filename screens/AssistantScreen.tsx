@@ -15,7 +15,7 @@ export const AssistantScreen: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: 'Olá! Sou sua assistente Vida em Dia. Posso responder sobre seu saldo, riscos de atraso ou como economizar no Imposto de Renda. O que quer saber?',
+      text: 'Olá! Sou a Elara, sua inteligência oficial aqui no Vida em Dia. Sou especialista em trânsito, impostos e finanças. Como posso ajudar você hoje?',
       sender: 'assistant',
       timestamp: new Date()
     }
