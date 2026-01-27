@@ -1,0 +1,142 @@
+[
+    {
+        "question": "Posso abater plano de saúde no imposto?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Sim! Plano de saúde é uma dedução **sem limite**. Você pode abater o valor total pago por você e por seus dependentes vinculados ao plano. Lembre-se que o app já ajuda a organizar esses recibos na Pasta Fiscal.",
+        "next_action": "check_fiscal_folder"
+    },
+    {
+        "question": "Vou cair na malha fina se errar um valor?",
+        "intent": "IR_BASICS",
+        "topic": "fear",
+        "answer": "Não necessariamente. A malha fina acontece quando há divergência entre o que você declara e o que as empresas informam à Receita. Se errar, você pode fazer uma **Declaração Retificadora** a qualquer momento para corrigir sem pagar multa, desde que faça antes de ser notificado.",
+        "next_action": "show_checklist"
+    },
+    {
+        "question": "Academia pode ser deduzida?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Infelizmente **não**. A Receita Federal não permite a dedução de gastos com academia, mesmo que seja por recomendação médica. Apenas tratamentos médicos, dentários, psicólogos e fisioterapia entram na lista.",
+        "next_action": "explain_rules"
+    },
+    {
+        "question": "Preciso declarar meu carro?",
+        "intent": "IR_PATRIMONY",
+        "topic": "assets",
+        "answer": "Sim, todos os veículos devem ser declarados na ficha de 'Bens e Direitos'. O valor deve ser o de **aquisição** (quanto você pagou), e não o valor atual da tabela FIPE.",
+        "next_action": "add_asset"
+    },
+    {
+        "question": "Recebi PLR, como declaro?",
+        "intent": "IR_INCOME",
+        "topic": "income",
+        "answer": "A PLR (Participação nos Lucros e Resultados) é tributada **exclusivamente na fonte**. Isso significa que o imposto já foi retido e você não paga nada a mais por ela na declaração anual, mas precisa informar o valor na ficha de 'Rendimentos Sujeitos à Tributação Exclusiva'.",
+        "next_action": "confirm_income"
+    },
+    {
+        "question": "O que acontece se eu não declarar dentro do prazo?",
+        "intent": "IR_CHECKLIST",
+        "topic": "fear",
+        "answer": "O atraso gera uma multa mínima de **R$ 165,74**, que pode chegar a 20% do imposto devido. Além disso, seu CPF pode ficar com a situação 'Pendente de Regularização', o que impede de tirar passaporte ou fazer empréstimos.",
+        "next_action": "show_deadlines"
+    },
+    {
+        "question": "Posso declarar meu filho que trabalha como dependente?",
+        "intent": "IR_DEPENDENTS",
+        "topic": "dependents",
+        "answer": "Pode, mas **atenção**: se ele trabalha, você é obrigado a somar o salário dele à sua renda. Muitas vezes isso faz você subir de faixa de imposto e acaba não valendo a pena. O ideal é simular no app as duas situações.",
+        "next_action": "simulate_dependent"
+    },
+    {
+        "question": "Prejuízo em ações ajuda a pagar menos imposto?",
+        "intent": "IR_INVESTMENTS",
+        "topic": "investments",
+        "answer": "Sim! Você pode usar prejuízos de meses anteriores para **abater o lucro** de meses futuros em renda variável (ações e FIIs), reduzindo assim o imposto a pagar sobre o ganho de capital.",
+        "next_action": "check_investments"
+    },
+    {
+        "question": "Preciso declarar Bitcoin e Criptomoedas?",
+        "intent": "IR_INVESTMENTS",
+        "topic": "investments",
+        "answer": "Sim. Criptoativos são considerados bens e devem ser declarados em 'Bens e Direitos'. Se você vendeu mais de R$ 35 mil em um mês com lucro, precisa pagar imposto via GCAP.",
+        "next_action": "add_crypto"
+    },
+    {
+        "question": "Recebi uma herança, pago imposto sobre ela?",
+        "intent": "IR_INCOME",
+        "topic": "income",
+        "answer": "A herança em si é um **rendimento isento** de Imposto de Renda (pois já paga o imposto estadual ITCMD). Porém, você deve declará-la para justificar o aumento do seu patrimônio na ficha de 'Rendimentos Isentos'.",
+        "next_action": "register_inheritance"
+    },
+    {
+        "question": "Alugo meu apartamento pelo Airbnb, como declaro?",
+        "intent": "IR_INCOME",
+        "topic": "income",
+        "answer": "Rendimentos de aluguel por aplicativos devem ser declarados mensalmente através do **Carne-Leão**. O imposto deve ser pago até o último dia útil do mês seguinte ao recebimento.",
+        "next_action": "setup_carne_leao"
+    },
+    {
+        "question": "Trabalho remoto para o exterior, como fica o IR?",
+        "intent": "IR_INCOME",
+        "topic": "income",
+        "answer": "Você deve recolher o imposto mensalmente via **Carne-Leão**. Na declaração anual, você informa os valores recebidos e compensa o imposto já pago aqui (ou no exterior, se houver acordo de reciprocidade).",
+        "next_action": "international_check"
+    },
+    {
+        "question": "Posso abater reforma do meu imóvel?",
+        "intent": "IR_PATRIMONY",
+        "topic": "assets",
+        "answer": "Sim! Reformas e benfeitorias podem ser somadas ao valor de compra do imóvel. Isso ajuda a reduzir o lucro futuro em uma eventual venda e, consequentemente, diminui o Ganho de Capital.",
+        "next_action": "add_renovation_cost"
+    },
+    {
+        "question": "Doações para igrejas ou ONGs são dedutíveis?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Apenas doações feitas a fundos controlados pelos conselhos municipais, estaduais ou federais (como o ECA ou Fundo do Idoso) podem ser deduzidas diretamente do imposto devido, respeitando o limite de 6%.",
+        "next_action": "explain_donations"
+    },
+    {
+        "question": "O que acontece se eu esquecer de declarar uma conta bancária?",
+        "intent": "IR_BASICS",
+        "topic": "fear",
+        "answer": "Esquecer contas com saldo superior a R$ 140 pode levar sua declaração à malha fina. Se perceber o erro, faça uma **Retificadora** o quanto antes para evitar multas de ofício da Receita.",
+        "next_action": "audit_accounts"
+    },
+    {
+        "question": "Minha prótese dentária entra no IR?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Sim! Gastos com próteses dentárias, dentaduras e implantes são considerados despesas médicas e são 100% dedutíveis se houver nota fiscal ou recibo do dentista.",
+        "next_action": "upload_dentist_receipt"
+    },
+    {
+        "question": "Aparelho ortodôntico entra?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Sim, a colocação e a manutenção mensal de aparelhos ortodônticos são dedutíveis como despesa odontológica.",
+        "next_action": "register_ortho"
+    },
+    {
+        "question": "E óculos de grau e lentes de contato?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Infelizmente **não**. A Receita Federal não permite a dedução de gastos com óculos, lentes de contato ou armações, mesmo que tenham finalidade corretiva.",
+        "next_action": "explain_medical_exceptions"
+    },
+    {
+        "question": "Prótese de silicone pode ser deduzida?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Sim, desde que o valor da prótese esteja incluído na conta do hospital ou na nota fiscal emitida pelo cirurgião. Se a prótese for comprada separadamente, ela não é dedutível.",
+        "next_action": "check_hospital_bill"
+    },
+    {
+        "question": "Gastos com veterinário no meu pet entram?",
+        "intent": "IR_DEDUCTIONS",
+        "topic": "deductions",
+        "answer": "Não. Despesas veterinárias e cuidados com animais de estimação não possuem previsão legal para dedução no Imposto de Renda no Brasil.",
+        "next_action": "back_to_home"
+    }
+]

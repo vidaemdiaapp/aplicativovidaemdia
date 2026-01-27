@@ -1,5 +1,5 @@
-import React from 'react';
 import { Receipt, FileText, ChevronRight, Calculator, Plus, ArrowUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
     totalDeductions: number;
@@ -8,6 +8,7 @@ interface Props {
 }
 
 export const DeductionsCard: React.FC<Props> = ({ totalDeductions, estimatedSaving, onOpenPastaFiscal }) => {
+    const navigate = useNavigate();
     const hasDeductions = totalDeductions > 0;
 
     return (
@@ -58,7 +59,7 @@ export const DeductionsCard: React.FC<Props> = ({ totalDeductions, estimatedSavi
                 </div>
 
                 <button
-                    onClick={() => alert('Dica: Tire foto dos seus recibos médicos no menu de Documentos!')}
+                    onClick={() => navigate('/assistant', { state: { initialMessage: '💡 Me dá uma dica de como aumentar minhas deduções no IR?' } })}
                     className="w-full mt-6 py-4 rounded-2xl bg-slate-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-200"
                 >
                     <Plus className="w-4 h-4" />

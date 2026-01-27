@@ -55,8 +55,9 @@ export const notificationsService = {
                 projectId: '924dbbf2-374b-420a-aeda-fe61fb22fd72'
             })).data;
 
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return null;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return null;
+            const user = session.user;
 
             const platform = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web';
 

@@ -13,6 +13,8 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { InviteAcceptScreen } from './screens/InviteAcceptScreen';
 import { CreateTaskScreen } from './screens/CreateTaskScreen';
 import { FiscalFolderScreen } from './screens/FiscalFolderScreen';
+import { TaxDeclarationScreen } from './screens/TaxDeclarationScreen';
+import { AssetsScreen } from './screens/AssetsScreen';
 import { FinancialDashboardScreen } from './screens/FinancialDashboardScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
@@ -52,6 +54,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
+    console.log('[ProtectedRoute] No user found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
@@ -103,6 +106,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
         <Route path="/edit-task/:id" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
         <Route path="/fiscal-folder" element={<ProtectedRoute><FiscalFolderScreen /></ProtectedRoute>} />
+        <Route path="/tax-declaration" element={<ProtectedRoute><TaxDeclarationScreen /></ProtectedRoute>} />
+        <Route path="/assets" element={<ProtectedRoute><AssetsScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

@@ -37,6 +37,7 @@ export const Sidebar: React.FC = () => {
             <nav className="flex-1 space-y-2">
                 <NavItem path="/home" icon={Home} label="Início" />
                 <NavItem path="/financial-dashboard" icon={Wallet} label="Financeiro" />
+                <NavItem path="/tax-declaration" icon={ShieldCheck} label="Imposto de Renda" />
                 <NavItem path="/categories" icon={Grid} label="Categorias" />
                 <NavItem path="/assistant" icon={MessageSquare} label="Assistente" />
                 <NavItem path="/settings" icon={Settings} label="Ajustes" />

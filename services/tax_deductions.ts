@@ -23,8 +23,9 @@ export const taxDeductionsService = {
      */
     getDeductions: async (year?: number): Promise<TaxDeductibleExpense[]> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return [];
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return [];
+            const user = session.user;
 
             let query = supabase
                 .from('tax_deductible_expenses')
@@ -52,8 +53,9 @@ export const taxDeductionsService = {
      */
     addDeduction: async (deduction: Partial<TaxDeductibleExpense>): Promise<boolean> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+            const user = session.user;
 
             const household = await tasksService.getHousehold();
 

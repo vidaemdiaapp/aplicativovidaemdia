@@ -1,0 +1,2774 @@
+{
+  "schema_version": "1.0",
+  "knowledge_version": "2026",
+  "locale": "pt-BR",
+  "generated_at": "2026-01-27T01:17:49.315130",
+  "source_notes": {
+    "monthly_table_2026": {
+      "base": "Receita Federal (tabela mensal 2026)",
+      "faixas": [
+        {
+          "ate": 2428.8,
+          "aliquota": 0.0,
+          "deducao": 0.0
+        },
+        {
+          "de": 2428.81,
+          "ate": 2826.65,
+          "aliquota": 0.075,
+          "deducao": 182.16
+        },
+        {
+          "de": 2826.66,
+          "ate": 3751.05,
+          "aliquota": 0.15,
+          "deducao": 394.16
+        },
+        {
+          "de": 3751.06,
+          "ate": 4664.68,
+          "aliquota": 0.225,
+          "deducao": 675.49
+        },
+        {
+          "acima_de": 4664.68,
+          "aliquota": 0.275,
+          "deducao": 908.73
+        }
+      ],
+      "deducao_dependente_mensal": 189.59,
+      "desconto_simplificado_mensal_limite": 607.2
+    },
+    "annual_relief_2026": {
+      "isencao_anual": 60000.0,
+      "redutor_gradual_ate": 88200.0
+    },
+    "dividendos_2026": {
+      "regra": "IRRF 10% sobre lucros/dividendos acima de R$ 50.000/mês pagos por uma mesma PJ a PF residente",
+      "limite_mensal_por_pj": 50000.0,
+      "aliquota_irrf": 0.1
+    },
+    "deduction_references_2026": {
+      "educacao_limite_anual_por_pessoa": 3561.5,
+      "dependente_deducao_anual_por_cpf": 2275.08,
+      "desconto_simplificado_anual_limite": 17640.0
+    }
+  },
+  "items": [
+    {
+      "id": 1,
+      "category": "fundamentals",
+      "question": "O que é imposto de renda?",
+      "answer": "É um imposto calculado sobre os rendimentos que você teve ao longo do ano. A declaração serve para somar tudo e calcular quanto é devido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "basico"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 2,
+      "category": "fundamentals",
+      "question": "Todo mundo paga imposto de renda?",
+      "answer": "Não. Quem está dentro da faixa de isenção não paga imposto, mas pode precisar declarar em algumas situações. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "isencao"
+      ],
+      "next_actions": [
+        "ver_obrigatoriedade"
+      ]
+    },
+    {
+      "id": 3,
+      "category": "fundamentals",
+      "question": "Declarar imposto é o mesmo que pagar?",
+      "answer": "Não. Declarar é informar seus dados. Depois do cálculo final, pode dar imposto a pagar, imposto a restituir ou zero. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 4,
+      "category": "fundamentals",
+      "question": "Quem é isento precisa declarar?",
+      "answer": "Às vezes, sim. Mesmo isento, você pode ser obrigado a declarar por patrimônio, ganhos em bolsa, rendimentos isentos altos, atividade rural e outros critérios. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "isencao",
+        "obrigatoriedade"
+      ],
+      "next_actions": [
+        "ver_obrigatoriedade"
+      ]
+    },
+    {
+      "id": 5,
+      "category": "fundamentals",
+      "question": "Por que descontam imposto todo mês do salário?",
+      "answer": "Isso é a retenção na fonte (IRRF): uma antecipação do imposto anual. No fim, a declaração ajusta o valor correto. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "irrf"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 6,
+      "category": "fundamentals",
+      "question": "O imposto é mensal ou anual?",
+      "answer": "O cálculo do IR é anual. O mensal (IRRF) é um adiantamento baseado na tabela mensal. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "basico"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 7,
+      "category": "fundamentals",
+      "question": "O que é ajuste anual?",
+      "answer": "É o acerto final: você soma rendas do ano, aplica as regras/deduções e compara com o que já foi pago/retido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "ajuste_anual"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 8,
+      "category": "fundamentals",
+      "question": "O que acontece se eu não declarar?",
+      "answer": "Você pode pagar multa por atraso, ter CPF com pendência e enfrentar restrições para crédito, passaporte e outros serviços. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "prazo",
+        "multa"
+      ],
+      "next_actions": [
+        "ver_prazos"
+      ]
+    },
+    {
+      "id": 9,
+      "category": "fundamentals",
+      "question": "Existe imposto negativo?",
+      "answer": "Na prática, não. Se você pagou mais do que devia, a diferença vira restituição. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao"
+      ],
+      "next_actions": [
+        "ver_restituicao"
+      ]
+    },
+    {
+      "id": 10,
+      "category": "fundamentals",
+      "question": "O que é restituição?",
+      "answer": "É a devolução do imposto pago/retido a mais durante o ano, após o ajuste da declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao"
+      ],
+      "next_actions": [
+        "ver_restituicao"
+      ]
+    },
+    {
+      "id": 11,
+      "category": "fundamentals",
+      "question": "Por que algumas pessoas recebem restituição?",
+      "answer": "Porque tiveram retenção alta na fonte e/ou deduções (saúde, educação, dependentes etc.) que reduziram o imposto devido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "deducoes"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 12,
+      "category": "fundamentals",
+      "question": "O que é base de cálculo?",
+      "answer": "É o valor que sobra depois das deduções permitidas (quando aplicável) e sobre o qual o imposto é calculado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "base_calculo"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 13,
+      "category": "fundamentals",
+      "question": "O imposto aumenta conforme a renda?",
+      "answer": "Sim. O sistema é progressivo: faixas mais altas pagam alíquotas maiores. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "tabela"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 14,
+      "category": "fundamentals",
+      "question": "As regras mudam todo ano?",
+      "answer": "Podem mudar. Por isso o Vida em Dia usa base versionada (2026, 2027...) e não mistura regras de anos diferentes. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "versionamento"
+      ],
+      "next_actions": [
+        "ver_config_ano"
+      ]
+    },
+    {
+      "id": 15,
+      "category": "fundamentals",
+      "question": "Qual é a grande mudança em 2026?",
+      "answer": "Em 2026 passou a existir isenção anual para renda até R$ 60 mil e um redutor gradual para rendas entre R$ 60.000,01 e R$ 88,2 mil (além da tabela mensal atualizada). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "2026",
+        "isencao"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 16,
+      "category": "fundamentals",
+      "question": "Se eu ganho até R$ 5 mil por mês, estou isento?",
+      "answer": "Em 2026, existe isenção anual até R$ 60 mil. A aplicação exata pode depender da sua renda anual e do redutor previsto na regra de 2026. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "2026",
+        "isencao"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 17,
+      "category": "fundamentals",
+      "question": "O app envia minha declaração para a Receita?",
+      "answer": "Não. O Vida em Dia prepara e organiza tudo para você protocolar corretamente no programa/app da Receita (ou com seu contador). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "produto"
+      ],
+      "next_actions": [
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 18,
+      "category": "fundamentals",
+      "question": "Preciso de contador?",
+      "answer": "Não é obrigatório. Em casos complexos (muitos investimentos, ganho de capital, exterior), pode ser útil. O app ajuda a deixar tudo mastigado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "orientacao"
+      ],
+      "next_actions": [
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 19,
+      "category": "fundamentals",
+      "question": "Declarar errado é crime?",
+      "answer": "Erro sem intenção normalmente vira exigência/correção. Crime é quando há fraude (omissão intencional, documentos falsos etc.). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "malha_fina"
+      ],
+      "next_actions": [
+        "ver_alertas"
+      ]
+    },
+    {
+      "id": 20,
+      "category": "fundamentals",
+      "question": "O que é malha fina?",
+      "answer": "É quando a Receita encontra inconsistências e pede comprovação ou correção. Comprovantes e consistência reduzem muito o risco. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "malha_fina"
+      ],
+      "next_actions": [
+        "ver_documentos"
+      ]
+    },
+    {
+      "id": 21,
+      "category": "income_pf",
+      "question": "Meu salário CLT entra no imposto?",
+      "answer": "Sim. Salário é rendimento tributável e entra no cálculo anual. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 22,
+      "category": "income_pf",
+      "question": "13º salário entra no imposto?",
+      "answer": "Sim, normalmente é tributado exclusivamente na fonte e também informado na declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 23,
+      "category": "income_pf",
+      "question": "PLR entra no imposto?",
+      "answer": "Sim. A PLR tem regras próprias e, em geral, é tributada exclusivamente na fonte. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 24,
+      "category": "income_pf",
+      "question": "Hora extra entra no imposto?",
+      "answer": "Sim. Faz parte do rendimento tributável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 25,
+      "category": "income_pf",
+      "question": "Comissão entra no imposto?",
+      "answer": "Sim, entra como rendimento tributável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 26,
+      "category": "income_pf",
+      "question": "Bônus entra no imposto?",
+      "answer": "Sim, em geral entra como rendimento tributável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 27,
+      "category": "income_pf",
+      "question": "Vale-refeição/vale-alimentação entra no imposto?",
+      "answer": "Depende do formato e regras trabalhistas. Em muitos casos não entra como rendimento tributável do empregado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 28,
+      "category": "income_pf",
+      "question": "FGTS entra no imposto?",
+      "answer": "Não. FGTS é, em regra, isento de IR. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 29,
+      "category": "income_pf",
+      "question": "Seguro-desemprego entra no imposto?",
+      "answer": "Não. Em geral é isento de IR. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 30,
+      "category": "income_pf",
+      "question": "Aposentadoria paga imposto?",
+      "answer": "Depende do valor. Há faixas de isenção e regras específicas; maiores de 65 anos têm uma parcela isenta adicional para rendimentos previdenciários. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 31,
+      "category": "income_pf",
+      "question": "Pensão por morte entra no imposto?",
+      "answer": "Depende da natureza e do total anual. Em geral é tratada como rendimento e deve ser informada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 32,
+      "category": "income_pf",
+      "question": "Pensão alimentícia recebida entra no imposto?",
+      "answer": "Sim, para quem recebe é rendimento tributável e entra no cálculo. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 33,
+      "category": "income_pf",
+      "question": "Quem paga pensão alimentícia pode abater?",
+      "answer": "Sim, quando fixada por decisão judicial ou acordo homologado, costuma ser dedutível para quem paga. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 34,
+      "category": "income_pf",
+      "question": "Aluguel recebido paga imposto?",
+      "answer": "Sim. Aluguel é rendimento tributável e deve ser informado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 35,
+      "category": "income_pf",
+      "question": "Airbnb conta como aluguel?",
+      "answer": "Na prática, costuma ser tratado como rendimento de aluguel/locação por temporada e deve ser informado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 36,
+      "category": "income_pf",
+      "question": "Recebo como autônomo: pago imposto?",
+      "answer": "Em geral sim. Autônomo pode ter carnê-leão/mensal e depois ajuste anual, dependendo da renda. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 37,
+      "category": "income_pf",
+      "question": "Recebo por Pix: isso muda algo?",
+      "answer": "Não. O meio de pagamento não muda a regra; o que importa é a natureza do rendimento. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 38,
+      "category": "income_pf",
+      "question": "Bicos e freelas entram no imposto?",
+      "answer": "Sim, se forem renda. É importante registrar e guardar comprovantes. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 39,
+      "category": "income_pf",
+      "question": "Recebi dinheiro em espécie: entra?",
+      "answer": "Sim, se for rendimento. A origem precisa ser coerente e comprovável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 40,
+      "category": "income_pf",
+      "question": "Recebi doação de família: entra no imposto?",
+      "answer": "Doação não é renda tributável de IRPF, mas deve ser declarada conforme regras e pode ter ITCMD estadual. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 41,
+      "category": "income_pf",
+      "question": "Herança entra no imposto?",
+      "answer": "Herança não é renda tributável de IRPF, mas deve ser declarada e pode ter ITCMD. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 42,
+      "category": "income_pf",
+      "question": "Prêmio de loteria entra?",
+      "answer": "Sim, mas normalmente já vem com tributação exclusiva na fonte e deve ser informado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 43,
+      "category": "income_pf",
+      "question": "Recebi uma ação judicial (atrasados): entra?",
+      "answer": "Pode entrar. Depende do tipo (salário atrasado, dano moral etc.). Em muitos casos há regras específicas. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 44,
+      "category": "income_pf",
+      "question": "Recebi rendimentos do exterior: entra?",
+      "answer": "Sim. Rendimentos do exterior geralmente precisam ser informados e podem ter regras próprias. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 45,
+      "category": "income_pf",
+      "question": "Recebi em dólar/euro: como declara?",
+      "answer": "Você declara convertendo para reais conforme regras de conversão do período e natureza do rendimento. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 46,
+      "category": "income_pf",
+      "question": "Cashback entra como renda?",
+      "answer": "Geralmente não é tratado como renda tributável quando é desconto/devolução, mas depende do caso. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 47,
+      "category": "income_pf",
+      "question": "Vendi milhas: paga imposto?",
+      "answer": "Pode pagar, dependendo de como ocorreu (ganho de capital/atividade). É um tema que costuma exigir cuidado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 48,
+      "category": "income_pf",
+      "question": "Gorjetas entram no imposto?",
+      "answer": "Em geral, sim, se forem rendimento habitual e comprovável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 49,
+      "category": "income_pf",
+      "question": "Recebi reembolso: entra?",
+      "answer": "Reembolso não é renda (é devolução de gasto). O que não pode é lançar como dedução algo que foi reembolsado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 50,
+      "category": "income_pf",
+      "question": "Recebi ajuda do meu parceiro(a) para contas: entra?",
+      "answer": "Se for transferência entre cônjuges/companheiros para despesas comuns, geralmente não é renda, mas deve fazer sentido no contexto. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 51,
+      "category": "income_pf",
+      "question": "Recebi aluguel e tenho despesas do imóvel: posso descontar?",
+      "answer": "Em geral, despesas específicas podem ser consideradas conforme regras do aluguel, mas é um tema com detalhes. O ideal é registrar tudo. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 52,
+      "category": "income_pf",
+      "question": "MEI entra como pessoa física?",
+      "answer": "MEI tem regras próprias: você pode ter rendimentos como PF (pró-labore) e rendimentos do negócio. É importante separar corretamente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 53,
+      "category": "income_pf",
+      "question": "Sou PJ e tiro pró-labore: entra?",
+      "answer": "Sim. Pró-labore é rendimento tributável na PF. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 54,
+      "category": "income_pf",
+      "question": "Sou PJ e tiro distribuição de lucros: entra?",
+      "answer": "Em 2026, lucros/dividendos acima de R$ 50 mil por mês pagos pela mesma empresa para a PF têm retenção na fonte de 10%. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 55,
+      "category": "income_pf",
+      "question": "PLR e 13º contam para a faixa anual?",
+      "answer": "Eles são informados e entram no ajuste, mas podem ter tributação exclusiva na fonte. O efeito exato depende do conjunto do ano. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 56,
+      "category": "income_pf",
+      "question": "Recebi comissão do exterior: entra?",
+      "answer": "Sim, e normalmente entra como rendimento tributável, com cuidados de conversão e comprovação. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 57,
+      "category": "income_pf",
+      "question": "Recebi aluguel em atraso (vários meses): como entra?",
+      "answer": "Em geral, entra como rendimento no ano do recebimento. Guardar contrato e comprovantes ajuda muito. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 58,
+      "category": "income_pf",
+      "question": "Recebi renda rural: entra?",
+      "answer": "Sim. Atividade rural tem regras próprias, inclusive critérios de obrigatoriedade e apuração de resultado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 59,
+      "category": "income_pf",
+      "question": "Recebi rendimentos isentos altos: preciso declarar?",
+      "answer": "Pode ser que sim, dependendo do limite anual e outros critérios. É comum ser obrigado a declarar mesmo isento de imposto. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 60,
+      "category": "income_pf",
+      "question": "Se eu mudo de emprego no ano, muda algo?",
+      "answer": "Muda a soma anual e pode mudar o ajuste. Você informa os rendimentos de cada fonte pagadora e o imposto retido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "pf",
+        "renda"
+      ],
+      "next_actions": [
+        "ver_meu_caso"
+      ]
+    },
+    {
+      "id": 61,
+      "category": "deductions",
+      "question": "Posso abater plano de saúde no imposto?",
+      "answer": "Sim. Despesas com plano de saúde podem ser dedutíveis, em regra, quando pagas por você e não reembolsadas. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 62,
+      "category": "deductions",
+      "question": "Consulta médica entra como dedução?",
+      "answer": "Sim, desde que você tenha comprovante/recibo válido e não tenha sido reembolsada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 63,
+      "category": "deductions",
+      "question": "Psicólogo entra como dedução?",
+      "answer": "Sim, como despesa médica, com recibo válido e sem reembolso. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 64,
+      "category": "deductions",
+      "question": "Dentista entra como dedução?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 65,
+      "category": "deductions",
+      "question": "Exames laboratoriais entram?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 66,
+      "category": "deductions",
+      "question": "Internação e cirurgia entram?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 67,
+      "category": "deductions",
+      "question": "Medicamentos entram como dedução?",
+      "answer": "Normalmente não, exceto quando fazem parte de conta hospitalar/nota do procedimento. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 68,
+      "category": "deductions",
+      "question": "Academia entra como dedução?",
+      "answer": "Não. Academia não é dedução de IRPF. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 69,
+      "category": "deductions",
+      "question": "Nutricionista entra?",
+      "answer": "Em geral, pode ser tratado como despesa de saúde se houver documentação válida, mas é importante manter recibos detalhados. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 70,
+      "category": "deductions",
+      "question": "Terapia (psicoterapia) entra?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 71,
+      "category": "deductions",
+      "question": "Óculos e lentes entram?",
+      "answer": "Em geral, não como despesa médica dedutível. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 72,
+      "category": "deductions",
+      "question": "Aparelho ortodôntico entra?",
+      "answer": "Sim, normalmente como despesa odontológica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 73,
+      "category": "deductions",
+      "question": "Vacinas entram?",
+      "answer": "Em geral, sim como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 74,
+      "category": "deductions",
+      "question": "Plano odontológico entra?",
+      "answer": "Sim, como despesa de saúde, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 75,
+      "category": "deductions",
+      "question": "Massagem entra como dedução?",
+      "answer": "Não, salvo casos muito específicos e comprovados como tratamento médico, o que é incomum. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 76,
+      "category": "deductions",
+      "question": "Acupuntura entra como dedução?",
+      "answer": "Pode entrar como despesa médica quando prestada por profissional habilitado e com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 77,
+      "category": "deductions",
+      "question": "Fisioterapia entra como dedução?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 78,
+      "category": "deductions",
+      "question": "Fonoaudiólogo entra?",
+      "answer": "Sim, como despesa médica, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 79,
+      "category": "deductions",
+      "question": "Terapia ocupacional entra?",
+      "answer": "Sim, com comprovante. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 80,
+      "category": "deductions",
+      "question": "Psicopedagogo entra?",
+      "answer": "Pode entrar como despesa médica quando se enquadrar e houver comprovante adequado. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 81,
+      "category": "deductions",
+      "question": "Posso abater mensalidade escolar?",
+      "answer": "Sim, educação formal pode ser dedutível até o limite anual por pessoa (referência 2026: R$ 3.561,50). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 82,
+      "category": "deductions",
+      "question": "Posso abater faculdade?",
+      "answer": "Sim, dentro do limite anual de educação por pessoa. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 83,
+      "category": "deductions",
+      "question": "Posso abater pós-graduação?",
+      "answer": "Em geral, cursos de pós e especialização ligados à educação formal entram dentro do limite anual. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 84,
+      "category": "deductions",
+      "question": "Curso de idioma entra?",
+      "answer": "Não. Curso livre (idioma, informática, preparatórios) não entra como dedução de educação. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 85,
+      "category": "deductions",
+      "question": "Material escolar entra?",
+      "answer": "Não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 86,
+      "category": "deductions",
+      "question": "Transporte escolar entra?",
+      "answer": "Não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 87,
+      "category": "deductions",
+      "question": "Uniforme escolar entra?",
+      "answer": "Não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 88,
+      "category": "deductions",
+      "question": "Creche entra como educação?",
+      "answer": "Em geral, sim como educação formal, dentro do limite anual por pessoa. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 89,
+      "category": "deductions",
+      "question": "INSS descontado do salário ajuda?",
+      "answer": "Sim. Contribuição à previdência oficial é dedutível na apuração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 90,
+      "category": "deductions",
+      "question": "Contribuição ao INSS como autônomo ajuda?",
+      "answer": "Sim, também é dedutível. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 91,
+      "category": "deductions",
+      "question": "PGBL reduz imposto?",
+      "answer": "Pode reduzir, pois contribuições a PGBL podem ser dedutíveis até 12% da renda tributável anual, seguindo as regras. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 92,
+      "category": "deductions",
+      "question": "VGBL reduz imposto?",
+      "answer": "Não. VGBL normalmente não é dedução; ele funciona mais como investimento e a tributação é sobre rendimentos no resgate. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 93,
+      "category": "deductions",
+      "question": "Dependente dá dedução?",
+      "answer": "Sim. Há dedução anual por dependente (referência 2026: R$ 2.275,08 por dependente no ano). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 94,
+      "category": "deductions",
+      "question": "Quais documentos preciso guardar?",
+      "answer": "Recibos/ notas com CPF, identificação do prestador, descrição e valores. Guardar por alguns anos é recomendável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 95,
+      "category": "deductions",
+      "question": "Posso lançar despesa sem comprovante?",
+      "answer": "Não. Falta de comprovação aumenta risco de glosa/malha fina. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 96,
+      "category": "deductions",
+      "question": "Se o plano reembolsa parte, posso deduzir?",
+      "answer": "Só a parte não reembolsada pode ser deduzida. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 97,
+      "category": "deductions",
+      "question": "Despesas do dependente contam?",
+      "answer": "Sim, se o dependente estiver na sua declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 98,
+      "category": "deductions",
+      "question": "Posso deduzir gasto do cônjuge sem declarar junto?",
+      "answer": "Depende do modelo (conjunta/separada) e de quem é o titular do gasto. Em geral, despesas seguem o CPF de quem declara. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 99,
+      "category": "deductions",
+      "question": "Pensão alimentícia paga abate?",
+      "answer": "Sim, quando fixada judicialmente ou homologada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 100,
+      "category": "deductions",
+      "question": "Pensão informal (sem decisão judicial) abate?",
+      "answer": "Em geral, não. Para dedução, costuma ser exigida formalização judicial/homologada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 101,
+      "category": "deductions",
+      "question": "Doações abatem imposto?",
+      "answer": "Algumas doações incentivadas podem reduzir imposto dentro de limites e regras específicas. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 102,
+      "category": "deductions",
+      "question": "Doação para igreja abate?",
+      "answer": "Não como doação incentivada no IRPF. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 103,
+      "category": "deductions",
+      "question": "Contribuição sindical abate?",
+      "answer": "Em geral, não como dedução padrão. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 104,
+      "category": "deductions",
+      "question": "Empregado doméstico abate?",
+      "answer": "As regras já mudaram ao longo do tempo; em 2026 não é uma dedução geral como saúde/educação. Melhor tratar como caso específico no app. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 105,
+      "category": "deductions",
+      "question": "Consórcio abate imposto?",
+      "answer": "Não. Consórcio é planejamento/compra, não dedução. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 106,
+      "category": "deductions",
+      "question": "Financiamento abate imposto?",
+      "answer": "Não. Financiamento não é dedução; o bem/ dívida pode ser declarado em bens/dívidas. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 107,
+      "category": "deductions",
+      "question": "Aluguel que eu pago abate imposto?",
+      "answer": "Em geral, não é dedução no IRPF (salvo situações específicas previstas em lei, que são raras). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 108,
+      "category": "deductions",
+      "question": "Seguro de vida abate imposto?",
+      "answer": "Em geral, não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 109,
+      "category": "deductions",
+      "question": "Seguro saúde do trabalho abate?",
+      "answer": "Se você paga e não é reembolsado, pode ser dedutível; se é benefício integral da empresa, normalmente não entra como sua despesa. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 110,
+      "category": "deductions",
+      "question": "Consulta de estética abate?",
+      "answer": "Não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 111,
+      "category": "deductions",
+      "question": "Cirurgia reparadora abate?",
+      "answer": "Pode abater como despesa médica, com documentação adequada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 112,
+      "category": "deductions",
+      "question": "Home care abate?",
+      "answer": "Pode, com comprovantes e se caracterizar despesa de saúde. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 113,
+      "category": "deductions",
+      "question": "Órtese e prótese abatem?",
+      "answer": "Pode abater quando vinculadas a tratamento e com documentação. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 114,
+      "category": "deductions",
+      "question": "Despesas parceladas contam?",
+      "answer": "Sim, conta o que foi efetivamente pago no ano-base. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 115,
+      "category": "deductions",
+      "question": "Despesas de anos anteriores entram?",
+      "answer": "Não. Em geral, você deduz no ano em que pagou. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 116,
+      "category": "deductions",
+      "question": "Aula particular abate como educação?",
+      "answer": "Não, educação dedutível é educação formal dentro das regras/limites. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 117,
+      "category": "deductions",
+      "question": "Curso preparatório abate?",
+      "answer": "Não. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 118,
+      "category": "deductions",
+      "question": "MBA abate?",
+      "answer": "Se caracterizado como educação formal, pode entrar no limite anual de educação; depende do enquadramento. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 119,
+      "category": "deductions",
+      "question": "Posso usar recibo digital?",
+      "answer": "Sim, desde que tenha as informações exigidas e seja verificável. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 120,
+      "category": "deductions",
+      "question": "Qual o limite do desconto simplificado anual?",
+      "answer": "Referência 2026: limite anual de desconto simplificado de R$ 17.640,00 (quando aplicável). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "deducao",
+        "pf"
+      ],
+      "next_actions": [
+        "ver_documentos",
+        "simular"
+      ]
+    },
+    {
+      "id": 121,
+      "category": "investments",
+      "question": "Preciso declarar investimentos mesmo sendo isento de imposto?",
+      "answer": "Muitas vezes, sim. Ter investimentos pode obrigar a declarar e, mesmo quando não gera imposto a pagar, costuma exigir informar bens e rendimentos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 122,
+      "category": "investments",
+      "question": "CDB paga imposto?",
+      "answer": "Em geral, os rendimentos sofrem IR retido na fonte conforme regras do produto. Mesmo assim, você informa os rendimentos e saldos na declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 123,
+      "category": "investments",
+      "question": "Tesouro Direto paga imposto?",
+      "answer": "Em geral, há IR sobre os rendimentos no resgate, com retenção na fonte. Você declara saldos e rendimentos conforme informes. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 124,
+      "category": "investments",
+      "question": "Poupança paga imposto?",
+      "answer": "A poupança costuma ser isenta de IR sobre rendimentos, mas ainda pode precisar ser informada na declaração dependendo do saldo e obrigatoriedade. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 125,
+      "category": "investments",
+      "question": "LCI/LCA pagam imposto?",
+      "answer": "Tradicionalmente são isentas de IR para pessoa física, mas você pode ter que declarar o saldo e os rendimentos isentos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 126,
+      "category": "investments",
+      "question": "Fundos de investimento pagam imposto?",
+      "answer": "Em geral, sim (come-cotas e/ou no resgate, conforme o tipo). Você declara usando o informe de rendimentos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 127,
+      "category": "investments",
+      "question": "Ações: quando pago imposto?",
+      "answer": "Em renda variável, o imposto pode incidir sobre ganhos e há regras específicas. O essencial é apurar lucros/prejuízos e guardar notas/relatórios. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 128,
+      "category": "investments",
+      "question": "Dividendos vão pagar imposto em 2026?",
+      "answer": "Sim, há retenção na fonte de 10% sobre lucros e dividendos acima de R$ 50.000 por mês pagos pela mesma empresa a uma pessoa física residente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 129,
+      "category": "investments",
+      "question": "Se eu recebo menos de R$ 50 mil/mês de dividendos por empresa, pago imposto?",
+      "answer": "Pela regra de 2026, a retenção automática é aplicada quando excede R$ 50.000/mês por empresa. A situação completa pode depender do seu conjunto de rendas no ano. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 130,
+      "category": "investments",
+      "question": "Como declaro dividendos?",
+      "answer": "Você informa conforme o informe da empresa/corretora. Em 2026, se houve retenção na fonte, ela também deve constar para ajuste. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 131,
+      "category": "investments",
+      "question": "Juros sobre capital próprio (JCP) entra?",
+      "answer": "Em geral, JCP tem tributação na fonte e deve ser informado conforme informes. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 132,
+      "category": "investments",
+      "question": "Vendi ações com prejuízo: isso ajuda?",
+      "answer": "Pode. Prejuízos podem ser compensados com lucros futuros na mesma natureza (regras específicas). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 133,
+      "category": "investments",
+      "question": "Como funciona compensação de prejuízo em bolsa?",
+      "answer": "Você registra prejuízos e pode abater de lucros futuros do mesmo tipo de operação, seguindo as regras aplicáveis. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 134,
+      "category": "investments",
+      "question": "Day trade tem regra diferente?",
+      "answer": "Sim, costuma ter regras e alíquotas específicas e exige apuração separada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 135,
+      "category": "investments",
+      "question": "Preciso do informe da corretora?",
+      "answer": "Sim, ele é a principal fonte para preencher rendimentos, posições e movimentações. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 136,
+      "category": "investments",
+      "question": "Criptomoedas precisam ser declaradas?",
+      "answer": "Em geral, sim, como bens/direitos. Ganhos em vendas podem gerar ganho de capital conforme regras. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 137,
+      "category": "investments",
+      "question": "NFT entra na declaração?",
+      "answer": "Pode entrar como bem/direito, e ganhos na venda podem ser tributáveis conforme regras. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 138,
+      "category": "investments",
+      "question": "Staking de cripto é renda?",
+      "answer": "Pode ser tratada como rendimento. O ideal é registrar valores e datas para declarar corretamente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 139,
+      "category": "investments",
+      "question": "Recebi cashback de corretora: é renda?",
+      "answer": "Geralmente cashback é benefício/comercial, e o tratamento depende do caso. Registre e guarde extratos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 140,
+      "category": "investments",
+      "question": "Tenho investimentos no exterior: preciso declarar?",
+      "answer": "Em geral, sim. Rendimentos e bens no exterior têm regras próprias e exigem cuidado maior. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 141,
+      "category": "investments",
+      "question": "Como declaro renda de aluguel de ações?",
+      "answer": "Trate como rendimento conforme informes e regras aplicáveis; geralmente há retenção na fonte. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 142,
+      "category": "investments",
+      "question": "Como declaro FIIs?",
+      "answer": "FIIs têm regras próprias de rendimentos e ganho de capital. Use o informe e registre operações. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 143,
+      "category": "investments",
+      "question": "Rendimentos isentos de FIIs entram?",
+      "answer": "Quando isentos, entram como rendimentos isentos, mas ainda assim precisam ser informados. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 144,
+      "category": "investments",
+      "question": "Vendi fundos com lucro: pago imposto?",
+      "answer": "Em geral, há imposto sobre ganho conforme regras do fundo; muitas vezes a tributação é na fonte, mas você informa na declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 145,
+      "category": "investments",
+      "question": "Posso compensar prejuízo de cripto com lucro de ações?",
+      "answer": "Em geral, não. Compensações costumam ser por natureza/categoria. Trate como casos distintos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 146,
+      "category": "investments",
+      "question": "O que é imposto retido na fonte em investimentos?",
+      "answer": "É quando a instituição retém e recolhe IR automaticamente. Você ainda informa na declaração para ajuste. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 147,
+      "category": "investments",
+      "question": "O que é come-cotas?",
+      "answer": "É uma antecipação semestral de IR em alguns fundos. Aparece no informe e afeta o imposto final. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 148,
+      "category": "investments",
+      "question": "Tenho só poupança: preciso declarar?",
+      "answer": "Depende dos critérios de obrigatoriedade (renda, bens, etc.). A poupança por si só não garante isenção de declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 149,
+      "category": "investments",
+      "question": "Como o Vida em Dia me ajuda com investimentos?",
+      "answer": "Ele te guia a cadastrar/integrar informes e cria um checklist de preenchimento para você não errar no programa da Receita. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 150,
+      "category": "investments",
+      "question": "Se eu não tiver informe, posso declarar mesmo assim?",
+      "answer": "É possível, mas aumenta risco de erro. O ideal é buscar informe/relatórios oficiais e guardar evidências. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "investimentos"
+      ],
+      "next_actions": [
+        "checklist_invest",
+        "upload_informe"
+      ]
+    },
+    {
+      "id": 151,
+      "category": "assets_capital_gain",
+      "question": "Preciso declarar meu carro?",
+      "answer": "Em geral, sim. Bens como veículos entram em 'Bens e Direitos' quando você é obrigado a declarar. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 152,
+      "category": "assets_capital_gain",
+      "question": "Preciso declarar minha moto?",
+      "answer": "Sim, como bem em 'Bens e Direitos', se você estiver obrigado a declarar. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 153,
+      "category": "assets_capital_gain",
+      "question": "Comprei um carro este ano: isso gera imposto?",
+      "answer": "Comprar não gera imposto de renda por si só, mas o bem deve ser declarado e a origem do dinheiro precisa fazer sentido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 154,
+      "category": "assets_capital_gain",
+      "question": "Vender carro gera imposto?",
+      "answer": "Pode gerar se houver ganho de capital (vendeu por mais do que custou), dependendo das regras e limites aplicáveis. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 155,
+      "category": "assets_capital_gain",
+      "question": "Como calculo ganho de capital?",
+      "answer": "Em geral, é o valor de venda menos o custo de aquisição (com possíveis ajustes). Se der positivo, pode haver imposto. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 156,
+      "category": "assets_capital_gain",
+      "question": "Vendi por menos do que paguei: pago imposto?",
+      "answer": "Em geral, não há imposto se não houve ganho. Ainda assim, a operação pode precisar ser informada. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 157,
+      "category": "assets_capital_gain",
+      "question": "Preciso declarar imóvel?",
+      "answer": "Em geral, sim. Imóveis entram em 'Bens e Direitos' com custo de aquisição. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 158,
+      "category": "assets_capital_gain",
+      "question": "Reforma aumenta o custo do imóvel?",
+      "answer": "Pode aumentar o custo declarado se houver documentação idônea, o que pode reduzir ganho de capital no futuro. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 159,
+      "category": "assets_capital_gain",
+      "question": "Financiamento de imóvel: como declarar?",
+      "answer": "Você declara o bem pelo que foi pago até o ano, e a dívida/financiamento conforme orientações do programa e informes do banco. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 160,
+      "category": "assets_capital_gain",
+      "question": "Consórcio de imóvel/carro: como declarar?",
+      "answer": "Normalmente você declara as parcelas pagas e, quando contemplado, passa a declarar o bem conforme regras. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 161,
+      "category": "assets_capital_gain",
+      "question": "Comprei imóvel e paguei ITBI/cartório: isso entra no custo?",
+      "answer": "Muitas despesas de aquisição podem compor o custo do bem se forem comprovadas, ajudando no ganho de capital futuramente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 162,
+      "category": "assets_capital_gain",
+      "question": "Vendi imóvel: sempre pago imposto?",
+      "answer": "Não necessariamente. Pode haver isenções e regras específicas. Quando há lucro e não há isenção, pode haver imposto. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 163,
+      "category": "assets_capital_gain",
+      "question": "Tenho imóvel alugado: além do aluguel, preciso declarar o imóvel?",
+      "answer": "Sim, o imóvel vai em bens e o aluguel em rendimentos tributáveis. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 164,
+      "category": "assets_capital_gain",
+      "question": "Tenho financiamentos: isso reduz imposto?",
+      "answer": "Não como dedução. Mas declarar corretamente bens e dívidas ajuda a coerência patrimonial. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 165,
+      "category": "assets_capital_gain",
+      "question": "Preciso declarar saldo de conta bancária?",
+      "answer": "Dependendo da obrigação e do saldo, pode ser recomendado declarar saldos em bens/direitos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 166,
+      "category": "assets_capital_gain",
+      "question": "Posso declarar PIX como bem?",
+      "answer": "PIX não é bem; é meio de transferência. O que importa é o saldo e origem dos recursos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 167,
+      "category": "assets_capital_gain",
+      "question": "Comprei criptomoedas: declaro como bem?",
+      "answer": "Em geral, sim, como bem/direito. Ganhos em vendas podem ser tributáveis. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 168,
+      "category": "assets_capital_gain",
+      "question": "Vendi cripto com lucro: pago imposto?",
+      "answer": "Pode pagar, como ganho de capital, conforme regras e limites. Registrar datas e valores é essencial. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 169,
+      "category": "assets_capital_gain",
+      "question": "Tenho bens no exterior: preciso declarar?",
+      "answer": "Em geral, sim. Bens no exterior exigem cuidado extra e documentação. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 170,
+      "category": "assets_capital_gain",
+      "question": "Como o Vida em Dia ajuda com bens e ganho de capital?",
+      "answer": "Ele registra o histórico (compra, custos, reformas, venda) e te mostra uma simulação de risco/imposto antes da venda. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "bens",
+        "ganho_capital"
+      ],
+      "next_actions": [
+        "cadastrar_bem",
+        "simular_ganho"
+      ]
+    },
+    {
+      "id": 171,
+      "category": "restitution_payment_2026",
+      "question": "Por que vou receber restituição?",
+      "answer": "Porque, após o ajuste anual, o imposto retido/pago foi maior do que o imposto devido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 172,
+      "category": "restitution_payment_2026",
+      "question": "Como a restituição é calculada?",
+      "answer": "É a diferença entre o imposto devido no ajuste anual e o imposto já retido/pago durante o ano. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 173,
+      "category": "restitution_payment_2026",
+      "question": "Quando a restituição cai na conta?",
+      "answer": "A Receita paga em lotes ao longo do ano após a declaração. A ordem pode considerar prioridades legais e data de envio. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 174,
+      "category": "restitution_payment_2026",
+      "question": "Quem tem prioridade na restituição?",
+      "answer": "Em geral, idosos, pessoas com deficiência/doenças graves, professores e outros critérios definidos pela Receita. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 175,
+      "category": "restitution_payment_2026",
+      "question": "Posso perder a restituição?",
+      "answer": "Você pode ter a restituição retida se cair em malha fina ou se houver pendências (dados bancários, inconsistências). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 176,
+      "category": "restitution_payment_2026",
+      "question": "Como escolho a conta para receber?",
+      "answer": "Você informa uma conta bancária em seu nome. É importante conferir agência/conta corretamente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 177,
+      "category": "restitution_payment_2026",
+      "question": "E se eu errar os dados bancários?",
+      "answer": "A restituição pode não ser paga até você corrigir. O ideal é revisar antes de enviar. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 178,
+      "category": "restitution_payment_2026",
+      "question": "Tenho imposto a pagar: como pago?",
+      "answer": "Em geral, por DARF gerado no sistema da Receita, podendo parcelar conforme regras do ano. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 179,
+      "category": "restitution_payment_2026",
+      "question": "Se eu não pagar o DARF, o que acontece?",
+      "answer": "Pode haver juros/multa e pendência fiscal. É importante respeitar prazos. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 180,
+      "category": "restitution_payment_2026",
+      "question": "Posso parcelar imposto devido?",
+      "answer": "Em muitos casos, sim, dentro das regras definidas pela Receita para o ano da declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 181,
+      "category": "restitution_payment_2026",
+      "question": "O que é imposto retido na fonte (IRRF)?",
+      "answer": "É o imposto que já foi descontado do seu rendimento (salário, alguns investimentos etc.) como antecipação. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 182,
+      "category": "restitution_payment_2026",
+      "question": "IRRF garante que não vou pagar mais?",
+      "answer": "Não. Se o IRRF foi menor que o devido, você pode ter imposto a pagar; se foi maior, pode ter restituição. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 183,
+      "category": "restitution_payment_2026",
+      "question": "Como sei se vou pagar ou receber?",
+      "answer": "Pelo ajuste anual: soma de rendas, menos deduções, aplica tabela e compara com o que já foi pago/retido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 184,
+      "category": "restitution_payment_2026",
+      "question": "Existe isenção anual em 2026?",
+      "answer": "Sim: em 2026 há isenção anual para quem ganhar até R$ 60 mil e um redutor gradual para rendas entre R$ 60.000,01 e R$ 88,2 mil. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 185,
+      "category": "restitution_payment_2026",
+      "question": "O que é o redutor gradual de 2026?",
+      "answer": "É um desconto no imposto apurado para uma faixa de renda anual intermediária. Ele não gera imposto negativo; só reduz até zerar o imposto devido. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 186,
+      "category": "restitution_payment_2026",
+      "question": "Se eu ganho R$ 5.500 por mês, vou pagar imposto?",
+      "answer": "Depende da renda anual, das deduções e do redutor de 2026. O app estima considerando suas informações. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 187,
+      "category": "restitution_payment_2026",
+      "question": "Dividendos acima de R$ 50 mil/mês por empresa têm imposto?",
+      "answer": "Sim. A partir de 2026, há retenção de 10% na fonte sobre o que exceder R$ 50.000 por mês pagos pela mesma pessoa jurídica para PF residente. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 188,
+      "category": "restitution_payment_2026",
+      "question": "Essa retenção de dividendos vale para empresas do Simples?",
+      "answer": "Sim. A regra de 2026 prevê retenção por todas as empresas, inclusive as optantes do Simples Nacional. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 189,
+      "category": "restitution_payment_2026",
+      "question": "Se eu recebo dividendos de duas empresas, soma para os R$ 50 mil?",
+      "answer": "A regra citada é por 'mesma pessoa jurídica' no mês. Então o limite é analisado por empresa pagadora. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 190,
+      "category": "restitution_payment_2026",
+      "question": "Como o app usa tudo isso sem depender do governo?",
+      "answer": "Ele usa suas entradas (rendas, comprovantes, informes) e regras versionadas de 2026 para estimar e preparar um checklist de declaração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "restituicao",
+        "pagamento",
+        "2026"
+      ],
+      "next_actions": [
+        "ver_meu_caso",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 191,
+      "category": "declaration_pj",
+      "question": "Como eu declaro o imposto de renda na prática?",
+      "answer": "Você usa o programa/app da Receita, preenche rendas, deduções, bens e conferências. O Vida em Dia te entrega tudo organizado por tópico. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 192,
+      "category": "declaration_pj",
+      "question": "Quais documentos eu preciso para declarar?",
+      "answer": "Informes de rendimentos (empresa/bancos/corretoras), comprovantes de saúde/educação, dados de bens/dívidas e CPF de dependentes. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 193,
+      "category": "declaration_pj",
+      "question": "Qual é o maior motivo de malha fina?",
+      "answer": "Inconsistência entre o que você declara e o que fontes pagadoras informam (rendimentos, IRRF, despesas médicas sem lastro). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 194,
+      "category": "declaration_pj",
+      "question": "Como reduzir risco de malha fina?",
+      "answer": "Usar informes oficiais, declarar tudo com consistência, guardar comprovantes e não lançar despesas reembolsadas como dedução. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 195,
+      "category": "declaration_pj",
+      "question": "Posso retificar depois?",
+      "answer": "Sim. Se encontrar erro, você pode enviar declaração retificadora para corrigir. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 196,
+      "category": "declaration_pj",
+      "question": "O que acontece se eu esquecer um informe?",
+      "answer": "Pode dar diferença e cair em malha. O ideal é usar checklist para garantir que nada ficou fora. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 197,
+      "category": "declaration_pj",
+      "question": "Como o Vida em Dia exporta para eu declarar?",
+      "answer": "Ele gera um resumo fiscal (PDF/CSV) com valores por categoria e uma lista de 'onde preencher' no programa da Receita. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 198,
+      "category": "declaration_pj",
+      "question": "Pessoa Jurídica também declara imposto de renda?",
+      "answer": "Sim. PJ tem obrigações próprias (IRPJ, CSLL, PIS/COFINS, ISS etc.) conforme regime: Simples, Lucro Presumido ou Lucro Real. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 199,
+      "category": "declaration_pj",
+      "question": "Qual a diferença entre IRPF e IRPJ?",
+      "answer": "IRPF é do cidadão (pessoa física). IRPJ é o imposto da empresa. No dia a dia, isso afeta pró-labore, lucro e a forma de apuração. Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    },
+    {
+      "id": 200,
+      "category": "declaration_pj",
+      "question": "O Vida em Dia vai fazer IRPJ também?",
+      "answer": "Pode, mas é um módulo separado: regimes, apuração de receitas/despesas e obrigações. A base 2026 do app pode começar com PF e o básico de PJ (pró-labore e distribuição). Se quiser, posso te ajudar a aplicar isso no seu caso usando o que você cadastrou no Vida em Dia.",
+      "tags": [
+        "declaracao",
+        "pj"
+      ],
+      "next_actions": [
+        "checklist",
+        "gerar_relatorio"
+      ]
+    }
+  ]
+}

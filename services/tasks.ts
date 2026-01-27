@@ -101,8 +101,9 @@ export const tasksService = {
      * Create a new task
      */
     createTask: async (task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Task | null> => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        const user = session.user;
 
         const household = await tasksService.getHousehold();
         if (!household) return null;
@@ -219,8 +220,9 @@ export const tasksService = {
     getHousehold: async (): Promise<Household | null> => {
         if (householdCache) return householdCache;
 
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        const user = session.user;
 
         let householdId: string | null = null;
 

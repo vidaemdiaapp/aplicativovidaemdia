@@ -1,5 +1,6 @@
 import React from 'react';
 import { Shield, TrendingUp, Info, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { IRPFEstimate } from '../types';
 
 interface Props {
@@ -8,6 +9,7 @@ interface Props {
 }
 
 export const IRPFEstimateCard: React.FC<Props> = ({ estimate, loading }) => {
+    const navigate = useNavigate();
     if (loading) {
         return (
             <div className="bg-slate-900 rounded-[32px] p-8 border border-white/5 animate-pulse">
@@ -94,7 +96,7 @@ export const IRPFEstimateCard: React.FC<Props> = ({ estimate, loading }) => {
                             </div>
                             <button
                                 className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
-                                onClick={() => alert('Sprint 12: Em breve você poderá adicionar suas despesas dedutíveis!')}
+                                onClick={() => navigate('/assistant', { state: { initialMessage: '🦁 O que eu posso abater no meu Imposto de Renda 2026 para pagar menos?' } })}
                             >
                                 O que posso deduzir?
                                 <ArrowRight className="w-4 h-4" />

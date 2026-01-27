@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Receipt, Calendar, FileText, ChevronRight, Download, Trash2, Heart, GraduationCap, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Receipt, Calendar, FileText, ChevronRight, Download, Trash2, Heart, GraduationCap, MoreHorizontal, AlertTriangle } from 'lucide-react';
 import { taxDeductionsService, TaxDeductibleExpense, DeductionType } from '../services/tax_deductions';
 import { useAuth } from '../hooks/useAuth';
 
@@ -17,7 +17,8 @@ export const FiscalFolderScreen: React.FC = () => {
 
     const loadDeductions = async () => {
         setLoading(true);
-        const data = await taxDeductionsService.getDeductions();
+        const currentYear = 2026;
+        const data = await taxDeductionsService.getDeductions(currentYear);
         setDeductions(data);
         setLoading(false);
     };
@@ -94,7 +95,7 @@ export const FiscalFolderScreen: React.FC = () => {
                 {/* Summary View */}
                 <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-2xl mb-8 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-bl-full"></div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Total Dedutível {new Date().getFullYear()}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">Total Dedutível 2026</p>
                     <h2 className="text-3xl font-black">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAmount)}</h2>
                     <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-emerald-400 bg-emerald-400/10 px-3 py-1.5 rounded-full w-fit">
                         <Download className="w-3 h-3" />

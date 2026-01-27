@@ -7,8 +7,9 @@ export const taxService = {
      */
     getIRPFEstimate: async (year: number = new Date().getFullYear()): Promise<IRPFEstimate | null> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return null;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return null;
+            const user = session.user;
 
             const { data, error } = await supabase
                 .rpc('get_irpf_estimate', {
@@ -29,8 +30,9 @@ export const taxService = {
      */
     updateTaxPreference: async (enabled: boolean): Promise<boolean> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+            const user = session.user;
 
             const { error } = await supabase
                 .from('profiles')
@@ -50,8 +52,9 @@ export const taxService = {
      */
     getUserTaxPreference: async (): Promise<boolean> => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return false;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+            const user = session.user;
 
             const { data, error } = await supabase
                 .from('profiles')
@@ -63,6 +66,28 @@ export const taxService = {
             return !!data?.estimate_ir;
         } catch (error) {
             return false;
+        }
+    },
+
+    /**
+     * Get Declaration Readiness checklist
+     */
+    getDeclarationReadiness: async (year: number = new Date().getFullYear()): Promise<any> => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return null;
+            const user = session.user;
+
+            const { data, error } = await supabase.rpc('get_declaration_readiness', {
+                target_user_id: user.id,
+                target_year: year
+            });
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('[TaxService] Failed to fetch readiness:', error);
+            return null;
         }
     }
 };

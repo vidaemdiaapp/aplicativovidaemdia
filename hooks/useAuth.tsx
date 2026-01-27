@@ -20,16 +20,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error) {
+                console.error('[Auth] Initial session error:', error);
+                setSession(null);
+                setUser(null);
+            } else {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
             setLoading(false);
         });
 
         // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log(`[Auth] Event: ${event}`);
+
+            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+                setSession(null);
+                setUser(null);
+            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
+
             setLoading(false);
         });
 

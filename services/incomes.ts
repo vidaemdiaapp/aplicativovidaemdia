@@ -20,8 +20,9 @@ export const incomesService = {
      */
     getIncomes: async (): Promise<Income[]> => {
         const household = await tasksService.getHousehold();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return [];
+        const user = session.user;
 
         const query = supabase
             .from('incomes')
@@ -46,8 +47,9 @@ export const incomesService = {
      * Upsert income for a user
      */
     upsertIncome: async (income: Partial<Income>): Promise<Income | null> => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return null;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        const user = session.user;
 
         const household = await tasksService.getHousehold();
 
@@ -96,8 +98,9 @@ export const incomesService = {
      * Request a change to partner's income
      */
     requestIncomeChange: async (partnerUserId: string, amount: number, type?: string): Promise<boolean> => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return false;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return false;
+        const user = session.user;
 
         const household = await tasksService.getHousehold();
         if (!household) return false;
@@ -134,8 +137,9 @@ export const incomesService = {
      * Get pending requests for the current user to approve
      */
     getPendingRequests: async (): Promise<any[]> => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return [];
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return [];
+        const user = session.user;
 
         const { data, error } = await supabase
             .from('income_change_requests')

@@ -82,6 +82,16 @@ export interface IRPFEstimate {
   estimated_tax_yearly: number;
   confidence: 'high' | 'medium' | 'low';
   tax_rate: number;
+  total_deductions_year?: number;
+  has_deductions?: boolean;
+}
+
+export interface IRPFReadiness {
+  status: 'ready' | 'almost' | 'incomplete';
+  completed_count: number;
+  total_count: number;
+  checklist: { id: string; label: string; status: 'done' | 'pending' }[];
+  last_update: string;
 }
 
 export interface Profile {
@@ -90,6 +100,54 @@ export interface Profile {
   avatar_url?: string;
   active_household_id?: string;
   estimate_ir?: boolean;
+  onboarding_step?: number;
+  onboarding_completed?: boolean;
+}
+
+export type AssistantIntent =
+  | 'FINANCIAL_STATUS'
+  | 'RISK_STATUS'
+  | 'STATUS_REPORT'
+  | 'GENERAL_HEALTH'
+  | 'ACTION_PROPOSAL'
+  | 'UPLOAD_INTENT'
+  | 'IR_BASICS'
+  | 'IR_INCOME'
+  | 'IR_DEDUCTIONS'
+  | 'IR_DEPENDENTS'
+  | 'IR_INVESTMENTS'
+  | 'IR_PATRIMONY'
+  | 'IR_REFUND'
+  | 'IR_CHECKLIST'
+  | 'TRAFFIC_ANALYSIS'
+  | 'UNKNOWN';
+
+export type OperationalAction =
+  | 'COMPLETE_TASK'
+  | 'DELEGATE_TASK'
+  | 'RESCHEDULE_TASK'
+  | 'ADD_AMOUNT'
+  | 'SAVE_DEDUCTION'
+  | 'ADD_TRAFFIC_FINE'
+  | 'ANALYZE_DEFENSE'
+  | 'GENERATE_TRAFFIC_DEFENSE'
+  | 'CANCEL_ACTION';
+
+export interface PendingAction {
+  id: string;
+  type: OperationalAction;
+  taskId: string;
+  payload: any;
+  summary: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface MessageAction {
+  label: string;
+  path?: string;
+  action?: OperationalAction;
+  task_id?: string;
 }
 
 export interface Message {
@@ -97,4 +155,18 @@ export interface Message {
   text: string;
   sender: 'user' | 'assistant';
   timestamp: Date;
+  actions?: MessageAction[];
+  pendingAction?: PendingAction;
+  suggestions?: { id: string; title: string }[];
+  intent?: AssistantIntent;
+  // Sprint 19 Extensions
+  is_cached?: boolean;
+  confidence_level?: 'low' | 'medium' | 'high';
+  sources?: { url: string; title: string; excerpt?: string }[];
+  answer_json?: {
+    domain: string;
+    key_facts: { label: string; value: string }[];
+    follow_up_questions?: string[];
+    suggested_next_actions?: string[];
+  };
 }
