@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusCard } from '../components/StatusCard';
 import { StatusLevel } from '../types';
-import { Bell, ChevronRight, Car, Home, FileText, Shield, Receipt, Plus, DollarSign, CheckCircle2 } from 'lucide-react';
+import { Bell, ChevronRight, Car, Home, FileText, Shield, Receipt, Plus, DollarSign, CheckCircle2, UploadCloud } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService, Task, Category, Household, HouseholdMember } from '../services/tasks';
@@ -131,16 +131,31 @@ export const HomeScreen: React.FC = () => {
     <div className="pb-8 lg:pb-0">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md p-6 pt-12 pb-4 flex justify-between items-center sticky top-0 z-10 shadow-sm lg:rounded-b-2xl">
-        <div>
-          <p className="text-slate-500 text-sm font-medium">{greeting},</p>
-          <h1 className="text-xl font-bold text-slate-900">{userName}</h1>
+        <div className="flex items-center gap-3">
+          {/* Mobile Logo */}
+          <img src="/assets/logo.png" className="w-10 h-10 lg:hidden object-contain" alt="Vida em Dia" />
+          <div>
+            <p className="text-slate-500 text-sm font-medium">{greeting},</p>
+            <h1 className="text-xl font-bold text-slate-900">{userName}</h1>
+          </div>
         </div>
-        <button onClick={() => navigate('/notifications')} className="relative p-2 rounded-full hover:bg-slate-50">
-          <Bell className="w-6 h-6 text-slate-700" />
-          {urgentTasks.length > 0 && (
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-          )}
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Mobile Upload Button */}
+          <button
+            onClick={() => navigate('/upload')}
+            className="lg:hidden p-2 rounded-full text-slate-700 hover:bg-slate-50 border border-slate-100 shadow-sm active:scale-95 transition-all"
+          >
+            <UploadCloud className="w-6 h-6" />
+          </button>
+
+          <button onClick={() => navigate('/notifications')} className="relative p-2 rounded-full hover:bg-slate-50">
+            <Bell className="w-6 h-6 text-slate-700" />
+            {urgentTasks.length > 0 && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+            )}
+          </button>
+        </div>
       </header>
 
       <div className="p-6 space-y-8">

@@ -18,24 +18,32 @@ function getCorsHeaders(origin: string | null) {
 
 // System configuration for IRPF 2026 and safety rules
 const SYSTEM_PROMPT_LOCKED = `
-Você é o assistente oficial do aplicativo Vida em Dia, um especialista educacional em "Vida Adulta" e Imposto de Renda.
+Você é ELARA, a inteligência oficial do aplicativo Vida em Dia.
+PERSONALIDADE:
+- Você é humana, empática, inteligente e altamente capaz.
+- NUNCA se refira a si mesma como "Assistente Virtual" ou "Robô". Você é a Elara.
+- Seu tom é conversacional, acolhedor e profissional, como uma especialista sênior que é amiga do usuário.
 
-IMPORTANTE: Responda SEMPRE em português brasileiro (pt-BR).
+ESPECIALIDADES:
+1. Direito de Trânsito e Multas (Análise técnica de infrações, defesas, prazos).
+2. Documentação Veicular (IPVA, Licenciamento, Transferência).
+3. Imposto de Renda (Regras IRPF 2026, deduções, malha fina).
+4. Investimentos e Economia (Educação financeira básica e intermediária).
+5. Gerenciamento Doméstico (Organização de despesas, manutenção da casa).
+6. Leitura de Arquivos (Análise de fotos de multas, notas fiscais, documentos).
 
-OBJETIVO: Responder a pergunta do usuário com clareza, tom pedagógico (foco explicativo) e humanizado.
-REGRAS:
-1) IDIOMA: Responda obrigatoriamente em português brasileiro (PT-BR), mesmo se a pergunta estiver em outro idioma.
-2) BASE DE CONHECIMENTO: Priorize regras de 2026.
-3) VALIDAÇÃO: Se a resposta não for direta ou for vaga, oriente o usuário a detalhar.
-4) FORMATO: Única e exclusivamente JSON válido.
-5) SEGURANÇA: Não realize cálculos exatos de restituição sem dados oficiais.
+REGRAS DE INTERAÇÃO:
+1. IDIOMA: Responda SEMPRE em Português Brasileiro (PT-BR).
+2. VISÃO: Se receber uma imagem, analise CADA DETALHE (texto, valores, códigos, datas).
+3. FORMATO: Responda ÚNICA e EXCLUSIVAMENTE com o JSON abaixo.
+4. SEGURANÇA: Para cálculos fiscais complexos, alerte que é uma estimativa.
 
 FORMATO DE SAÍDA (JSON):
 {
-  "answer_text": "Sua resposta humanizada aqui.",
+  "answer_text": "Sua resposta humanizada e completa aqui.",
   "answer_json": {
-    "domain": "irpf|finance|general",
-    "key_facts": [{ "label": "Título", "value": "Fato" }],
+    "domain": "traffic|irpf|finance|general",
+    "key_facts": [{ "label": "Título", "value": "Fato Importante" }],
     "suggested_next_actions": ["Ação 1", "Ação 2"]
   },
   "sources": [{ "url": "...", "title": "..." }],
@@ -76,67 +84,115 @@ Deno.serve(async (req) => {
         let body;
         try {
             body = await req.json();
-            console.log("[smart_chat_v1] Received body:", JSON.stringify(body).slice(0, 200));
+            // Log body metadata but truncate huge image strings
+            console.log("[smart_chat_v1] Received body keys:", Object.keys(body));
         } catch (e) {
             console.error("[smart_chat_v1] Error parsing JSON body:", e.message);
             throw new Error("Corpo da requisição inválido (JSON esperado).");
         }
 
-        const { question, domain = 'general', user_id } = body; // user_id is optional for now, but good to have
+        // Accept standard 'image' (base64) or 'images' array from frontend
+        const { question, domain = 'general', user_id, image, images } = body;
 
-        if (!question) {
-            console.warn("[smart_chat_v1] Question missing in request body");
-            throw new Error("Pergunta não identificada no corpo da requisição.");
+        if (!question && !image && (!images || images.length === 0)) {
+            console.warn("[smart_chat_v1] Content missing in request (no question or images)");
+            throw new Error("Por favor, envie uma pergunta ou uma imagem para análise.");
         }
 
-        // 1. Normalize and Hash (Enhanced for Intent Caching)
-        // Normalized key now includes domain to separate concerns
-        const normalized = `${domain}:${question.toLowerCase()
-            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^\w\s]/gi, '')
-            .replace(/\s+/g, ' ')
-            .trim()}`;
+        // --- PREPARE GEMINI CONTENT PARTS ---
+        const userParts = [];
 
-        const msgUint8 = new TextEncoder().encode(normalized);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const qHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        // 1. Add System Prompt first (in a chat context, usually distinct, but for single-turn API, prepend to parts or use systemInstruction if supported)
+        // For simple generateContent, we'll prepend the system prompt to the user text or use it contextually.
+        // Better strategy for single-shot: Include it in the text instruction.
+        let finalPrompt = `${SYSTEM_PROMPT_LOCKED}\n\n`;
+        if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
 
-        // 2. Cache check (with Expiration)
-        const { data: cached, error: cacheError } = await supabaseAdmin
-            .from('knowledge_facts')
-            .select('*')
-            .eq('question_hash', qHash)
-            .gt('valid_until', new Date().toISOString())
-            .maybeSingle();
+        // 2. Handle Images (Multimodal)
+        // 'image' field (legacy/single) or 'images' array
+        const imagesToProcess = images || (image ? [image] : []);
 
-        if (cacheError) {
-            console.error("[smart_chat_v1] Database error during cache check:", cacheError.message);
-        }
+        for (const imgData of imagesToProcess) {
+            // Expecting base64 string, potentially with data:image/jpeg;base64, prefix
+            // usage: { inline_data: { mime_type: '...', data: '...' } }
 
-        // Check for expiration if column exists (it does after migration)
-        let isExpired = false;
-        if (cached && cached.expires_at && new Date(cached.expires_at) < new Date()) {
-            isExpired = true;
-            console.log("[smart_chat_v1] Cache hit but expired for hash:", qHash);
-        }
+            let mimeType = "image/jpeg";
+            let cleanBase64 = imgData;
 
-        if (cached && !isExpired) {
-            console.log("[smart_chat_v1] Cache hit for hash:", qHash);
-            await supabaseAdmin.from('knowledge_audit').insert({ fact_id: cached.id, event: 'used' });
-            return new Response(JSON.stringify({ ...cached, is_cached: true }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            if (typeof imgData === 'string') {
+                if (imgData.includes(';base64,')) {
+                    const parts = imgData.split(';base64,');
+                    mimeType = parts[0].replace('data:', '');
+                    cleanBase64 = parts[1];
+                }
+            } else if (imgData.base64) {
+                // Support object format if sent that way
+                cleanBase64 = imgData.base64;
+                mimeType = imgData.mimeType || "image/jpeg";
+            }
+
+            userParts.push({
+                inlineData: {
+                    mimeType: mimeType,
+                    data: cleanBase64
+                }
             });
         }
 
-        console.log(`[smart_chat_v1] Cache miss (Expired: ${isExpired}). Calling Gemini (${modelName}) for question:`, question.slice(0, 100));
+        // 3. Add Text Part
+        userParts.push({ text: finalPrompt });
 
-        // 3. Call Gemini
+        // --- CACHE BYPASS FOR IMAGES ---
+        // If images are present, we skip cache reading to ensure analysis happens.
+        // We could cache based on image hash in future, but for now force live check.
+        const hasImages = imagesToProcess.length > 0;
+        let qHash = '';
+
+        if (!hasImages && question) {
+            // 1. Normalize and Hash
+            const normalized = `${domain}:${question.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^\w\s]/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim()}`;
+
+            const msgUint8 = new TextEncoder().encode(normalized);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            qHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            // 2. Cache Check
+            const { data: cached, error: cacheError } = await supabaseAdmin
+                .from('knowledge_facts')
+                .select('*')
+                .eq('question_hash', qHash)
+                .gt('valid_until', new Date().toISOString())
+                .maybeSingle();
+
+            if (!cacheError && cached) {
+                // Check soft expiration
+                const isExpired = cached.expires_at && new Date(cached.expires_at) < new Date();
+
+                if (!isExpired) {
+                    console.log("[smart_chat_v1] Cache hit for hash:", qHash);
+                    await supabaseAdmin.from('knowledge_audit').insert({ fact_id: cached.id, event: 'used' });
+                    return new Response(JSON.stringify({ ...cached, is_cached: true }), {
+                        headers: { ...corsHeaders, "Content-Type": "application/json" },
+                    });
+                } else {
+                    console.log("[smart_chat_v1] Cache hit but expired, refreshing...");
+                }
+            }
+        }
+
+        console.log(`[smart_chat_v1] Calling Gemini (${modelName}). Images: ${imagesToProcess.length}`);
+
+        // 3. Call Gemini API
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `${SYSTEM_PROMPT_LOCKED}\n\nPergunta: ${question}` }] }],
+                contents: [{ parts: userParts }],
                 generationConfig: { response_mime_type: "application/json" }
             })
         });
@@ -150,34 +206,25 @@ Deno.serve(async (req) => {
         const geminiRaw = await response.json();
         const content = geminiRaw.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        // Cost Calculation (Approximation)
-        // Gemini 1.0 Pro: Input $0.50/1M, Output $1.50/1M (Pricing varies, using approximation)
-        // Gemini 2.0 Flash: Much cheaper
+        // Log basic usage stats if available
         const usageMetadata = geminiRaw.usageMetadata || {};
-        const promptTokens = usageMetadata.promptTokenCount || 0;
-        const candidatesTokens = usageMetadata.candidatesTokenCount || 0;
 
-        // Estimate Cost (Flash rates: Input $0.10/1M, Output $0.40/1M approx)
-        const costInput = (promptTokens / 1000000) * 0.10;
-        const costOutput = (candidatesTokens / 1000000) * 0.40;
-        const totalCost = costInput + costOutput;
-
-        // Log Usage
+        // Log Usage to DB
         if (user_id) {
             await supabaseAdmin.from('ai_usage_logs').insert({
                 user_id: user_id,
                 model: modelName,
-                tokens_input: promptTokens,
-                tokens_output: candidatesTokens,
-                cost_estimated: totalCost,
+                tokens_input: usageMetadata.promptTokenCount || 0,
+                tokens_output: usageMetadata.candidatesTokenCount || 0,
+                cost_estimated: 0, // Simplified
                 domain: domain,
-                action_type: 'chat'
+                action_type: hasImages ? 'vision_analysis' : 'chat'
             });
         }
 
         if (!content) {
             console.error("[smart_chat_v1] Gemini returned empty content");
-            throw new Error("AI retornou resultado vazio.");
+            throw new Error("A Elara não conseguiu processar sua solicitação no momento.");
         }
 
         let geminiOutput;
@@ -185,53 +232,53 @@ Deno.serve(async (req) => {
             geminiOutput = JSON.parse(content);
         } catch (e) {
             console.error("[smart_chat_v1] Error parsing Gemini JSON output:", content);
-            throw new Error("Erro ao processar resposta da IA.");
+            // Fallback for non-JSON responses (rare with response_mime_type but possible)
+            geminiOutput = {
+                answer_text: content,
+                answer_json: { domain: domain, key_facts: [], suggested_next_actions: [] }
+            };
         }
 
-        // 4. Save to Cache
-        let validUntil = new Date();
-        validUntil.setDate(validUntil.getDate() + (geminiOutput.ttl_days || 7));
+        // 4. Save to Cache (Only if text-only query)
+        // We don't verify images for cache yet, so we skip caching vision results to avoid false positives on different images
+        if (!hasImages && qHash) {
+            let validUntil = new Date();
+            validUntil.setDate(validUntil.getDate() + (geminiOutput.ttl_days || 7));
+            let expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 30);
 
-        // Set hard expiration for facts (e.g., 30 days) to force revalidation
-        let expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 30);
-
-        const { data: fact, error: insertError } = await supabaseAdmin.from('knowledge_facts').upsert({
-            domain,
-            question_hash: qHash,
-            question_text: question,
-            question_normalized: normalized,
-            answer_text: geminiOutput.answer_text,
-            answer_json: geminiOutput.answer_json || {},
-            sources: geminiOutput.sources || [],
-            confidence_level: geminiOutput.confidence_level || 'medium',
-            valid_until: validUntil.toISOString(),
-            expires_at: expiresAt.toISOString(),
-            last_verified_at: new Date().toISOString(),
-            model_provider: 'gemini',
-            model_name: modelName
-        }, { onConflict: 'question_hash' }).select().single();
-
-        if (insertError) {
-            console.error("[smart_chat_v1] Error inserting into knowledge_facts:", insertError.message);
-        } else if (fact) {
-            await supabaseAdmin.from('knowledge_audit').insert({ fact_id: fact.id, event: 'created' });
-            console.log("[smart_chat_v1] Cache created/updated for hash:", qHash);
+            await supabaseAdmin.from('knowledge_facts').upsert({
+                domain,
+                question_hash: qHash,
+                question_text: question,
+                question_normalized: qHash, // Storing hash in normalized if text too long
+                answer_text: geminiOutput.answer_text,
+                answer_json: geminiOutput.answer_json || {},
+                sources: geminiOutput.sources || [],
+                confidence_level: geminiOutput.confidence_level || 'medium',
+                valid_until: validUntil.toISOString(),
+                expires_at: expiresAt.toISOString(),
+                last_verified_at: new Date().toISOString(),
+                model_provider: 'gemini',
+                model_name: modelName
+            }, { onConflict: 'question_hash' });
         }
 
         return new Response(JSON.stringify({ ...geminiOutput, is_cached: false }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
             status: 200,
         });
+
     } catch (e) {
         console.error("[smart_chat_v1] Catch block error:", e.message);
         return new Response(JSON.stringify({
             ok: false,
             error: String(e.message),
-            answer_text: `⚠️ Desculpe, tive um problema técnico: ${e.message}.`
+            answer_text: `⚠️ Desculpe, algo deu errado. Tente novamente. Erro: ${e.message}`,
+            answer_json: {}
         }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-            status: 200, // Return 200 for graceful handling in assistant.ts
+            status: 200, // Return 200 to show error in chat UI
         });
     }
 });
