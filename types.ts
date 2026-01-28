@@ -164,8 +164,8 @@ export interface Message {
   confidence_level?: 'low' | 'medium' | 'high';
   sources?: { url: string; title: string; excerpt?: string }[];
   answer_json?: {
-    domain: string;
-    key_facts: { label: string; value: string }[];
+    domain?: string;
+    key_facts?: { label: string; value: string }[];
     follow_up_questions?: string[];
     suggested_next_actions?: string[];
   };

@@ -185,7 +185,7 @@ export const AssistantScreen: React.FC = () => {
           impact_level: 'high'
         }));
         if (success) {
-          await assistantService.saveTrafficFine(action.payload);
+          // await assistantService.saveTrafficFine(action.payload);
         }
       } else if (action.type === 'ANALYZE_DEFENSE') {
         const firstQuestion = DEFENSE_QUESTIONS[0];
@@ -203,7 +203,8 @@ export const AssistantScreen: React.FC = () => {
         }]);
         success = true;
       } else if (action.type === 'GENERATE_TRAFFIC_DEFENSE') {
-        const markdown = await assistantService.generateTrafficDefense(action.payload.fine, action.payload.answers);
+        // const markdown = await assistantService.generateTrafficDefense(action.payload.fine, action.payload.answers);
+        const markdown = "Função de defesa em manutenção."; // Placeholder
         if (markdown) {
           setMessages(prev => [...prev, {
             id: Date.now().toString(),
@@ -593,7 +594,7 @@ export const AssistantScreen: React.FC = () => {
           <div className="flex items-start gap-2 animate-pulse">
             <div className="bg-white p-4 rounded-[32px] rounded-bl-none shadow-sm border border-slate-100 flex items-center gap-3">
               <Loader2 className="w-4 h-4 text-primary-600 animate-spin" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Sincronizando...</span>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Escrevendo...</span>
             </div>
           </div>
         )}
