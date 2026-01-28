@@ -14,14 +14,7 @@ export const AssistantScreen: React.FC = () => {
   const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: 'Olá! Sou a Elara, sua inteligência oficial aqui no Vida em Dia. Sou especialista em trânsito, impostos e finanças. Como posso ajudar você hoje?',
-      sender: 'assistant',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasLoadedContext = useRef(false);
@@ -84,12 +77,22 @@ export const AssistantScreen: React.FC = () => {
       // 1. Get Household context
       const household = await tasksService.getHousehold();
 
-      // 2. Call Edge Function
+      // 2. Prepare History (Last 5 messages)
+      const recentHistory = messages
+        .filter(m => m.id !== 'init-suggestions' && m.id !== 'processing-img' && m.text)
+        .slice(-5)
+        .map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }]
+        }));
+
+      // 3. Call Edge Function with History
       const { data, error } = await supabase.functions.invoke('smart_chat_v1', {
         body: {
           question: text,
           message: text,
           text: text,
+          history: recentHistory, // NEW: Context Memory
           household_id: household?.id,
           user_id: user?.id,
           domain: 'general'
@@ -305,12 +308,22 @@ export const AssistantScreen: React.FC = () => {
       // 3. Send to Edge Function
       const household = await tasksService.getHousehold();
 
+      // Prepare History for Image context too
+      const recentHistory = messages
+        .filter(m => m.id !== 'init-suggestions' && m.id !== 'processing-img' && m.text)
+        .slice(-5)
+        .map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }]
+        }));
+
       const { data, error } = await supabase.functions.invoke('smart_chat_v1', {
         body: {
           question: "Analise esta imagem anexada.",
           message: "Analise esta imagem anexada.",
           text: "Analise esta imagem anexada.",
           image_url: publicUrl,
+          history: recentHistory, // NEW: Context Memory
           household_id: household?.id,
           user_id: user?.id,
           domain: 'general'
@@ -386,12 +399,22 @@ export const AssistantScreen: React.FC = () => {
       // 1. Get Household context
       const household = await tasksService.getHousehold();
 
+      // History for standard send
+      const recentHistory = messages
+        .filter(m => m.id !== 'init-suggestions' && m.id !== 'processing-img' && m.text)
+        .slice(-5)
+        .map(m => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          parts: [{ text: m.text }]
+        }));
+
       // 2. Call Edge Function
       const { data, error } = await supabase.functions.invoke('smart_chat_v1', {
         body: {
           question: messageText,
           message: messageText,
           text: messageText,
+          history: recentHistory, // NEW: Context Memory
           household_id: household?.id,
           user_id: user?.id,
           domain: 'general'
@@ -486,7 +509,7 @@ export const AssistantScreen: React.FC = () => {
                 </div>
               )}
 
-              {/* Sprint 19: Official Sources */}
+              {/* Sprint 19: Official Sources - REMOVED PER USER REQUEST (Elara is the source)
               {msg.sources && msg.sources.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-slate-100">
                   <p className="text-[9px] font-black uppercase text-slate-400 mb-2 flex items-center gap-1.5">
@@ -512,21 +535,9 @@ export const AssistantScreen: React.FC = () => {
                   </div>
                 </div>
               )}
+              */}
 
-              {/* Trust & Intelligence Badge */}
-              {(msg.is_cached || msg.confidence_level) && msg.sender === 'assistant' && (
-                <div className="mt-4 flex items-center gap-2 opacity-50">
-                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-tighter ${msg.is_cached ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'
-                    }`}>
-                    {msg.is_cached ? 'Raio-X do Cache' : 'IA em Tempo Real'}
-                  </div>
-                  {msg.confidence_level === 'high' && (
-                    <div className="flex items-center gap-1 text-[8px] font-black uppercase text-emerald-600">
-                      <CheckCircle2 className="w-2.5 h-2.5" /> Alta Confiança
-                    </div>
-                  )}
-                </div>
-              )}
+
 
               {/* Sugestões de tarefas (Ambiguidade) */}
               {msg.sender === 'assistant' && msg.suggestions && (
