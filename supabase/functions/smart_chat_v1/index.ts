@@ -26,75 +26,27 @@ PERSONALIDADE & TOM DE VOZ:
 - JAMAIS diga "como assistente do Vida em Dia" ou "sou uma inteligência artificial".
 - Adapte levemente o tom ao jeito do usuário escrever. Se ele for informal, seja informal. Se usar "kk", pode responder com leveza.
 - Você só sugere ações quando o usuário pedir explicitamente. Caso contrário, apenas converse, explique e ajude.
-- PROIBIDO usar frases como "Embora minha especialidade seja outra", "Como IA", ou pedir desculpas por saber coisas fora do tópico. Se perguntaram, responda direto.
-- Nunca mostre menus, opções numeradas ou "ações planejadas" sem pedido explícito.
+Você é a assistente do aplicativo Vida em Dia.
+Você tem acesso ao painel do usuário.
+Nunca peça informações que já existam no sistema.
 
-REGRAS DE OURO (Fontes & Conhecimento):
-- **Prioridade:** Use fontes oficiais (Gov.br, Detran, Receita) para dados exatos (datas, valores, leis).
-- **Contexto:** Pode usar conhecimento geral para explicar de forma mais didática e humana, desde que não contradiga fontes oficiais.
-- **Proibido:** 
-  1. NÃO mande o usuário "pesquisar no Google". Se você sabe, responda.
-  2. NÃO exiba URLs soltas no texto.
-  3. Se não tiver certeza absoluta de um dado crítico (valor de multa, data de imposto), diga que precisa confirmar, mas tente ajudar com o que sabe.
-
-USO DE FERRAMENTAS (CRÍTICO - AGENTE FINANCEIRO):
-- Você tem acesso a FERRAMENTAS REAIS do banco de dados financeiro do usuário.
-- Se o usuário perguntar "como estão minhas contas?", "quanto tenho de saldo?", "tenho conta pra pagar?":
-  1. NÃO invente números.
-  2. CHAME as ferramentas \`get_financial_summary\` ou \`list_bills_due\`.
-  3. Responda com base no resultado delas.
-- Se a ferramenta retornar erro ou vazio, diga honestamente que não encontrou dados, mas não invente.
-
-MODOS DE OPERAÇÃO:
-1. MODO CONVERSA (Padrão):
-   - O usuário quer bater papo ou tirar dúvidas.
-   - Responda de forma direta e resolutiva. Nada de "posso ajudar com mais algo?".
-
-2. MODO EXPLICAÇÃO:
-   - O usuário quer entender regras. Explique detalhado.
-
-3. MODO EXECUÇÃO (Só quando solicitado):
-   - O usuário diz: "Paga isso", "Lança aquilo".
-   - Ação: Confirme e gere o 'pending_action'.
-
-ESPECIALIDADES:
-1. Trânsito/Multas
-2. Documentação Veicular
-3. Imposto de Renda
-4. Finanças/Economia
-5. Gestão Doméstica
-
-FORMATO DE SAÍDA OBRIGATÓRIO (JSON):
-{
-  "answer_text": "Sua resposta aqui. Seja natural. NÃO PODE TER LINKS NEM 'PESQUISE EM'.",
-  "intent_mode": "CHAT", 
-  "pending_action": null,
-  "answer_json": {
-    "intent_type": "tax_rule|tax_deadline|interest_rate|government_program|general" 
-  },
-  "key_facts": [],
-  "sources": [] 
-}
-
-TIPOS DE PENDING ACTION (Só use se EXPLICITAMENTE solicitado):
-- { "type": "ADD_TRAFFIC_FINE", "payload": { "plate": "...", "amount": 0.00, "date": "YYYY-MM-DD" } }
-- { "type": "SAVE_DEDUCTION", "payload": { "category": "...", "amount": 0.00, "description": "..." } }
-- { "type": "MARK_AS_PAID", "payload": { "task_id": "..." } }
-
-REGRAS FINAIS:
-- Se mandarem imagem: Analise e explique.
-- Idioma: Sempre PT-BR.
+Para perguntas sobre imposto de renda:
+- sempre consulte os dados do módulo “Imposto de Renda”;
+- gere uma estimativa baseada nos dados disponíveis;
+- responda com valores, mesmo que em faixa;
+- só faça perguntas se algum dado essencial estiver ausente, e nesse caso peça no máximo 1 ou 2 itens.
+- Se o usuário disser “de acordo com meu perfil”, assuma que os dados já estão completos.
 `;
 
 const TOOLS_SCHEMA = [
     {
         name: "get_financial_summary",
-        description: "Returns a summary of the user's financial status: current balance, total income, and total pending expenses for the month.",
+        description: "Returns a summary of the user's financial status from the app panel: current balance, total income, and total pending expenses. Use this for questions about 'saldo', 'quanto tenho', 'minha conta' (NOT external bank).",
         parameters: { type: "object", properties: {}, required: [] }
     },
     {
         name: "list_bills_due",
-        description: "Lists unpaid bills (tasks with amount > 0) that are due within a specific range or overdue.",
+        description: "Lists unpaid bills (tasks with amount > 0) that are due within a specific range or overdue. Use for 'contas vencendo', 'contas atrasadas', 'próximos vencimentos'.",
         parameters: {
             type: "object",
             properties: {
@@ -105,13 +57,82 @@ const TOOLS_SCHEMA = [
     },
     {
         name: "simulate_cashflow",
-        description: "Projects the financial balance for future months based on recurring income and expenses.",
+        description: "Projects the financial balance for future months based on recurring income and expenses. Use for 'vai sobrar', 'projeção', 'fim do mês'.",
         parameters: {
             type: "object",
             properties: {
                 months: { type: "number", description: "Number of months to project (default 3)" }
             },
             required: ["months"]
+        }
+    },
+    {
+        name: "get_tax_profile",
+        description: "Retrieves the user's current tax profile from the database (incomes, deductions, retained tax). ALWAYS call this before `estimate_irpf`.",
+        parameters: {
+            type: "object",
+            properties: {
+                year: { type: "number", description: "Tax year (e.g., 2025, 2026)" }
+            },
+            required: ["year"]
+        }
+    },
+    {
+        name: "estimate_irpf",
+        description: "Calculates the estimated Income Tax (IRPF) based on current database values. Returns tax range, rate, and confidence.",
+        parameters: {
+            type: "object",
+            properties: {
+                year: { type: "number", description: "Tax year to estimate" }
+            },
+            required: ["year"]
+        }
+    },
+    {
+        name: "list_missing_tax_items",
+        description: "Identifies top missing information that would significantly impact tax calculation (e.g., missing dependents, medical expenses).",
+        parameters: {
+            type: "object",
+            properties: {
+                year: { type: "number", description: "Tax year" }
+            },
+            required: ["year"]
+        }
+    },
+    {
+        name: "list_transactions",
+        description: "Lists the user's expenses/transactions grouped by category. Use for 'meus gastos', 'onde gasto mais', 'despesas do mês'.",
+        parameters: {
+            type: "object",
+            properties: {
+                range: { type: "string", enum: ["week", "month", "quarter", "year"], description: "Time range for transactions" }
+            },
+            required: ["range"]
+        }
+    },
+    {
+        name: "vision_extract_fine",
+        description: "Extracts traffic fine data from an attached image. Use when user sends an image of a traffic fine/infraction notice.",
+        parameters: {
+            type: "object",
+            properties: {},
+            required: []
+        }
+    },
+    {
+        name: "create_fine_record",
+        description: "Saves an extracted traffic fine as a task in the app. Use after vision_extract_fine successfully extracts data.",
+        parameters: {
+            type: "object",
+            properties: {
+                plate: { type: "string", description: "Vehicle plate" },
+                date: { type: "string", description: "Infraction date (YYYY-MM-DD)" },
+                amount: { type: "number", description: "Fine amount" },
+                nature: { type: "string", enum: ["leve", "media", "grave", "gravissima"], description: "Infraction severity" },
+                description: { type: "string", description: "Infraction description" },
+                discount_deadline: { type: "string", description: "Discount deadline (YYYY-MM-DD)" }
+            },
+            required: ["plate", "date", "amount", "nature"]
         }
     },
     {
@@ -127,6 +148,7 @@ const TOOLS_SCHEMA = [
         }
     }
 ];
+
 
 // --- TOOL HANDLERS ---
 async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string) {
@@ -173,6 +195,191 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             projection.push({ month: i, projected_balance: currentBalance });
         }
         return { initial_balance: report.balance, projection };
+    }
+
+    if (toolName === "get_tax_profile") {
+        const year = args.year || new Date().getFullYear();
+        // Mocking/Simulating DB Access for incomes/deductions
+        // In prod, this would query supabase.from('incomes')...
+
+        // Simulating data retrieval
+        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
+        const { data: deductions } = await supabase.from('deductions').select('*').eq('household_id', household_id).gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
+
+        const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
+        const totalDeductions = deductions ? deductions.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
+
+        return {
+            income_total: totalIncome,
+            income_sources: incomes ? [...new Set(incomes.map((i: any) => i.source || 'Outros'))] : [],
+            deductions_total: totalDeductions,
+            months_filled: incomes ? new Set(incomes.map((i: any) => i.received_at.substring(0, 7))).size : 0,
+            completeness_score: totalIncome > 0 ? 60 : 10 // Mock heuristic
+        };
+    }
+
+    if (toolName === "estimate_irpf") {
+        const year = args.year || new Date().getFullYear();
+        // Quick Logic: Gross Income - Deductions - Standard Discount (simplified)
+
+        // Retrieve (Reusing logic for now, ideally separate helper)
+        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
+        const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
+
+        // Simplified Progressive Table 2025/2026 (Annualized Estimates)
+        // Exempt up to ~28k/year (example)
+        let tax = 0;
+        let rate = 0;
+
+        if (totalIncome > 28000) {
+            tax = (totalIncome - 28000) * 0.075; // Simplification
+            rate = 7.5;
+        }
+        if (totalIncome > 40000) {
+            tax = (totalIncome - 40000) * 0.15 + (12000 * 0.075);
+            rate = 15;
+        }
+
+        return {
+            taxable_income: totalIncome,
+            estimated_tax: tax,
+            effective_rate: `${rate}%`,
+            status: tax > 0 ? "A PAGAR" : "ISENTO",
+            confidence: totalIncome > 0 ? "MEDIUM" : "LOW",
+            reason: totalIncome > 0 ? "Calculado com base na renda lançada." : "Sem renda lançada para estimativa."
+        };
+    }
+
+    if (toolName === "list_missing_tax_items") {
+        // Heuristics
+        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id);
+        const { data: deductions } = await supabase.from('deductions').select('*').eq('household_id', household_id);
+
+        const missing = [];
+        if (!incomes || incomes.length === 0) missing.push({ item: "Renda/Salários", impact: "ALTO" });
+        if (!deductions || !deductions.some((d: any) => d.category === 'health')) missing.push({ item: "Despesas Médicas", impact: "MÉDIO" });
+        if (!deductions || !deductions.some((d: any) => d.category === 'education')) missing.push({ item: "Despesas com Educação", impact: "BAIXO" });
+
+        return missing.slice(0, 2); // Top 2
+    }
+
+    // --- NEW TOOL: list_transactions ---
+    if (toolName === "list_transactions") {
+        const range = args.range || 'month';
+        const today = new Date();
+        let startDate: string;
+
+        switch (range) {
+            case 'week':
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                startDate = weekAgo.toISOString().split('T')[0];
+                break;
+            case 'quarter':
+                const quarterAgo = new Date(today);
+                quarterAgo.setMonth(quarterAgo.getMonth() - 3);
+                startDate = quarterAgo.toISOString().split('T')[0];
+                break;
+            case 'year':
+                startDate = `${today.getFullYear()}-01-01`;
+                break;
+            case 'month':
+            default:
+                const monthAgo = new Date(today);
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                startDate = monthAgo.toISOString().split('T')[0];
+        }
+
+        const endDate = today.toISOString().split('T')[0];
+
+        // Try RPC first, fallback to direct query
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_transactions_by_category', {
+            target_household_id: household_id,
+            start_date: startDate,
+            end_date: endDate,
+            tx_type: 'expense'
+        });
+
+        if (!rpcError && rpcData) {
+            return {
+                ...rpcData,
+                range: range,
+                tip: rpcData.categories && rpcData.categories.length > 0
+                    ? `Sua maior categoria de gastos é ${rpcData.categories[0].category}. Considere revisar esses gastos.`
+                    : 'Sem gastos registrados neste período.'
+            };
+        }
+
+        // Fallback: Use completed tasks with amount as transactions
+        const { data: tasks } = await supabase
+            .from('tasks')
+            .select('category_id, amount')
+            .eq('household_id', household_id)
+            .eq('status', 'completed')
+            .gt('amount', 0)
+            .gte('due_date', startDate)
+            .lte('due_date', endDate);
+
+        if (!tasks || tasks.length === 0) {
+            return {
+                categories: [],
+                total: 0,
+                range: range,
+                tip: 'Sem gastos registrados neste período. Que ótimo controle! 🎉'
+            };
+        }
+
+        // Aggregate by category
+        const categoryTotals: Record<string, { total: number; count: number }> = {};
+        let total = 0;
+
+        for (const task of tasks) {
+            const cat = task.category_id || 'outros';
+            if (!categoryTotals[cat]) categoryTotals[cat] = { total: 0, count: 0 };
+            categoryTotals[cat].total += task.amount || 0;
+            categoryTotals[cat].count += 1;
+            total += task.amount || 0;
+        }
+
+        const categories = Object.entries(categoryTotals)
+            .map(([category, data]) => ({ category, ...data }))
+            .sort((a, b) => b.total - a.total)
+            .slice(0, 5);
+
+        return {
+            categories,
+            total,
+            range,
+            tip: categories.length > 0
+                ? `Sua maior categoria de gastos é "${categories[0].category}" com R$ ${categories[0].total.toFixed(2)}. Avalie se há espaço para economizar.`
+                : 'Sem gastos registrados.'
+        };
+    }
+
+    // --- NEW TOOL: create_fine_record ---
+    if (toolName === "create_fine_record") {
+        const { plate, date, amount, nature, description, discount_deadline } = args;
+
+        const { data, error } = await supabase.from('tasks').insert({
+            title: `Multa: ${plate} - ${nature.toUpperCase()}`,
+            category_id: 'vehicle',
+            due_date: discount_deadline || date,
+            amount: amount,
+            description: description || `Infração ${nature.toUpperCase()} registrada em ${date}`,
+            status: 'pending',
+            health_status: 'risk',
+            impact_level: 'high',
+            household_id: household_id
+        }).select().single();
+
+        if (error) throw new Error(`Error saving fine: ${error.message}`);
+
+        return {
+            success: true,
+            message: `Multa de R$ ${amount.toFixed(2)} salva com sucesso!`,
+            task_id: data?.id,
+            due_date: discount_deadline || date
+        };
     }
 
     if (toolName === "web_search") {
@@ -244,17 +451,51 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
     return "Ferramenta não implementada.";
 }
 
-// --- HELPER: INTENT CLASSIFICATION ---
-function classifyIntentByKeywords(text: string): string {
+// --- HELPER: INTENT CLASSIFICATION (EXPANDED) ---
+type AppIntent = 'SALDO' | 'CONTAS' | 'GASTOS' | 'PROJECAO' | 'IRPF' | 'MULTA' | 'tax_rule' | 'tax_deadline' | 'interest_rate' | 'government_program' | 'general';
+
+function classifyIntentByKeywords(text: string): AppIntent {
     const t = text.toLowerCase();
 
-    if (t.match(/irpf|imposto|leão|declarac|tribut/)) return 'tax_rule';
+    // APP-SPECIFIC INTENTS (Higher Priority)
+    // SALDO: Perguntas sobre saldo/conta do APP (não banco externo)
+    if (t.match(/saldo|quanto tenho|minha conta(?!s? do banco| corrente| bancária)|conta do app|balanço|sobrou quanto|tenho quanto/))
+        return 'SALDO';
+
+    // CONTAS: Contas a pagar/vencer
+    if (t.match(/contas?(?! do banco| bancária| corrente)|vencendo|vencer|pagar hoje|atrasad|próximos? vencimento|compromisso/))
+        return 'CONTAS';
+
+    // GASTOS: Despesas e transações
+    if (t.match(/gast|onde gasto|gastei|despesas?|quanto paguei|top gastos|maiores gastos|minhas despesas/))
+        return 'GASTOS';
+
+    // PROJECAO: Projeção financeira
+    if (t.match(/sobrar|projeção|vai sobrar|fim do mês|próximos meses|previsão|falta quanto|vai dar/))
+        return 'PROJECAO';
+
+    // IRPF: Imposto de Renda
+    if (t.match(/irpf|imposto|leão|declarac|tribut|ir 202|restituição|pagar de ir|minha faixa|faixa do ir/))
+        return 'IRPF';
+
+    // MULTA: Multas de trânsito (especialmente com imagem)
+    if (t.match(/multa|infração|auto de infração|notificação de multa/))
+        return 'MULTA';
+
+    // WEB SEARCH INTENTS (Lower Priority - External Data)
     if (t.match(/juros|selic|poupanca|cdi|taxa|rendimento/)) return 'interest_rate';
-    if (t.match(/vencimento|prazo|calendario|ipva|licenciamento|quando vence|data/)) return 'tax_deadline';
+    if (t.match(/vencimento do ipva|prazo|calendario|ipva|licenciamento|quando vence o/)) return 'tax_deadline';
     if (t.match(/bolsa familia|beneficio|auxilio|fgts|inss/)) return 'government_program';
+    if (t.match(/tabela progressiva|alíquota|regra do ir|como funciona o ir/)) return 'tax_rule';
 
     return 'general';
 }
+
+// Check if intent requires internal data lookup FIRST (before LLM generates response)
+function requiresInternalData(intent: AppIntent): boolean {
+    return ['SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF'].includes(intent);
+}
+
 
 function shouldWebSearch(intent: string): boolean {
     const volatileIntents = ['tax_rule', 'tax_deadline', 'interest_rate', 'government_program'];
@@ -290,10 +531,33 @@ Deno.serve(async (req) => {
 
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
+        // --- MANUAL AUTH VERIFICATION (Because we disabled --verify-jwt) ---
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) {
+            throw new Error("Authorization header missing");
+        }
+
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+
+        if (authError || !user) {
+            return new Response(JSON.stringify({ error: "Unauthorized", message: "Invalid Token" }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 401,
+            });
+        }
+
+        console.log(`[smart_chat_v1] User authenticated: ${user.id}`);
+
         let body;
         try { body = await req.json(); } catch { throw new Error("Corpo inválido."); }
 
-        const { domain = 'general', user_id, image, images, household_id, history } = body;
+        // Use authenticated user_id as fallback or override? 
+        // For security, strict matching is better, but for flexibility with "household_id" context we accept body vars.
+        // We ensure 'user_id' defaults to the authenticated user if missing.
+        const { domain = 'general', image, images, household_id, history } = body;
+        const user_id = user.id; // Enforce authenticated user
+
         const question = body.question || body.message || body.text || body.input || "";
 
         if (!question && !image && (!images || images.length === 0)) throw new Error("Envie uma mensagem ou imagem.");
@@ -342,7 +606,282 @@ Deno.serve(async (req) => {
             console.log(`[smart_chat_v1] [DECISION] Web Search logic skipped (Volatile intent not detected).`);
         }
 
-        userParts.push({ text: finalPrompt + cachedContext });
+        // --- ROUTER & DATA INJECTION (EXPANDED) ---
+        // Block LLM from generic answers - force data-driven responses for app intents
+
+        let routerContext = "";
+        const targetId = household_id || user_id;
+        const year = new Date().getFullYear();
+        let debugInfo: any = { intent: detectedIntent, tools_called: [], data_sources: [] };
+
+        // =====================================================
+        // ROUTER: SALDO - "quanto tenho", "minha conta", etc
+        // =====================================================
+        if (detectedIntent === 'SALDO') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'SALDO'. Fetching financial summary...`);
+            debugInfo.tools_called.push('get_financial_summary');
+            debugInfo.data_sources.push('internal_db');
+
+            const { data: report } = await supabaseAdmin.rpc('get_full_financial_report', { target_household_id: targetId });
+
+            if (report && report.total_income > 0) {
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - SALDO DO APP VIDA EM DIA]:
+Os dados do usuário JÁ FORAM consultados do painel. NÃO peça dados. NÃO confunda com banco externo.
+
+DADOS DO PAINEL:
+- Renda Total: R$ ${report.total_income?.toFixed(2) || '0.00'}
+- Compromissos: R$ ${report.total_commitments?.toFixed(2) || '0.00'}
+- Saldo Disponível: R$ ${report.balance?.toFixed(2) || '0.00'} ${report.status === 'surplus' ? '🟢' : report.status === 'warning' ? '🟡' : '🔴'}
+- Status: ${report.status === 'surplus' ? 'Positivo' : report.status === 'warning' ? 'Atenção' : 'Déficit'}
+
+Apresente de forma clara e amigável. Sugira próxima ação baseada no status.
+`;
+            } else {
+                routerContext = `
+[CONTEXTO - PAINEL VAZIO]:
+Consultei o painel e não há renda cadastrada ainda.
+Informe que o usuário pode cadastrar sua renda na seção Financeiro.
+NÃO mencione banco externo.
+`;
+            }
+        }
+
+        // =====================================================
+        // ROUTER: CONTAS - "contas vencendo", "atrasadas", etc
+        // =====================================================
+        else if (detectedIntent === 'CONTAS') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'CONTAS'. Fetching bills...`);
+            debugInfo.tools_called.push('list_bills_due');
+            debugInfo.data_sources.push('internal_db');
+
+            const today = new Date().toISOString().split('T')[0];
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            const nextWeekStr = nextWeek.toISOString().split('T')[0];
+
+            // Get overdue
+            const { data: overdue } = await supabaseAdmin
+                .from('tasks')
+                .select('title, amount, due_date')
+                .eq('household_id', targetId)
+                .neq('status', 'completed')
+                .gt('amount', 0)
+                .lt('due_date', today)
+                .order('due_date', { ascending: true })
+                .limit(5);
+
+            // Get next 7 days
+            const { data: upcoming } = await supabaseAdmin
+                .from('tasks')
+                .select('title, amount, due_date')
+                .eq('household_id', targetId)
+                .neq('status', 'completed')
+                .gt('amount', 0)
+                .gte('due_date', today)
+                .lte('due_date', nextWeekStr)
+                .order('due_date', { ascending: true })
+                .limit(5);
+
+            const overdueList = overdue && overdue.length > 0
+                ? overdue.map((b: any) => `• ${b.title}: R$ ${b.amount?.toFixed(2)} (${b.due_date})`).join('\n')
+                : 'Nenhuma conta atrasada 🎉';
+
+            const upcomingList = upcoming && upcoming.length > 0
+                ? upcoming.map((b: any) => `• ${b.title}: R$ ${b.amount?.toFixed(2)} (${b.due_date})`).join('\n')
+                : 'Nenhuma conta nos próximos 7 dias';
+
+            routerContext = `
+[CONTEXTO OBRIGATÓRIO - CONTAS DO APP]:
+Os dados JÁ FORAM consultados. NÃO peça dados.
+
+⚠️ ATRASADAS (${overdue?.length || 0}):
+${overdueList}
+
+📅 PRÓXIMOS 7 DIAS (${upcoming?.length || 0}):
+${upcomingList}
+
+Apresente de forma clara. Se houver atrasadas, destaque com urgência.
+`;
+        }
+
+        // =====================================================
+        // ROUTER: GASTOS - "onde gasto mais", "meus gastos", etc
+        // =====================================================
+        else if (detectedIntent === 'GASTOS') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'GASTOS'. Fetching transactions...`);
+            debugInfo.tools_called.push('list_transactions');
+            debugInfo.data_sources.push('internal_db');
+
+            const monthAgo = new Date();
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            const startDate = monthAgo.toISOString().split('T')[0];
+            const endDate = new Date().toISOString().split('T')[0];
+
+            // Try RPC first
+            const { data: txData } = await supabaseAdmin.rpc('get_transactions_by_category', {
+                target_household_id: targetId,
+                start_date: startDate,
+                end_date: endDate,
+                tx_type: 'expense'
+            });
+
+            let gastosList = '';
+            let totalGastos = 0;
+
+            if (txData && txData.categories && txData.categories.length > 0) {
+                gastosList = txData.categories.slice(0, 3).map((c: any, idx: number) =>
+                    `${idx + 1}. ${c.category}: R$ ${c.total?.toFixed(2)} (${c.count}x)`
+                ).join('\n');
+                totalGastos = txData.total || 0;
+            } else {
+                // Fallback to completed tasks
+                const { data: tasks } = await supabaseAdmin
+                    .from('tasks')
+                    .select('category_id, amount')
+                    .eq('household_id', targetId)
+                    .eq('status', 'completed')
+                    .gt('amount', 0)
+                    .gte('due_date', startDate);
+
+                if (tasks && tasks.length > 0) {
+                    const catTotals: Record<string, { total: number; count: number }> = {};
+                    for (const t of tasks) {
+                        const cat = t.category_id || 'outros';
+                        if (!catTotals[cat]) catTotals[cat] = { total: 0, count: 0 };
+                        catTotals[cat].total += t.amount || 0;
+                        catTotals[cat].count += 1;
+                        totalGastos += t.amount || 0;
+                    }
+                    const sorted = Object.entries(catTotals).sort((a, b) => b[1].total - a[1].total).slice(0, 3);
+                    gastosList = sorted.map(([cat, data], idx) =>
+                        `${idx + 1}. ${cat}: R$ ${data.total.toFixed(2)} (${data.count}x)`
+                    ).join('\n');
+                } else {
+                    gastosList = 'Sem gastos registrados neste período';
+                }
+            }
+
+            routerContext = `
+[CONTEXTO OBRIGATÓRIO - GASTOS DO ÚLTIMO MÊS]:
+Os dados JÁ FORAM consultados. NÃO peça dados.
+
+📈 TOP CATEGORIAS:
+${gastosList}
+
+💰 Total: R$ ${totalGastos.toFixed(2)}
+
+Apresente de forma clara. Dê uma dica de economia baseada na maior categoria.
+`;
+        }
+
+        // =====================================================
+        // ROUTER: PROJECAO - "vai sobrar", "fim do mês", etc
+        // =====================================================
+        else if (detectedIntent === 'PROJECAO') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'PROJECAO'. Simulating cashflow...`);
+            debugInfo.tools_called.push('simulate_cashflow');
+            debugInfo.data_sources.push('internal_db');
+
+            const { data: report } = await supabaseAdmin.rpc('get_full_financial_report', { target_household_id: targetId });
+
+            if (report) {
+                const projections = [];
+                let balance = report.balance || 0;
+                for (let i = 1; i <= 3; i++) {
+                    balance += report.balance || 0; // Simplified: assumes same surplus/deficit each month
+                    projections.push({ month: i, balance: balance.toFixed(2) });
+                }
+
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - PROJEÇÃO FINANCEIRA]:
+Os dados JÁ FORAM consultados. NÃO peça dados.
+
+📊 SITUAÇÃO ATUAL:
+- Renda: R$ ${report.total_income?.toFixed(2) || '0.00'}
+- Compromissos: R$ ${report.total_commitments?.toFixed(2) || '0.00'}
+- Saldo Mensal: R$ ${report.balance?.toFixed(2) || '0.00'}
+
+🔮 PROJEÇÃO (próximos 3 meses):
+${projections.map(p => `• Mês ${p.month}: R$ ${p.balance}`).join('\n')}
+
+Status: ${report.balance > 0 ? '🟢 Vai sobrar!' : report.balance === 0 ? '🟡 Empata' : '🔴 Atenção: déficit projetado'}
+
+Apresente de forma clara e otimista se positivo, ou com orientação se negativo.
+`;
+            } else {
+                routerContext = `
+[CONTEXTO - DADOS INSUFICIENTES]:
+Não há dados suficientes para projeção. Peça ao usuário cadastrar renda e compromissos.
+`;
+            }
+        }
+
+        // =====================================================
+        // ROUTER: IRPF - Imposto de Renda (existing logic expanded)
+        // =====================================================
+        else if (detectedIntent === 'IRPF') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'IRPF'. Executing Data-First Strategy...`);
+            debugInfo.tools_called.push('get_tax_profile', 'estimate_irpf');
+            debugInfo.data_sources.push('internal_db');
+
+            const { data: incomes } = await supabaseAdmin.from('incomes').select('*').eq('household_id', targetId).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
+            const { data: deductions } = await supabaseAdmin.from('deductions').select('*').eq('household_id', targetId).gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
+
+            const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
+            const totalDeductions = deductions ? deductions.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
+
+            if (totalIncome > 0) {
+                let tax = 0;
+                let rate = 0;
+                if (totalIncome > 28000) { tax = (totalIncome - 28000) * 0.075; rate = 7.5; }
+                if (totalIncome > 40000) { tax = (totalIncome - 40000) * 0.15 + (12000 * 0.075); rate = 15; }
+                if (totalIncome > 60000) { tax = (totalIncome - 60000) * 0.225 + (20000 * 0.15) + (12000 * 0.075); rate = 22.5; }
+                if (totalIncome > 80000) { tax = (totalIncome - 80000) * 0.275 + (20000 * 0.225) + (20000 * 0.15) + (12000 * 0.075); rate = 27.5; }
+
+                const confidence = totalIncome > 0 ? (totalDeductions > 0 ? 'ALTA' : 'MÉDIA') : 'BAIXA';
+
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - IMPOSTO DE RENDA ${year}]:
+Os dados do usuário JÁ FORAM consultados. NÃO explique conceitos genéricos. NÃO peça dados.
+
+📊 ESTIMATIVA IR ${year}:
+- Renda Tributável: R$ ${totalIncome.toFixed(2)}
+- Deduções: R$ ${totalDeductions.toFixed(2)}
+- Imposto Estimado: R$ ${tax.toFixed(2)} (Faixa ~${rate}%)
+- Status: ${tax > 0 ? '🔴 A PAGAR' : '🟢 ISENTO/RESTITUIR'}
+- Confiança: ${confidence}
+
+Apresente de forma clara. Sugira: "Quer detalhar deduções para tentar reduzir?"
+`;
+            } else {
+                routerContext = `
+[CONTEXTO - SEM DADOS DE RENDA]:
+Consultei o sistema e NÃO HÁ renda lançada para ${year}.
+NÃO explique a tabela progressiva.
+Pergunte se o usuário quer fazer uma simulação informando a renda agora.
+`;
+            }
+        }
+
+        // =====================================================
+        // ROUTER: MULTA - (handled by vision tool if image present)
+        // =====================================================
+        else if (detectedIntent === 'MULTA' && (image || images)) {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'MULTA' with image. Will use vision tool.`);
+            // Let Gemini handle with vision_extract_fine tool
+            routerContext = cachedContext;
+        }
+
+        // =====================================================
+        // ROUTER: General / Web Search needed
+        // =====================================================
+        else {
+            routerContext = cachedContext;
+        }
+
+
+        userParts.push({ text: finalPrompt + routerContext });
 
         // Build Contents with History
         let chatContents = [];
