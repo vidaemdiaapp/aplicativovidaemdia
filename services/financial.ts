@@ -68,6 +68,33 @@ export interface SavingsTransaction {
     created_at: string;
 }
 
+export interface Investment {
+    id: string;
+    user_id: string;
+    household_id: string;
+    name: string;
+    type: 'stocks' | 'fixed_income' | 'real_estate' | 'crypto' | 'savings' | 'other';
+    institution: string | null;
+    current_value: number;
+    invested_value: number;
+    yield_rate: number;
+    last_updated: string;
+    is_automatic: boolean;
+    external_id: string | null;
+    metadata: any;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PortfolioSummary {
+    total_value: number;
+    total_invested: number;
+    total_yield: number;
+    yield_percentage: number;
+    count: number;
+    allocations: { type: string; value: number; percentage: number }[];
+}
+
 export interface BudgetLimit {
     id: string;
     user_id: string;
@@ -459,5 +486,117 @@ export const budgetLimitsService = {
             .eq('id', id);
 
         return !error;
+    },
+
+    async checkAlerts(householdId: string) {
+        const { data, error } = await supabase.rpc('check_budget_alerts', {
+            target_household_id: householdId
+        });
+
+        if (error) throw error;
+        return data;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Investments Service
+// ═══════════════════════════════════════════════════════════════
+
+export const investmentsService = {
+    async getAll() {
+        const { data, error } = await supabase
+            .from('investments')
+            .select('*')
+            .order('current_value', { ascending: false });
+
+        if (error) throw error;
+        return data as Investment[];
+    },
+
+    async getSummary() {
+        const { data, error } = await supabase.rpc('get_portfolio_summary');
+        if (error) throw error;
+        return data as PortfolioSummary;
+    },
+
+    async create(investment: Omit<Investment, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'household_id' | 'last_updated'>) {
+        const household = await tasksService.getHousehold();
+        if (!household) throw new Error('No household found');
+
+        const { data, error } = await supabase
+            .from('investments')
+            .insert([{
+                ...investment,
+                household_id: household.id,
+                user_id: (await supabase.auth.getUser()).data.user?.id
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Investment;
+    },
+
+    async updateValue(id: string, currentValue: number) {
+        // First record history
+        const { data: inv } = await supabase.from('investments').select('*').eq('id', id).single();
+        if (inv) {
+            await supabase.from('investment_history').insert([{
+                investment_id: id,
+                value: currentValue,
+                yield_value: currentValue - inv.invested_value
+            }]);
+        }
+
+        const { data, error } = await supabase
+            .from('investments')
+            .update({
+                current_value: currentValue,
+                last_updated: new Date().toISOString()
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Investment;
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Open Finance Service (Simulated)
+// ═══════════════════════════════════════════════════════════════
+
+export const openFinanceService = {
+    async getConnections() {
+        const { data, error } = await supabase
+            .from('open_finance_connections')
+            .select('*');
+        if (error) throw error;
+        return data;
+    },
+
+    async connectInstitution(institutionId: string, institutionName: string) {
+        const { data, error } = await supabase
+            .from('open_finance_connections')
+            .insert([{
+                institution_id: institutionId,
+                institution_name: institutionName,
+                status: 'active',
+                user_id: (await supabase.auth.getUser()).data.user?.id,
+                consent_expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString() // 90 days
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async syncData() {
+        // Mock sync logic
+        console.log('[OpenFinance] Syncing data from all connections...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return { success: true, message: 'Sync complete' };
     }
 };

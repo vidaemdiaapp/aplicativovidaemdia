@@ -18,24 +18,19 @@ function getCorsHeaders(origin: string | null) {
 
 // System configuration for IRPF 2026 and safety rules
 const SYSTEM_PROMPT_LOCKED = `
-Você é a Elara.
+Você é a Elara, assistente financeira do Vida em Dia.
 
-PERSONALIDADE & TOM DE VOZ:
-- Você fala como uma pessoa brasileira, natural, clara e direta.
-- Nada de linguagem institucional, jurídica ou robótica.
-- JAMAIS diga "como assistente do Vida em Dia" ou "sou uma inteligência artificial".
-- Adapte levemente o tom ao jeito do usuário escrever. Se ele for informal, seja informal. Se usar "kk", pode responder com leveza.
-- Você só sugere ações quando o usuário pedir explicitamente. Caso contrário, apenas converse, explique e ajude.
-Você é a assistente do aplicativo Vida em Dia.
-Você tem acesso ao painel do usuário.
-Nunca peça informações que já existam no sistema.
+REGRA DE OURO (DATA FIRST):
+- JAMAIS peça informações ao usuário sem antes consultar as ferramentas de imposto (get_tax_profile) e estimativa (estimate_irpf).
+- Chame as ferramentas assim que o usuário mencionar "imposto", "IR" ou "leão".
+- Só peça dados se o sistema indicar falta de informações essenciais.
 
-Para perguntas sobre imposto de renda:
-- sempre consulte os dados do módulo “Imposto de Renda”;
-- gere uma estimativa baseada nos dados disponíveis;
-- responda com valores, mesmo que em faixa;
-- só faça perguntas se algum dado essencial estiver ausente, e nesse caso peça no máximo 1 ou 2 itens.
-- Se o usuário disser “de acordo com meu perfil”, assuma que os dados já estão completos.
+
+
+
+PERSONALIDADE:
+- Brasileira, clara e direta. Sem tom robótico.
+- Módulo Fiscal: Use sempre dados do sistema e informe a confiança da estimativa.
 `;
 
 const TOOLS_SCHEMA = [
@@ -151,7 +146,7 @@ const TOOLS_SCHEMA = [
 
 
 // --- TOOL HANDLERS ---
-async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string) {
+async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string, user_id: string) {
     if (toolName === "get_financial_summary") {
         const { data, error } = await supabase.rpc('get_full_financial_report', { target_household_id: household_id });
         if (error) throw new Error(`Error getting summary: ${error.message}`);
@@ -197,70 +192,34 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         return { initial_balance: report.balance, projection };
     }
 
-    if (toolName === "get_tax_profile") {
+    if (toolName === "get_tax_profile" || toolName === "estimate_irpf") {
         const year = args.year || new Date().getFullYear();
-        // Mocking/Simulating DB Access for incomes/deductions
-        // In prod, this would query supabase.from('incomes')...
+        // Use RPC get_irpf_estimate for both to get a complete view
+        const { data, error } = await supabase.rpc('get_irpf_estimate', {
+            target_user_id: user_id,
+            target_year: year
+        });
 
-        // Simulating data retrieval
-        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
-        const { data: deductions } = await supabase.from('deductions').select('*').eq('household_id', household_id).gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
-
-        const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
-        const totalDeductions = deductions ? deductions.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
-
-        return {
-            income_total: totalIncome,
-            income_sources: incomes ? [...new Set(incomes.map((i: any) => i.source || 'Outros'))] : [],
-            deductions_total: totalDeductions,
-            months_filled: incomes ? new Set(incomes.map((i: any) => i.received_at.substring(0, 7))).size : 0,
-            completeness_score: totalIncome > 0 ? 60 : 10 // Mock heuristic
-        };
-    }
-
-    if (toolName === "estimate_irpf") {
-        const year = args.year || new Date().getFullYear();
-        // Quick Logic: Gross Income - Deductions - Standard Discount (simplified)
-
-        // Retrieve (Reusing logic for now, ideally separate helper)
-        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
-        const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
-
-        // Simplified Progressive Table 2025/2026 (Annualized Estimates)
-        // Exempt up to ~28k/year (example)
-        let tax = 0;
-        let rate = 0;
-
-        if (totalIncome > 28000) {
-            tax = (totalIncome - 28000) * 0.075; // Simplification
-            rate = 7.5;
-        }
-        if (totalIncome > 40000) {
-            tax = (totalIncome - 40000) * 0.15 + (12000 * 0.075);
-            rate = 15;
-        }
-
-        return {
-            taxable_income: totalIncome,
-            estimated_tax: tax,
-            effective_rate: `${rate}%`,
-            status: tax > 0 ? "A PAGAR" : "ISENTO",
-            confidence: totalIncome > 0 ? "MEDIUM" : "LOW",
-            reason: totalIncome > 0 ? "Calculado com base na renda lançada." : "Sem renda lançada para estimativa."
-        };
+        if (error) throw new Error(`Error estimating IRPF: ${error.message}`);
+        return data;
     }
 
     if (toolName === "list_missing_tax_items") {
-        // Heuristics
-        const { data: incomes } = await supabase.from('incomes').select('*').eq('household_id', household_id);
-        const { data: deductions } = await supabase.from('deductions').select('*').eq('household_id', household_id);
+        const year = args.year || new Date().getFullYear();
+        const { data, error } = await supabase.rpc('get_declaration_readiness', {
+            target_user_id: user_id,
+            target_year: year
+        });
 
-        const missing = [];
-        if (!incomes || incomes.length === 0) missing.push({ item: "Renda/Salários", impact: "ALTO" });
-        if (!deductions || !deductions.some((d: any) => d.category === 'health')) missing.push({ item: "Despesas Médicas", impact: "MÉDIO" });
-        if (!deductions || !deductions.some((d: any) => d.category === 'education')) missing.push({ item: "Despesas com Educação", impact: "BAIXO" });
+        if (error) throw new Error(`Error checking tax readiness: ${error.message}`);
 
-        return missing.slice(0, 2); // Top 2
+        // Extract top 2 pending items
+        const pendingItems = data.checklist
+            .filter((item: any) => item.status === 'pending')
+            .map((item: any) => ({ item: item.label, impact: "ALTO" }))
+            .slice(0, 2);
+
+        return pendingItems.length > 0 ? pendingItems : "Perfil de imposto está completo.";
     }
 
     // --- NEW TOOL: list_transactions ---
@@ -821,45 +780,42 @@ Não há dados suficientes para projeção. Peça ao usuário cadastrar renda e 
         // ROUTER: IRPF - Imposto de Renda (existing logic expanded)
         // =====================================================
         else if (detectedIntent === 'IRPF') {
-            console.log(`[smart_chat_v1] ROUTER: Intent is 'IRPF'. Executing Data-First Strategy...`);
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'IRPF'. Executing Data-First Strategy with RPCs...`);
             debugInfo.tools_called.push('get_tax_profile', 'estimate_irpf');
-            debugInfo.data_sources.push('internal_db');
 
-            const { data: incomes } = await supabaseAdmin.from('incomes').select('*').eq('household_id', targetId).gte('received_at', `${year}-01-01`).lte('received_at', `${year}-12-31`);
-            const { data: deductions } = await supabaseAdmin.from('deductions').select('*').eq('household_id', targetId).gte('date', `${year}-01-01`).lte('date', `${year}-12-31`);
+            const { data: estimate, error: estError } = await supabaseAdmin.rpc('get_irpf_estimate', {
+                target_user_id: user_id,
+                target_year: year
+            });
+            const { data: readiness } = await supabaseAdmin.rpc('get_declaration_readiness', {
+                target_user_id: user_id,
+                target_year: year
+            });
 
-            const totalIncome = incomes ? incomes.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
-            const totalDeductions = deductions ? deductions.reduce((acc: any, curr: any) => acc + (curr.amount || 0), 0) : 0;
-
-            if (totalIncome > 0) {
-                let tax = 0;
-                let rate = 0;
-                if (totalIncome > 28000) { tax = (totalIncome - 28000) * 0.075; rate = 7.5; }
-                if (totalIncome > 40000) { tax = (totalIncome - 40000) * 0.15 + (12000 * 0.075); rate = 15; }
-                if (totalIncome > 60000) { tax = (totalIncome - 60000) * 0.225 + (20000 * 0.15) + (12000 * 0.075); rate = 22.5; }
-                if (totalIncome > 80000) { tax = (totalIncome - 80000) * 0.275 + (20000 * 0.225) + (20000 * 0.15) + (12000 * 0.075); rate = 27.5; }
-
-                const confidence = totalIncome > 0 ? (totalDeductions > 0 ? 'ALTA' : 'MÉDIA') : 'BAIXA';
-
+            if (estimate && !estError) {
                 routerContext = `
 [CONTEXTO OBRIGATÓRIO - IMPOSTO DE RENDA ${year}]:
-Os dados do usuário JÁ FORAM consultados. NÃO explique conceitos genéricos. NÃO peça dados.
+Os dados do sistema foram consultados via RPC.
+- Renda Mensal: R$ ${estimate.income_monthly.toFixed(2)}
+- Deduções Anuais: R$ ${estimate.total_deductions_year.toFixed(2)}
+- Imposto Mensal Estimado: R$ ${estimate.estimated_tax_monthly.toFixed(2)}
+- Alíquota: ${estimate.tax_rate * 100}%
+- Confiança: ${estimate.confidence.toUpperCase()}
+- Status: ${estimate.is_exempt ? '🟢 ISENTO' : '🔴 A PAGAR'}
 
-📊 ESTIMATIVA IR ${year}:
-- Renda Tributável: R$ ${totalIncome.toFixed(2)}
-- Deduções: R$ ${totalDeductions.toFixed(2)}
-- Imposto Estimado: R$ ${tax.toFixed(2)} (Faixa ~${rate}%)
-- Status: ${tax > 0 ? '🔴 A PAGAR' : '🟢 ISENTO/RESTITUIR'}
-- Confiança: ${confidence}
+[CHECKLIST DE COMPLETUDE]:
+${readiness?.checklist?.map((c: any) => `- ${c.label}: ${c.status === 'done' ? '✅' : '❌'}`).join('\n')}
 
-Apresente de forma clara. Sugira: "Quer detalhar deduções para tentar reduzir?"
+IMPORTANTE: 
+1. NÃO peça dados que já estão como ✅.
+2. Seja direto sobre o status (Isento/Pagar).
+3. Se a confiança for baixa/média, recomende completar os itens com ❌.
 `;
             } else {
                 routerContext = `
-[CONTEXTO - SEM DADOS DE RENDA]:
-Consultei o sistema e NÃO HÁ renda lançada para ${year}.
-NÃO explique a tabela progressiva.
-Pergunte se o usuário quer fazer uma simulação informando a renda agora.
+[CONTEXTO - ERRO OU SEM DADOS]:
+Não foi possível obter uma estimativa automática. 
+Incentive o usuário a lançar seus rendimentos e despesas no módulo de Imposto de Renda.
 `;
             }
         }
@@ -920,7 +876,7 @@ Pergunte se o usuário quer fazer uma simulação informando a renda agora.
 
             const toolResults = [];
             for (const fn of functionCalls) {
-                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, household_id || user_id); // Fallback to user_id if household missing
+                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, household_id, user_id);
                 toolResults.push({
                     functionResponse: {
                         name: fn.name,

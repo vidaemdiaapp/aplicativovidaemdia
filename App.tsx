@@ -18,6 +18,7 @@ import { AssetsScreen } from './screens/AssetsScreen';
 import { FinancialDashboardScreen } from './screens/FinancialDashboardScreen';
 import { CreditCardsScreen } from './screens/CreditCardsScreen';
 import { SavingsGoalsScreen } from './screens/SavingsGoalsScreen';
+import { InvestmentsScreen } from './screens/InvestmentsScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -113,7 +114,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/credit-cards" element={<ProtectedRoute><CreditCardsScreen /></ProtectedRoute>} />
         <Route path="/savings" element={<ProtectedRoute><SavingsGoalsScreen /></ProtectedRoute>} />
         <Route path="/financial" element={<Navigate to="/financial-dashboard" replace />} />
-        <Route path="/investments" element={<ProtectedRoute><AssetsScreen /></ProtectedRoute>} />
+        <Route path="/investments" element={<ProtectedRoute><InvestmentsScreen /></ProtectedRoute>} />
         <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
