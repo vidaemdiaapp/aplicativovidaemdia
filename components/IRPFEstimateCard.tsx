@@ -42,81 +42,80 @@ export const IRPFEstimateCard: React.FC<Props> = ({ estimate, loading }) => {
     };
 
     return (
-        <div className="bg-slate-900 shadow-2xl rounded-[32px] p-8 border border-white/10 relative overflow-hidden group">
-            {/* Decorative background */}
-            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary-600/10 rounded-full blur-[60px] group-hover:bg-primary-600/20 transition-all duration-700"></div>
+        <div className="bg-slate-900 shadow-2xl rounded-[32px] p-8 border border-slate-800 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex justify-between items-start mb-8">
                     <div>
-                        <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Shield className="w-3 h-3 text-primary-400" />
-                            Imposto de Renda (Estimativa)
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                            <Shield className="w-3 h-3 text-emerald-500" />
+                            Análise Projetada
                         </p>
-                        <h3 className={`text-sm font-bold px-3 py-1 rounded-full inline-block ${getStatusColor()}`}>
+                        <h3 className={`text-xs font-black px-4 py-1.5 rounded-xl inline-block uppercase tracking-widest ${getStatusColor()}`}>
                             {getStatusLabel()}
                         </h3>
                     </div>
-                    <div className="bg-white/5 p-3 rounded-2xl">
+                    <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700">
                         <TrendingUp className="w-6 h-6 text-slate-400" />
                     </div>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-8">
                     <div>
-                        <p className="text-slate-500 text-xs font-bold uppercase tracking-tight mb-1">Renda Mensal Considerada</p>
-                        <p className="text-2xl font-black text-white">
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-1">Renda Mensal Detectada</p>
+                        <p className="text-3xl font-black text-white">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estimate.income_monthly)}
                         </p>
                     </div>
 
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 flex gap-4 items-start">
-                        <Info className="w-5 h-5 text-primary-400 shrink-0 mt-0.5" />
+                    <div className="bg-slate-800/40 rounded-2xl p-5 border border-slate-800 flex gap-4 items-start backdrop-blur-sm">
+                        <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                         <div className="space-y-2">
-                            <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                            <p className="text-sm text-slate-300 font-medium leading-relaxed">
                                 {getHumanMessage()}
                             </p>
-                            <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 bg-white/10 rounded text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                    {estimate.confidence === 'medium' ? 'Estimativa com dados básicos' : 'Estimativa Simplificada'}
+                            <div className="flex items-center gap-3">
+                                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${estimate.confidence === 'high' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                    {estimate.confidence === 'high' ? 'Confiança Alta' : 'Média Confiança'}
                                 </span>
-                                <span className="text-[9px] text-slate-500">•</span>
-                                <span className="text-[9px] text-slate-500 font-bold uppercase">{estimate.year}</span>
+                                <span className="w-1 h-1 bg-slate-700 rounded-full"></span>
+                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Base 2026</span>
                             </div>
                         </div>
                     </div>
 
                     {!estimate.is_exempt && (
-                        <div className="pt-4 border-t border-white/5">
-                            <div className="flex justify-between items-center mb-4">
-                                <span className="text-xs font-bold text-slate-400">Estimativa Anual</span>
-                                <span className="text-lg font-black text-rose-400">
+                        <div className="pt-6 border-t border-slate-800">
+                            <div className="flex justify-between items-center mb-6">
+                                <span className="text-xs font-black uppercase tracking-widest text-slate-500">Estimativa Anual</span>
+                                <span className="text-2xl font-black text-rose-400">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(estimate.estimated_tax_yearly)}
                                 </span>
                             </div>
                             <button
-                                className="w-full bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-active:scale-[0.98]"
-                                onClick={() => navigate('/assistant', { state: { initialMessage: '🦁 O que eu posso abater no meu Imposto de Renda 2026 para pagar menos?' } })}
+                                className="w-full bg-slate-800 hover:bg-slate-700 text-white py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-3 border border-slate-700 active:scale-95"
+                                onClick={() => navigate('/assistant', { state: { initialMessage: '🦁 Elara, me mostre dicas de como reduzir meu IR através de previdência privada ou dependentes.' } })}
                             >
-                                O que posso deduzir?
-                                <ArrowRight className="w-4 h-4" />
+                                Estratégias de Economia
+                                <ArrowRight className="w-4 h-4 text-blue-400" />
                             </button>
                         </div>
                     )}
 
                     {estimate.is_exempt && (
-                        <div className="flex gap-2 items-center text-[10px] text-emerald-400/60 font-medium italic">
+                        <div className="flex gap-2 items-center text-[10px] text-emerald-500/60 font-black uppercase tracking-widest">
                             <CheckCircle2 className="w-3 h-3" />
-                            Valores baseados na tabela oficial de {estimate.year}
+                            Isenção Garantida pela Regra 2026
                         </div>
                     )}
                 </div>
             </div>
 
-            <div className="mt-6 flex gap-2 items-start opacity-30">
+            <div className="mt-8 pt-6 border-t border-slate-800/30 flex gap-3 items-start opacity-40">
                 <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                <p className="text-[9px] leading-tight font-medium uppercase tracking-tighter">
-                    Este painel é apenas uma simulação e não substitui a declaração oficial ou orientação de um contador.
+                <p className="text-[8px] leading-tight font-bold uppercase tracking-widest text-slate-500">
+                    DIAGNÓSTICO SIMULADO: ESTES VALORES SÃO PROJEÇÕES BASEADAS NAS REGRAS DE 2026. NÃO SUBSTITUI O PROGRAMA OFICIAL DA RECEITA FEDERAL.
                 </p>
             </div>
         </div>

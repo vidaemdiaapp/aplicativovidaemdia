@@ -12,13 +12,13 @@ export interface Task {
   title: string;
   category_id: string;
   category?: CategoryType;
-  due_date: string;
+  due_date?: string;
   status: 'pending' | 'completed' | 'overdue';
   health_status?: HealthStatus;
   impact_level?: ImpactLevel;
   impact_text?: string;
   next_action_text?: string;
-  amount?: string;
+  amount?: number;
   description?: string;
   household_id?: string;
   owner_user_id?: string;
@@ -29,6 +29,9 @@ export interface Task {
   confidence_score?: number;
   is_joint?: boolean;
   user_id?: string;
+  entry_type?: 'bill' | 'immediate';
+  payment_method?: 'cash' | 'pix' | 'debit' | 'credit';
+  purchase_date?: string;
 }
 
 export interface Household {
@@ -61,16 +64,23 @@ export enum CategoryType {
   HOME = 'home',
   DOCUMENTS = 'documents',
   TAXES = 'taxes',
-  CONTRACTS = 'contracts'
+  CONTRACTS = 'contracts',
+  FOOD = 'food',
+  SHOPPING = 'shopping',
+  HEALTH = 'health',
+  UTILITIES = 'utilities',
+  LEISURE = 'leisure',
+  TRANSPORT = 'transport',
+  OUTROS = 'outros'
 }
 
 export interface Category {
-  id: CategoryType;
+  id: string;
   label: string;
   icon: string;
   color?: string;
   status: 'ok' | 'warning' | 'error';
-  pendingCount: number;
+  pendingCount?: number;
 }
 
 export interface IRPFEstimate {

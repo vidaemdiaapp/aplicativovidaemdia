@@ -1,5 +1,6 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { RegisterScreen } from './screens/RegisterScreen';
@@ -19,6 +20,7 @@ import { FinancialDashboardScreen } from './screens/FinancialDashboardScreen';
 import { CreditCardsScreen } from './screens/CreditCardsScreen';
 import { SavingsGoalsScreen } from './screens/SavingsGoalsScreen';
 import { InvestmentsScreen } from './screens/InvestmentsScreen';
+import { CreditSimulatorScreen } from './screens/CreditSimulatorScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -115,6 +117,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/savings" element={<ProtectedRoute><SavingsGoalsScreen /></ProtectedRoute>} />
         <Route path="/financial" element={<Navigate to="/financial-dashboard" replace />} />
         <Route path="/investments" element={<ProtectedRoute><InvestmentsScreen /></ProtectedRoute>} />
+        <Route path="/credit-simulator" element={<ProtectedRoute><CreditSimulatorScreen /></ProtectedRoute>} />
         <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -127,6 +130,7 @@ const App: React.FC = () => {
     <HashRouter>
       <AuthProvider>
         <AppRoutes />
+        <Toaster position="top-center" />
       </AuthProvider>
     </HashRouter>
   );

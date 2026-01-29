@@ -596,7 +596,69 @@ export const openFinanceService = {
     async syncData() {
         // Mock sync logic
         console.log('[OpenFinance] Syncing data from all connections...');
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return { success: true, message: 'Sync complete' };
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Insert simulated data if the list is empty to provide real feedback
+        const { data: existing } = await supabase.from('investments').select('id').limit(1);
+
+        if (!existing || existing.length === 0) {
+            const { data: { user } } = await supabase.auth.getUser();
+            const household = await tasksService.getHousehold();
+
+            if (user && household) {
+                await supabase.from('investments').insert([
+                    {
+                        user_id: user.id,
+                        household_id: household.id,
+                        name: 'Tesouro Selic 2029',
+                        type: 'fixed_income',
+                        institution: 'Nubank',
+                        current_value: 12450.32,
+                        invested_value: 11000.00,
+                        yield_rate: 13.18,
+                        is_automatic: true,
+                        last_updated: new Date().toISOString()
+                    },
+                    {
+                        user_id: user.id,
+                        household_id: household.id,
+                        name: 'FII XP Malls (XPML11)',
+                        type: 'real_estate',
+                        institution: 'XP Investimentos',
+                        current_value: 5240.00,
+                        invested_value: 4800.00,
+                        yield_rate: 9.17,
+                        is_automatic: true,
+                        last_updated: new Date().toISOString()
+                    },
+                    {
+                        user_id: user.id,
+                        household_id: household.id,
+                        name: 'Bitcoin (BTC)',
+                        type: 'crypto',
+                        institution: 'Binance',
+                        current_value: 15720.50,
+                        invested_value: 12000.00,
+                        yield_rate: 31.00,
+                        is_automatic: true,
+                        last_updated: new Date().toISOString()
+                    },
+                    {
+                        user_id: user.id,
+                        household_id: household.id,
+                        name: 'Ethereum (ETH)',
+                        type: 'crypto',
+                        institution: 'Mercado Bitcoin',
+                        current_value: 8430.20,
+                        invested_value: 7500.00,
+                        yield_rate: 12.40,
+                        is_automatic: true,
+                        last_updated: new Date().toISOString()
+                    }
+                ]);
+            }
+        }
+
+        return { success: true, message: 'Sincronização concluída com sucesso' };
     }
 };

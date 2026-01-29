@@ -30,15 +30,20 @@ interface TimeSeriesData {
 // ═══════════════════════════════════════════════════════════════
 
 const CATEGORY_COLORS: Record<string, string> = {
-    housing: '#10B981',
-    transport: '#3B82F6',
-    food: '#F59E0B',
-    health: '#EC4899',
-    leisure: '#8B5CF6',
-    education: '#06B6D4',
-    utilities: '#6366F1',
-    vehicle: '#F43F5E',
-    outros: '#6B7280'
+    'home': '#10B981',
+    'housing': '#10B981',
+    'transport': '#3B82F6',
+    'food': '#F59E0B',
+    'health': '#EC4899',
+    'leisure': '#8B5CF6',
+    'education': '#06B6D4',
+    'utilities': '#6366F1',
+    'vehicle': '#F43F5E',
+    'shopping': '#D946EF',
+    'taxes': '#EF4444',
+    'contracts': '#F97316',
+    'documents': '#14B8A6',
+    'outros': '#6B7280'
 };
 
 const CHART_COLORS = [

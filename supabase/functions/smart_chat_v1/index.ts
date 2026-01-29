@@ -25,12 +25,19 @@ REGRA DE OURO (DATA FIRST):
 - Chame as ferramentas assim que o usuário mencionar "imposto", "IR" ou "leão".
 - Só peça dados se o sistema indicar falta de informações essenciais.
 
-
-
-
 PERSONALIDADE:
 - Brasileira, clara e direta. Sem tom robótico.
-- Módulo Fiscal: Use sempre dados do sistema e informe a confiança da estimativa.
+- SEMPRE chame o usuário pelo nome {{USER_NAME}} de forma natural e amigável, especialmente no início ou final da resposta.
+- Módulo Fiscal: Use sempre dados do sistema e informe a confiança da estimativa. PROIBIDO USAR PLACEHOLDERS como '[valor da faixa]'. Se o dado não existir, diga que não sabe.
+
+FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
+Sua resposta final DEVE ser um objeto JSON puro, sem markdown extra, contendo:
+{
+  "answer_text": "Texto da sua resposta aqui",
+  "intent_mode": "CHAT",
+  "key_facts": [],
+  "sources": []
+}
 `;
 
 const TOOLS_SCHEMA = [
@@ -411,7 +418,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
 }
 
 // --- HELPER: INTENT CLASSIFICATION (EXPANDED) ---
-type AppIntent = 'SALDO' | 'CONTAS' | 'GASTOS' | 'PROJECAO' | 'IRPF' | 'MULTA' | 'tax_rule' | 'tax_deadline' | 'interest_rate' | 'government_program' | 'general';
+type AppIntent = 'SALDO' | 'CONTAS' | 'GASTOS' | 'PROJECAO' | 'IRPF' | 'MULTA' | 'INVESTMENTS' | 'tax_rule' | 'tax_deadline' | 'interest_rate' | 'government_program' | 'general';
 
 function classifyIntentByKeywords(text: string): AppIntent {
     const t = text.toLowerCase();
@@ -441,6 +448,10 @@ function classifyIntentByKeywords(text: string): AppIntent {
     if (t.match(/multa|infração|auto de infração|notificação de multa/))
         return 'MULTA';
 
+    // INVESTMENTS: Patrimônio e investimentos
+    if (t.match(/investimento|patrimônio|ações|bolsa|tesouro|bitcoin|cripto|ouro|fii|porfólio|carteira|open finance/))
+        return 'INVESTMENTS';
+
     // WEB SEARCH INTENTS (Lower Priority - External Data)
     if (t.match(/juros|selic|poupanca|cdi|taxa|rendimento/)) return 'interest_rate';
     if (t.match(/vencimento do ipva|prazo|calendario|ipva|licenciamento|quando vence o/)) return 'tax_deadline';
@@ -452,7 +463,7 @@ function classifyIntentByKeywords(text: string): AppIntent {
 
 // Check if intent requires internal data lookup FIRST (before LLM generates response)
 function requiresInternalData(intent: AppIntent): boolean {
-    return ['SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF'].includes(intent);
+    return ['SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'INVESTMENTS'].includes(intent);
 }
 
 
@@ -521,9 +532,18 @@ Deno.serve(async (req) => {
 
         if (!question && !image && (!images || images.length === 0)) throw new Error("Envie uma mensagem ou imagem.");
 
+        // --- FETCH USER PROFILE FOR PERSONALIZATION ---
+        const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('full_name')
+            .eq('id', user_id)
+            .single();
+
+        const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'usuário';
+
         // --- GEMINI PROMPT SETUP ---
         const userParts = [];
-        let finalPrompt = `${SYSTEM_PROMPT_LOCKED}\n\n`;
+        let finalPrompt = SYSTEM_PROMPT_LOCKED.replace('{{USER_NAME}}', firstName) + "\n\n";
         if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
 
         if (image || images) finalPrompt += "\n[IMAGEM ANEXADA]";
@@ -777,7 +797,40 @@ Não há dados suficientes para projeção. Peça ao usuário cadastrar renda e 
         }
 
         // =====================================================
-        // ROUTER: IRPF - Imposto de Renda (existing logic expanded)
+        // ROUTER: INVESTMENTS - "meus investimentos", "patrimônio", etc
+        // =====================================================
+        else if (detectedIntent === 'INVESTMENTS') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'INVESTMENTS'. Fetching portfolio summary...`);
+            debugInfo.tools_called.push('get_portfolio_summary');
+            debugInfo.data_sources.push('internal_db');
+
+            const { data: summary } = await supabaseAdmin.rpc('get_portfolio_summary', { target_user_id: user_id });
+
+            if (summary && summary.total_value > 0) {
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - SEU PATRIMÔNIO]:
+Os dados foram consultados. 
+- Total Consolidado: R$ ${summary.total_value.toFixed(2)}
+- Rendimento Total: R$ ${summary.total_yield.toFixed(2)} (${summary.yield_percentage.toFixed(2)}%)
+- Ativos cadastrados: ${summary.count}
+
+COMPOSIÇÃO:
+${summary.allocations?.map((a: any) => `• ${a.type}: ${a.percentage.toFixed(1)}%`).join('\n')}
+
+DICA ELITE:
+Lembre o usuário que ele pode sincronizar tudo automaticamente via **Simulação de Open Finance** na tela de Investimentos para manter esses números sempre precisos.
+`;
+            } else {
+                routerContext = `
+[CONTEXTO - SEM INVESTIMENTOS]:
+Consultei sua carteira e ela ainda está vazia. 
+Ação Sugerida: "Para ver seu patrimônio aqui, você pode cadastrar ativos manualmente ou usar nossa **Simulação de Open Finance** na tela de Investimentos para conectar suas contas fictícias e ver a mágica acontecer!"
+`;
+            }
+        }
+
+        // =====================================================
+        // ROUTER: IRPF - Imposto de Renda
         // =====================================================
         else if (detectedIntent === 'IRPF') {
             console.log(`[smart_chat_v1] ROUTER: Intent is 'IRPF'. Executing Data-First Strategy with RPCs...`);
@@ -802,14 +855,17 @@ Os dados do sistema foram consultados via RPC.
 - Alíquota: ${estimate.tax_rate * 100}%
 - Confiança: ${estimate.confidence.toUpperCase()}
 - Status: ${estimate.is_exempt ? '🟢 ISENTO' : '🔴 A PAGAR'}
+- Observação: Se não houver dados de renda cadastrada, o sistema mostrará zero. Relate o que vê.
 
 [CHECKLIST DE COMPLETUDE]:
 ${readiness?.checklist?.map((c: any) => `- ${c.label}: ${c.status === 'done' ? '✅' : '❌'}`).join('\n')}
 
 IMPORTANTE: 
-1. NÃO peça dados que já estão como ✅.
-2. Seja direto sobre o status (Isento/Pagar).
-3. Se a confiança for baixa/média, recomende completar os itens com ❌.
+1. Use os valores ACIMA (Ex: R$ ${estimate.income_monthly.toFixed(2)}) na sua resposta. 
+2. JAMAIS use colchetes como '[valor]'. Se o valor for 0, diga que é zero.
+3. Seja direto sobre o status (Isento/Pagar).
+4. Se a confiança for baixa/média, recomende completar os itens com ❌.
+5. Se for a primeira vez que você vê os dados, comemore os números ou ofereça ajuda para reduzir o imposto.
 `;
             } else {
                 routerContext = `
@@ -900,13 +956,21 @@ Incentive o usuário a lançar seus rendimentos e despesas no módulo de Imposto
             });
 
             const secondData = await secondResponse.json();
-            const textPart = secondData.candidates?.[0]?.content?.parts?.find((p: any) => p.text);
-            finalContent = textPart ? textPart.text : JSON.stringify(secondData);
+            const cand = secondData.candidates?.[0];
+            const textPart = cand?.content?.parts?.find((p: any) => p.text);
+            finalContent = textPart ? textPart.text : (cand?.finishReason ? `[Erro: ${cand.finishReason}]` : "Não consegui processar os dados das ferramentas.");
 
         } else {
             // No tools used, standard text response
             const textPart = candidate?.content?.parts?.find((p: any) => p.text);
-            finalContent = textPart ? textPart.text : "Não entendi.";
+            finalContent = textPart ? textPart.text : (candidate?.finishReason ? `[Erro: ${candidate.finishReason}]` : "Não entendi sua mensagem ou o modelo não retornou texto.");
+        }
+
+        // --- CLEAN UP RESPONSE ---
+        if (!finalContent || finalContent === "Não entendi.") {
+            console.warn("[smart_chat_v1] Empty or default response detected. Retrying with simple prompt...");
+            // One last fallback to ensure we don't send a blank message
+            finalContent = "Desculpe, " + firstName + ", tive um pequeno problema técnico ao processar sua resposta. Pode repetir por favor?";
         }
 
         // --- PARSE FINAL JSON OUPUT ---

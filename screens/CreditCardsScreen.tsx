@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { creditCardsService, CreditCard, CreditCardTransaction } from '../services/financial';
+import { tasksService } from '../services/tasks';
 
 interface CardFormData {
     name: string;
@@ -170,8 +171,8 @@ export const CreditCardsScreen: React.FC = () => {
                                 key={card.id}
                                 onClick={() => handleCardSelect(card)}
                                 className={`flex-shrink-0 w-72 h-44 rounded-lg p-5 cursor-pointer transition-all duration-300 ${selectedCard?.id === card.id
-                                        ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-105'
-                                        : 'hover:scale-102'
+                                    ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-950 scale-105'
+                                    : 'hover:scale-102'
                                     }`}
                                 style={{
                                     background: `linear-gradient(135deg, ${card.color} 0%, ${card.color}99 100%)`
@@ -473,8 +474,8 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onSuccess 
                                     key={brand}
                                     onClick={() => setForm({ ...form, brand })}
                                     className={`px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${form.brand === brand
-                                            ? 'bg-cyan-500 text-white'
-                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                        ? 'bg-cyan-500 text-white'
+                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                                         }`}
                                 >
                                     {brand}
@@ -576,11 +577,17 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
         amount: 0,
         transaction_date: new Date().toISOString().split('T')[0],
         installment_total: 1,
+        category_id: '' as string | null,
         is_third_party: false,
         third_party_name: '',
         third_party_type: 'reembolso' as 'reembolso' | 'rateio'
     });
+    const [categories, setCategories] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        tasksService.getCategories().then(setCategories);
+    }, []);
 
     const handleSubmit = async () => {
         if (!form.title.trim() || form.amount <= 0) return;
@@ -594,7 +601,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
             transaction_date: form.transaction_date,
             installment_current: 1,
             installment_total: form.installment_total,
-            category_id: null,
+            category_id: form.category_id || null,
             is_third_party: form.is_third_party,
             third_party_name: form.is_third_party ? form.third_party_name : null,
             third_party_type: form.is_third_party ? form.third_party_type : null,
@@ -661,6 +668,27 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                         />
                     </div>
 
+                    {/* Category Selection */}
+                    <div>
+                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-2">
+                            Categoria
+                        </label>
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setForm({ ...form, category_id: cat.id })}
+                                    className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${form.category_id === cat.id
+                                        ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    {cat.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Installments */}
                     <div>
                         <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
@@ -720,8 +748,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                                     <button
                                         onClick={() => setForm({ ...form, third_party_type: 'reembolso' })}
                                         className={`flex-1 px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${form.third_party_type === 'reembolso'
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-slate-800 text-slate-400'
+                                            ? 'bg-amber-500 text-white'
+                                            : 'bg-slate-800 text-slate-400'
                                             }`}
                                     >
                                         Reembolso
@@ -729,8 +757,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                                     <button
                                         onClick={() => setForm({ ...form, third_party_type: 'rateio' })}
                                         className={`flex-1 px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${form.third_party_type === 'rateio'
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-slate-800 text-slate-400'
+                                            ? 'bg-amber-500 text-white'
+                                            : 'bg-slate-800 text-slate-400'
                                             }`}
                                     >
                                         Rateio

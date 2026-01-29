@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Car, Filter, Search, Home, FileText, Shield, Receipt, DollarSign, ClipboardList } from 'lucide-react';
+import {
+  ArrowLeft, Car, Filter, Search, Home, FileText, Shield, Receipt,
+  DollarSign, ClipboardList, Zap, ShoppingBag, Utensils, Heart,
+  Plane, Landmark, MoreHorizontal
+} from 'lucide-react';
 import { tasksService, Task, Category } from '../services/tasks';
 
 // Icon mapping for categories
@@ -11,7 +15,14 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   'Shield': Shield,
   'Receipt': Receipt,
   'DollarSign': DollarSign,
-  'ClipboardList': ClipboardList
+  'ClipboardList': ClipboardList,
+  'Landmark': Landmark,
+  'Zap': Zap,
+  'ShoppingBag': ShoppingBag,
+  'Utensils': Utensils,
+  'Heart': Heart,
+  'Plane': Plane,
+  'MoreHorizontal': MoreHorizontal
 };
 
 export const CategoryScreen: React.FC = () => {
@@ -146,7 +157,11 @@ export const CategoryScreen: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-slate-400 mb-1 font-medium">Valor</p>
-                      <p className="text-lg font-bold text-slate-900">{task.amount || 'R$ 0,00'}</p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {typeof task.amount === 'number'
+                          ? task.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                          : 'R$ 0,00'}
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { StatusCard } from '../components/StatusCard';
 import { StatusLevel } from '../types';
-import { Bell, ChevronRight, Car, Home, FileText, Shield, Receipt, Plus, DollarSign, CheckCircle2, UploadCloud } from 'lucide-react';
+import {
+  Bell, ChevronRight, Car, Home, FileText, Shield, Receipt, Plus,
+  DollarSign, CheckCircle2, UploadCloud, Zap, ShoppingBag,
+  Utensils, Heart, Plane, Landmark, MoreHorizontal
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService, Task, Category, Household, HouseholdMember } from '../services/tasks';
@@ -17,8 +21,16 @@ const ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
   'Home': Home,
   'FileText': FileText,
   'Shield': Shield,
-  'Receipt': Receipt
+  'Receipt': Receipt,
+  'Landmark': Landmark,
+  'Zap': Zap,
+  'ShoppingBag': ShoppingBag,
+  'Utensils': Utensils,
+  'Heart': Heart,
+  'Plane': Plane,
+  'MoreHorizontal': MoreHorizontal
 };
+
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -188,7 +200,7 @@ export const HomeScreen: React.FC = () => {
                   responsibilityFilter === 'joint' ? 'Nossas Pendências' :
                     'Itens Pendentes'}
             </h3>
-            <button onClick={() => navigate('/categories')} className="text-xs text-primary-600 font-bold hover:underline py-1">Ver tudo</button>
+
           </div>
 
           {urgentTasks.length === 0 ? (
@@ -238,30 +250,7 @@ export const HomeScreen: React.FC = () => {
           )}
         </section>
 
-        {/* Quick Categories */}
-        <section>
-          <h3 className="font-bold text-slate-900 text-lg mb-4">Categorias</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {categories.slice(0, 4).map((cat) => {
-              const IconComponent = ICON_MAP[cat.icon] || FileText;
-              const count = categoryStats[cat.id] || 0;
 
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => navigate('/categories')}
-                  className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-left hover:shadow-md transition-shadow hover:border-primary-100"
-                >
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${cat.color}`}>
-                    <IconComponent className="w-5 h-5" />
-                  </div>
-                  <p className="font-semibold text-slate-900">{cat.label}</p>
-                  <p className="text-xs text-slate-500 mt-1">{count} itens</p>
-                </button>
-              );
-            })}
-          </div>
-        </section>
         {/* Activity Timeline (Sprint 9) */}
         {activities.length > 0 && (
           <section className="pb-12">

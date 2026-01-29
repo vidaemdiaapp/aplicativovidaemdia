@@ -12,8 +12,8 @@ interface Props {
 }
 
 export const FinancialSummaryCard: React.FC<Props> = ({ report, onClick }) => {
-    const formatCurrency = (val: number) =>
-        val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatCurrency = (val: number | undefined | null) =>
+        (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     const statusConfig = {
         surplus: { color: 'bg-emerald-500', icon: '🟢', label: 'sobra' },

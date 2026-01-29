@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Calendar, ChevronRight,
     TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, CreditCard,
-    PiggyBank, Target, BarChart3, Zap, ArrowRight, Bell, Sparkles, LineChart
+    PiggyBank, Target, BarChart3, Zap, ArrowRight, Bell, Sparkles, LineChart, Landmark, RefreshCw
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -15,7 +15,8 @@ import { BudgetAlertBanner, BudgetAlert } from '../components/BudgetAlertBanner'
 
 interface DashboardData {
     total_income: number;
-    total_commitments: number;
+    total_bills: number;
+    total_immediate: number;
     balance: number;
     status: 'surplus' | 'warning' | 'deficit';
     overdue_count: number;
@@ -113,8 +114,8 @@ export const FinancialDashboardScreen: React.FC = () => {
         }
     };
 
-    const formatCurrency = (val: number) =>
-        val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const formatCurrency = (val: number | undefined | null) =>
+        (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr + 'T00:00:00');
@@ -130,14 +131,19 @@ export const FinancialDashboardScreen: React.FC = () => {
 
     const getCategoryLabel = (id: string) => {
         const map: Record<string, string> = {
+            'home': 'Casa/Moradia',
             'housing': 'Moradia',
             'transport': 'Transporte',
             'food': 'Alimentação',
             'health': 'Saúde',
             'leisure': 'Lazer',
             'education': 'Educação',
-            'utilities': 'Contas',
+            'utilities': 'Contas Fixas',
             'vehicle': 'Veículo',
+            'shopping': 'Compras',
+            'taxes': 'Impostos',
+            'contracts': 'Contratos',
+            'documents': 'Documentos',
             'outros': 'Outros'
         };
         return map[id] || id;
@@ -198,26 +204,48 @@ export const FinancialDashboardScreen: React.FC = () => {
                     </div>
 
                     {/* Income / Expenses Row */}
-                    <div className="flex gap-6 mt-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded bg-emerald-500/10 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded bg-emerald-500/10 flex items-center justify-center">
                                 <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
                             </div>
                             <div>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase">Rendas</p>
-                                <p className="text-lg font-black text-white">
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Rendas</p>
+                                <p className="text-sm font-black text-white">
                                     {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded bg-rose-500/10 flex items-center justify-center">
+                            <div className="w-9 h-9 rounded bg-rose-500/10 flex items-center justify-center">
                                 <ArrowDownCircle className="w-5 h-5 text-rose-500" />
                             </div>
                             <div>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase">Compromissos</p>
-                                <p className="text-lg font-black text-white">
-                                    {dashboard ? formatCurrency(dashboard.total_commitments) : 'R$ 0'}
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Contas Fixas</p>
+                                <p className="text-sm font-black text-white">
+                                    {dashboard ? formatCurrency(dashboard.total_bills) : 'R$ 0'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded bg-cyan-500/10 flex items-center justify-center">
+                                <CreditCard className="w-5 h-5 text-cyan-500" />
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Cartões</p>
+                                <p className="text-sm font-black text-white">
+                                    {dashboard ? formatCurrency(dashboard.credit_card_balance) : 'R$ 0'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded bg-amber-500/10 flex items-center justify-center">
+                                <Zap className="w-5 h-5 text-amber-500" />
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-slate-500 font-bold uppercase">Gastos à Vista</p>
+                                <p className="text-sm font-black text-white">
+                                    {dashboard ? formatCurrency(dashboard.total_immediate) : 'R$ 0'}
                                 </p>
                             </div>
                         </div>
@@ -228,22 +256,49 @@ export const FinancialDashboardScreen: React.FC = () => {
             {/* ═══════════════════════════════════════════════════════════════
                 QUICK ACTIONS
             ═══════════════════════════════════════════════════════════════ */}
-            <div className="px-6 -mt-2 flex gap-3">
+            <div className="px-6 -mt-2 grid grid-cols-2 gap-3">
                 <button
-                    onClick={() => setIsIncomeModalOpen(true)}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 p-4 rounded flex items-center justify-center gap-2 transition-all active:scale-95 group"
+                    onClick={() => navigate('/new-task', { state: { type: 'immediate' } })}
+                    className="bg-emerald-600 hover:bg-emerald-500 p-4 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 group shadow-lg shadow-emerald-500/20"
                 >
-                    <Plus className="w-5 h-5 text-white group-hover:rotate-90 transition-transform" />
-                    <span className="text-xs font-black uppercase tracking-tight">Rendas</span>
+                    <Plus className="w-6 h-6 text-white group-hover:rotate-90 transition-transform" />
+                    <span className="text-xs font-black uppercase tracking-tight">Gasto do Dia</span>
                 </button>
                 <button
                     onClick={() => navigate('/new-task')}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 p-4 rounded flex items-center justify-center gap-2 transition-all active:scale-95 border border-slate-700"
+                    className="bg-slate-800 hover:bg-slate-700 p-4 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 border border-slate-700"
                 >
                     <Calendar className="w-5 h-5 text-slate-300" />
                     <span className="text-xs font-black uppercase tracking-tight text-slate-300">Nova Conta</span>
                 </button>
             </div>
+
+            <button
+                onClick={() => setIsIncomeModalOpen(true)}
+                className="w-[calc(100%-3rem)] mx-6 mt-3 bg-slate-900 border border-slate-800 hover:border-slate-700 p-4 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95"
+            >
+                <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+                <span className="text-xs font-black uppercase tracking-tight text-slate-300">Gerenciar Rendas</span>
+            </button>
+
+            <button
+                onClick={() => navigate('/credit-simulator')}
+                className="w-[calc(100%-3rem)] mx-6 mt-3 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 border border-cyan-500/30 hover:border-cyan-500/50 p-6 rounded-2xl flex items-center justify-between transition-all active:scale-[0.98] group relative overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                    <Landmark className="w-12 h-12 text-cyan-500" />
+                </div>
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-12 h-12 rounded-xl bg-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                        <RefreshCw className="w-6 h-6 text-white animate-spin-slow" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-black text-white text-left">Simulador Open Finance</p>
+                        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest text-left">Visão Consolidada de Cartões</p>
+                    </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-cyan-500 group-hover:translate-x-1 transition-transform" />
+            </button>
 
             {/* ═══════════════════════════════════════════════════════════════
                 QUICK STATS ROW
@@ -486,6 +541,28 @@ export const FinancialDashboardScreen: React.FC = () => {
                     <p className="text-xs font-black text-white">Imposto de Renda</p>
                     <p className="text-[10px] text-slate-500 font-medium mt-0.5">Estimativa IR</p>
                 </button>
+
+                <button
+                    onClick={() => navigate('/investments')}
+                    className="bg-slate-900 border border-slate-800 rounded p-4 text-left hover:border-slate-700 transition-all group col-span-2 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-colors"></div>
+                    <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Landmark className="w-6 h-6 text-blue-400" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <p className="text-xs font-black text-white uppercase tracking-wider">Open Finance</p>
+                                    <span className="text-[7px] bg-blue-500/20 text-blue-400 font-black px-1.5 py-0.5 rounded uppercase tracking-widest border border-blue-500/20">Elite Sync</span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Sincronize suas contas e ativos</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-700 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+                    </div>
+                </button>
             </section>
 
             {/* ═══════════════════════════════════════════════════════════════
@@ -499,16 +576,18 @@ export const FinancialDashboardScreen: React.FC = () => {
                         </div>
                         <div className="flex-1">
                             <p className="text-[10px] text-emerald-500 font-black uppercase tracking-wider mb-1">
-                                Próxima Melhor Ação
+                                Análise Inteligente
                             </p>
                             <p className="text-sm font-bold text-white leading-snug">
                                 {overdueBills.length > 0
                                     ? `Você tem ${overdueBills.length} conta(s) atrasada(s). Regularize para evitar juros!`
-                                    : dashboard?.status === 'deficit'
-                                        ? 'Seu orçamento está no vermelho. Revise seus compromissos.'
-                                        : dashboard?.status === 'warning'
-                                            ? 'Margem apertada! Considere adiar gastos não essenciais.'
-                                            : 'Tudo em ordem! Que tal reservar parte do saldo para um cofrinho?'
+                                    : dashboard?.total_immediate && dashboard?.total_income && (dashboard.total_immediate / dashboard.total_income) > 0.1
+                                        ? `⚠️ Pequenos gastos já consumiram ${((dashboard.total_immediate / dashboard.total_income) * 100).toFixed(0)}% do seu orçamento este mês.`
+                                        : dashboard?.status === 'deficit'
+                                            ? 'Seu orçamento está no vermelho. Revise seus compromissos.'
+                                            : dashboard?.status === 'warning'
+                                                ? 'Margem apertada! Considere adiar gastos não essenciais.'
+                                                : 'Tudo em ordem! Que tal reservar parte do saldo para um cofrinho?'
                                 }
                             </p>
                         </div>
