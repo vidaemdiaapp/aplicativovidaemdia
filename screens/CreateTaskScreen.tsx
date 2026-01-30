@@ -174,31 +174,31 @@ export const CreateTaskScreen: React.FC = () => {
 
     if (initialLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+            <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Carregando...</p>
+                    <Loader2 className="w-10 h-10 text-primary-500 animate-spin" />
+                    <p className="text-slate-400 text-sm font-medium animate-pulse uppercase tracking-widest">Carregando...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
+        <div className="min-h-screen bg-surface text-slate-900 font-sans">
             {/* Header Sticky */}
-            <header className="fixed top-0 inset-x-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-white/5 px-6 py-12 flex items-center justify-between">
+            <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 pt-12 pb-6 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-colors border border-white/10"
+                        className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100 active:scale-95"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-5 h-5 text-slate-600" />
                     </button>
-                    <div>
-                        <h1 className="text-lg font-black tracking-tight">
-                            {isEditMode ? 'Editar Registro' : entryType === 'immediate' ? 'Gasto do Dia' : 'Nova Conta'}
+                    <div className="space-y-0.5">
+                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                            {isEditMode ? 'Editar' : entryType === 'immediate' ? 'Lançar Gasto' : 'Nova Conta'}
                         </h1>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Gestão de Patrimônio</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Registo Financeiro</p>
                     </div>
                 </div>
             </header>
@@ -207,15 +207,15 @@ export const CreateTaskScreen: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-8">
 
                     {/* Amount Input Large */}
-                    <div className="text-center py-8">
-                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-4">Valor do Lançamento</p>
+                    <div className="text-center py-6">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4">Valor do Lançamento</p>
                         <div className="flex items-center justify-center gap-2">
-                            <span className="text-2xl font-black text-slate-600">R$</span>
+                            <span className="text-2xl font-bold text-slate-300">R$</span>
                             <input
                                 type="tel"
                                 inputMode="numeric"
                                 placeholder="0,00"
-                                className="bg-transparent text-5xl md:text-6xl font-black outline-none placeholder:text-slate-800 text-white w-full text-center"
+                                className="bg-transparent text-5xl md:text-6xl font-bold outline-none placeholder:text-slate-100 text-slate-900 w-full text-center tracking-tight"
                                 value={amount}
                                 onChange={(e) => handleAmountChange(e.target.value)}
                             />
@@ -225,15 +225,15 @@ export const CreateTaskScreen: React.FC = () => {
                     <div className="space-y-6">
                         {/* Title */}
                         <div className="space-y-2">
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Descrição do Item</label>
+                            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Descrição do Item</label>
                             <div className="relative group">
-                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary-500 transition-colors">
                                     <FileText className="w-5 h-5" />
                                 </div>
                                 <input
                                     type="text"
                                     placeholder="Ex: Aluguel do Mês, Supermercado..."
-                                    className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 transition-all font-medium"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary-500/50 focus:ring-4 focus:ring-primary-500/5 transition-all font-medium text-slate-900 placeholder:text-slate-300"
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     required
@@ -243,7 +243,7 @@ export const CreateTaskScreen: React.FC = () => {
 
                         {/* Category Selector Grid */}
                         <div className="space-y-3">
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Categoria de Gasto</label>
+                            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Categoria de Gasto</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {categories.map(cat => {
                                     const Icon = CATEGORY_ICONS[cat.id] || MoreHorizontal;
@@ -253,15 +253,15 @@ export const CreateTaskScreen: React.FC = () => {
                                             key={cat.id}
                                             type="button"
                                             onClick={() => setSelectedCategory(cat.id)}
-                                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all ${isActive
-                                                ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/20 scale-[1.02]'
-                                                : 'bg-slate-900 border-slate-800 hover:border-slate-700'
+                                            className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border transition-all shadow-sm ${isActive
+                                                ? 'bg-primary-500 border-primary-500 shadow-primary-500/20 scale-[1.02] text-white'
+                                                : 'bg-white border-slate-100 hover:border-slate-200 text-slate-500'
                                                 }`}
                                         >
-                                            <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${isActive ? 'bg-white/20' : 'bg-slate-800'}`}>
+                                            <div className={`w-8 h-8 flex items-center justify-center rounded-lg ${isActive ? 'bg-white/20' : 'bg-slate-50'}`}>
                                                 <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                                             </div>
-                                            <span className={`text-[9px] font-black uppercase tracking-wider ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                                            <span className={`text-[9px] font-bold uppercase tracking-wider ${isActive ? 'text-white' : 'text-slate-400'}`}>
                                                 {cat.label}
                                             </span>
                                         </button>
@@ -273,24 +273,24 @@ export const CreateTaskScreen: React.FC = () => {
                         {/* Payment Method (Immediate Only) */}
                         {entryType === 'immediate' && (
                             <div className="space-y-3">
-                                <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Forma de Pagamento</label>
+                                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Forma de Pagamento</label>
                                 <div className="grid grid-cols-3 gap-2">
                                     {[
-                                        { id: 'pix', label: 'PIX', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
-                                        { id: 'debit', label: 'Débito', icon: CreditCard, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-                                        { id: 'cash', label: 'Dinheiro', icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+                                        { id: 'pix', label: 'PIX', icon: Zap, color: 'text-cyan-500', bg: 'bg-cyan-50' },
+                                        { id: 'debit', label: 'Débito', icon: CreditCard, color: 'text-primary-500', bg: 'bg-primary-50' },
+                                        { id: 'cash', label: 'Dinheiro', icon: Coins, color: 'text-emerald-500', bg: 'bg-emerald-50' },
                                     ].map(method => (
                                         <button
                                             key={method.id}
                                             type="button"
                                             onClick={() => setPaymentMethod(method.id as any)}
-                                            className={`flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all ${paymentMethod === method.id
-                                                ? 'border-white/20 bg-white/10 scale-[1.02] shadow-lg'
-                                                : 'border-slate-800 bg-slate-900/50 grayscale opacity-60 hover:opacity-100 hover:grayscale-0'
+                                            className={`flex flex-col items-center gap-3 p-4 rounded-2xl border transition-all shadow-sm ${paymentMethod === method.id
+                                                ? 'border-primary-100 bg-white scale-[1.05] shadow-md ring-2 ring-primary-500/5'
+                                                : 'border-slate-100 bg-slate-50/50 grayscale opacity-60 hover:opacity-100'
                                                 }`}
                                         >
                                             <method.icon className={`w-6 h-6 ${method.color}`} />
-                                            <span className="text-[10px] font-black uppercase tracking-widest">{method.label}</span>
+                                            <span className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">{method.label}</span>
                                         </button>
                                     ))}
                                 </div>
@@ -300,17 +300,16 @@ export const CreateTaskScreen: React.FC = () => {
                         {/* Date & Recurrence */}
                         <div className={`grid ${entryType === 'immediate' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}>
                             <div className="space-y-2">
-                                <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">
+                                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">
                                     {entryType === 'immediate' ? 'Data do Gasto' : 'Vencimento'}
                                 </label>
                                 <div className="relative group">
-                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-400">
+                                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary-500">
                                         <Calendar className="w-5 h-5" />
                                     </div>
                                     <input
                                         type="date"
-                                        className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-blue-500/50 transition-all font-medium text-white appearance-none"
-                                        style={{ colorScheme: 'dark' }}
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-primary-500/50 transition-all font-medium text-slate-900 appearance-none shadow-sm"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
                                     />
@@ -318,17 +317,17 @@ export const CreateTaskScreen: React.FC = () => {
                             </div>
                             {entryType === 'bill' && (
                                 <div className="space-y-2">
-                                    <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Repetir Mensal</label>
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Repetir Mensal</label>
                                     <button
                                         type="button"
                                         onClick={() => setIsRecurring(!isRecurring)}
-                                        className={`w-full h-[58px] rounded-2xl border flex items-center justify-center gap-3 transition-all ${isRecurring
-                                            ? 'bg-blue-600/10 border-blue-500/50 text-blue-400'
-                                            : 'bg-slate-900 border-slate-800 text-slate-500'
+                                        className={`w-full h-[58px] rounded-2xl border flex items-center justify-center gap-3 transition-all shadow-sm ${isRecurring
+                                            ? 'bg-primary-50 border-primary-100 text-primary-600 shadow-inner'
+                                            : 'bg-white border-slate-100 text-slate-400'
                                             }`}
                                     >
-                                        <Repeat className={`w-5 h-5 ${isRecurring ? 'animate-spin-slow' : ''}`} />
-                                        <span className="text-xs font-black uppercase tracking-widest">{isRecurring ? 'ATIVO' : 'OFF'}</span>
+                                        <Repeat className={`w-5 h-5 ${isRecurring ? 'animate-spin-slow text-primary-500' : ''}`} />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">{isRecurring ? 'ATIVO' : 'OFF'}</span>
                                     </button>
                                 </div>
                             )}
@@ -336,10 +335,10 @@ export const CreateTaskScreen: React.FC = () => {
 
                         {/* Extra Notes */}
                         <div className="space-y-2">
-                            <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest ml-1">Observações (Opcional)</label>
+                            <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Observações (Opcional)</label>
                             <textarea
                                 placeholder="Informações adicionais..."
-                                className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-4 px-4 outline-none focus:border-blue-500/50 transition-all font-medium min-h-[100px] resize-none"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 outline-none focus:border-primary-500/50 transition-all font-medium min-h-[100px] resize-none text-slate-900 placeholder:text-slate-300 shadow-sm"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                             />
@@ -347,15 +346,15 @@ export const CreateTaskScreen: React.FC = () => {
                     </div>
 
                     {/* Action Button */}
-                    <div className="fixed bottom-0 inset-x-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+                    <div className="fixed bottom-0 inset-x-0 p-6 bg-gradient-to-t from-white via-white/90 to-transparent">
                         <Button
                             type="submit"
                             fullWidth
                             disabled={loading}
-                            className={`h-16 rounded-2xl text-base font-black uppercase tracking-widest transition-all ${loading ? 'bg-slate-800 opacity-50' :
+                            className={`h-16 rounded-3xl text-sm font-bold uppercase tracking-widest transition-all ${loading ? 'bg-slate-100 text-slate-300' :
                                 entryType === 'immediate'
-                                    ? 'bg-emerald-600 hover:bg-emerald-500 shadow-xl shadow-emerald-500/20 active:scale-95'
-                                    : 'bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-600/20 active:scale-95'
+                                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/20 active:scale-95'
+                                    : 'bg-primary-500 hover:bg-primary-600 text-white shadow-xl shadow-primary-500/20 active:scale-95'
                                 }`}
                         >
                             {loading ? (
@@ -366,7 +365,7 @@ export const CreateTaskScreen: React.FC = () => {
                             ) : (
                                 <div className="flex items-center gap-3">
                                     <Check className="w-5 h-5" />
-                                    <span>{isEditMode ? 'Salvar Alterações' : 'Concluir Lançamento'}</span>
+                                    <span>{isEditMode ? 'Salvar Alterações' : 'Concluir Registro'}</span>
                                 </div>
                             )}
                         </Button>

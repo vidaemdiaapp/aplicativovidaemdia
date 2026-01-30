@@ -21,30 +21,18 @@ import { CreditCardsScreen } from './screens/CreditCardsScreen';
 import { SavingsGoalsScreen } from './screens/SavingsGoalsScreen';
 import { InvestmentsScreen } from './screens/InvestmentsScreen';
 import { CreditSimulatorScreen } from './screens/CreditSimulatorScreen';
+import { VehicleCentralScreen } from './screens/VehicleCentralScreen';
+import { VehicleDebtSimulationScreen } from './screens/VehicleDebtSimulationScreen';
+import { VehicleReceiptScreen } from './screens/VehicleReceiptScreen';
+import { VehicleEditScreen } from './screens/VehicleEditScreen';
+import { AgendaScreen } from './screens/AgendaScreen';
+import { AgendaEditScreen } from './screens/AgendaEditScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { NotificationCenterScreen } from './screens/NotificationCenterScreen';
 import { notificationsService } from './services/notifications';
-
-const Layout = ({ children }: { children?: React.ReactNode }) => (
-  <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row">
-    {/* Sidebar for Desktop */}
-    <Sidebar />
-
-    <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
-      {/* Content wrapper with fluid grid behavior */}
-      <main className="flex-1 overflow-y-auto no-scrollbar pb-24 lg:pb-0">
-        <div className="w-full max-w-5xl mx-auto lg:p-8">
-          {children}
-        </div>
-      </main>
-
-      {/* Bottom Nav for Mobile/Tablet */}
-      <BottomNav />
-    </div>
-  </div>
-);
+import { Layout } from './components/Layout';
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -52,8 +40,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-surface-highlight border-t-primary rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -118,6 +106,12 @@ const AppRoutes: React.FC = () => {
         <Route path="/financial" element={<Navigate to="/financial-dashboard" replace />} />
         <Route path="/investments" element={<ProtectedRoute><InvestmentsScreen /></ProtectedRoute>} />
         <Route path="/credit-simulator" element={<ProtectedRoute><CreditSimulatorScreen /></ProtectedRoute>} />
+        <Route path="/vehicle-central" element={<ProtectedRoute><VehicleCentralScreen /></ProtectedRoute>} />
+        <Route path="/vehicle-simulation" element={<ProtectedRoute><VehicleDebtSimulationScreen /></ProtectedRoute>} />
+        <Route path="/vehicle-receipt" element={<ProtectedRoute><VehicleReceiptScreen /></ProtectedRoute>} />
+        <Route path="/vehicle-edit" element={<ProtectedRoute><VehicleEditScreen /></ProtectedRoute>} />
+        <Route path="/agenda" element={<ProtectedRoute><AgendaScreen /></ProtectedRoute>} />
+        <Route path="/agenda/:id" element={<ProtectedRoute><AgendaEditScreen /></ProtectedRoute>} />
         <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

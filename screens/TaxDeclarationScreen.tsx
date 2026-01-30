@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Circle, AlertCircle, Download, ExternalLink, Calendar, Calculator, Info, ShieldCheck, Package, ChevronRight } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, Circle, AlertCircle, Download, ExternalLink, Calendar, Calculator, Info, ShieldCheck, Package, ChevronRight } from 'lucide-react';
 import { taxService } from '../services/tax';
 import { incomesService } from '../services/incomes';
 import { calculateIRPF2026 } from '../services/tax_calculator';
@@ -111,32 +111,35 @@ Gerador da Declaração (PGD) da Receita Federal.
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
+                    <p className="text-slate-400 text-sm font-medium animate-pulse uppercase tracking-widest">Processando imposto...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-32 text-white">
-            <header className="bg-slate-950/80 backdrop-blur-md p-6 pt-16 pb-6 sticky top-0 z-20 border-b border-slate-800/50">
+        <div className="min-h-screen bg-surface pb-32 text-slate-900 font-sans">
+            <header className="bg-white/80 backdrop-blur-md px-6 pt-16 pb-6 sticky top-0 z-20 border-b border-slate-100 shadow-sm">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/financial-dashboard')}
-                        className="p-2 hover:bg-slate-800 rounded-full -ml-2 transition-colors"
+                        className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all active:scale-95"
                     >
-                        <ArrowLeft className="w-6 h-6 text-slate-400" />
+                        <ChevronLeft className="w-6 h-6" />
                     </button>
                     <div>
-                        <h1 className="text-xl font-black text-white">Imposto de Renda</h1>
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Exercício {estimate?.year}</p>
+                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Imposto de Renda</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Exercício {estimate?.year}</p>
                     </div>
                 </div>
             </header>
 
             <div className="p-6 space-y-8">
-                {/* Readiness Status Header - Premium Redesign */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-900 border border-slate-800 rounded-[32px] p-6 flex items-center justify-between shadow-2xl relative overflow-hidden group">
+                {/* Readiness Status Header */}
+                <div className="bg-white border border-slate-100 rounded-[32px] p-6 flex items-center justify-between shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-colors"></div>
 
                     <div className="flex gap-4 items-center relative z-10">
@@ -144,21 +147,27 @@ Gerador da Declaração (PGD) da Receita Federal.
                             <BudgetProgressRing
                                 spent={readiness?.completed_count || 0}
                                 limit={readiness?.total_count || 5}
-                                size={70}
+                                size={72}
+                            // Note: SpendingChart colors might need adjustment to handle light mode better if they are fixed
                             />
                         </div>
                         <div>
-                            <h3 className="font-black uppercase tracking-widest text-[10px] text-slate-500">Prontidão para Declarar</h3>
-                            <p className="text-lg font-black text-white">
-                                {readiness?.status === 'ready' ? '🟢 100% Pronto' :
-                                    readiness?.status === 'almost' ? '🟡 Quase lá...' : '🔴 Incompleto'}
-                            </p>
+                            <h3 className="font-bold uppercase tracking-widest text-[9px] text-slate-400 mb-1">Status de Prontidão</h3>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${readiness?.status === 'ready' ? 'bg-emerald-500' :
+                                        readiness?.status === 'almost' ? 'bg-amber-500' : 'bg-rose-500'
+                                    } animate-pulse shadow-sm`}></div>
+                                <p className="text-lg font-bold text-slate-900 tracking-tight">
+                                    {readiness?.status === 'ready' ? '100% Completo' :
+                                        readiness?.status === 'almost' ? 'Quase lá...' : 'Ação Necessária'}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
                     <button
                         onClick={() => navigate('/assistant', { state: { initialMessage: '🦁 Elara, me ajude a completar os itens que faltam para minha declaração de IR?' } })}
-                        className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all p-2 relative z-10"
+                        className="bg-primary-50 hover:bg-primary-100 text-primary-600 px-5 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all p-2 relative z-10 border border-primary-100"
                     >
                         Ajustar
                     </button>
@@ -172,18 +181,18 @@ Gerador da Declaração (PGD) da Receita Federal.
                         {/* Patrimônio Quick Access */}
                         <div
                             onClick={() => navigate('/assets')}
-                            className="bg-slate-900 p-6 rounded-[32px] border border-slate-800 shadow-sm flex items-center justify-between group cursor-pointer active:scale-[0.98] transition-all hover:bg-slate-800/50"
+                            className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between group cursor-pointer active:scale-[0.98] transition-all hover:bg-slate-50/50"
                         >
                             <div className="flex items-center gap-4">
-                                <div className="bg-slate-800 p-3 rounded-2xl group-hover:bg-blue-500/10 transition-all border border-slate-700">
-                                    <Package className="w-6 h-6 text-slate-500 group-hover:text-blue-400" />
+                                <div className="bg-primary-50 p-3 rounded-2xl group-hover:scale-110 transition-all border border-primary-100">
+                                    <Package className="w-6 h-6 text-primary-500" />
                                 </div>
                                 <div>
-                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Patrimônio</h4>
-                                    <p className="text-sm font-bold text-white">Bens e Direitos</p>
+                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Patrimônio</h4>
+                                    <p className="text-sm font-bold text-slate-900">Bens e Direitos</p>
                                 </div>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-slate-600 group-hover:translate-x-1 transition-transform" />
+                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:translate-x-1 transition-transform group-hover:text-primary-500" />
                         </div>
 
                         <IRPFEstimateCard estimate={estimate} />
@@ -195,50 +204,50 @@ Gerador da Declaração (PGD) da Receita Federal.
                     </div>
                 )}
 
-                {/* Memória de Cálculo - Premium Integration */}
-                <section className="bg-slate-900 rounded-[32px] p-6 border border-slate-800 shadow-xl">
+                {/* Memória de Cálculo */}
+                <section className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
-                        <Info className="w-4 h-4 text-slate-500" />
-                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500">Regras IR 2026 (Simuladas)</h3>
+                        <Info className="w-4 h-4 text-primary-500" />
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Regras IR 2026 (Simuladas)</h3>
                     </div>
                     <div className="space-y-4">
                         <div className="flex justify-between items-start">
-                            <span className="text-xs text-slate-400 font-medium">Isenção: Atée R$ 60.000,00</span>
-                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded font-bold uppercase">Novo</span>
+                            <span className="text-xs text-slate-600 font-medium">Isenção: Até R$ 60.000,00</span>
+                            <span className="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-md font-bold uppercase border border-emerald-100">Novo</span>
                         </div>
-                        <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                        <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
                             A regra de 2026 aplica um redutor gradual. Nosso simulador já está atualizado com estas projeções para você não ter surpresas.
                         </p>
                         <button
                             onClick={() => navigate('/assistant', { state: { initialMessage: '🦁 Me explica detalhadamente a nova regra de isenção de 60 mil do IR 2026 e o redutor gradual?' } })}
-                            className="w-full py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl text-[10px] font-black uppercase text-slate-300 transition-all flex items-center justify-center gap-3"
+                            className="w-full py-4 bg-slate-50 hover:bg-primary-50 border border-slate-100 hover:border-primary-100 rounded-2xl text-[10px] font-bold uppercase text-slate-600 hover:text-primary-700 transition-all flex items-center justify-center gap-3"
                         >
                             Explicação Detalhada com Elara
-                            <ExternalLink className="w-3 h-3 opacity-40" />
+                            <ExternalLink className="w-3 h-3 text-slate-300" />
                         </button>
                     </div>
                 </section>
 
-                {/* Checklist Section - Premium */}
+                {/* Checklist Section */}
                 <section>
                     <div className="flex justify-between items-end mb-4 ml-2">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-500">Diagnostic de Prontidão</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Diagnostic de Prontidão</h3>
                     </div>
-                    <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-sm overflow-hidden divide-y divide-slate-800/50">
+                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-50">
                         {readiness?.checklist.map((item) => (
-                            <div key={item.id} className="p-5 flex items-center justify-between hover:bg-slate-800/30 transition-colors group">
+                            <div key={item.id} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors group">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${item.status === 'done' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-800 text-slate-600'}`}>
-                                        {item.status === 'done' ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${item.status === 'done' ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-300'}`}>
+                                        {item.status === 'done' ? <CheckCircle2 className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
                                     </div>
                                     <div>
-                                        <h4 className={`text-sm font-bold ${item.status === 'done' ? 'text-white' : 'text-slate-500'}`}>{item.label}</h4>
-                                        <p className="text-[10px] text-slate-600 font-medium uppercase">{item.status === 'done' ? 'Completo' : 'Pendente'}</p>
+                                        <h4 className={`text-[15px] font-bold ${item.status === 'done' ? 'text-slate-900' : 'text-slate-400'}`}>{item.label}</h4>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">{item.status === 'done' ? 'Completo' : 'Pendente'}</p>
                                     </div>
                                 </div>
                                 {item.status === 'pending' && (
                                     <button
-                                        className="text-[10px] font-black uppercase text-blue-400 bg-blue-400/10 px-4 py-2 rounded-xl border border-blue-400/20 active:scale-90 transition-all"
+                                        className="text-[10px] font-bold uppercase text-primary-600 bg-primary-50 px-4 py-2.5 rounded-xl border border-primary-100 active:scale-95 transition-all shadow-sm"
                                         onClick={() => {
                                             if (item.id === 'income') navigate('/financial-dashboard');
                                             else if (item.id === 'assets') navigate('/assets');
@@ -258,15 +267,17 @@ Gerador da Declaração (PGD) da Receita Federal.
                 <div className="pt-4">
                     <button
                         onClick={handleExport}
-                        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-6 rounded-[32px] font-black text-lg shadow-[0_20px_50px_rgba(16,185,129,0.2)] hover:from-emerald-500 hover:to-teal-500 transition-all flex items-center justify-center gap-3 active:scale-95 border border-white/10"
+                        className="w-full bg-primary-500 text-white py-6 rounded-[32px] font-bold text-lg shadow-xl shadow-primary-500/20 hover:bg-primary-600 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                     >
                         <Download className="w-6 h-6" />
-                        Gerar Pacote para o Contador
+                        Gerar Pacote para Contador
                     </button>
 
-                    <div className="mt-8 p-6 bg-slate-900/50 border border-slate-800 rounded-3xl flex gap-3 items-start">
-                        <ShieldCheck className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
-                        <p className="text-[10px] leading-relaxed font-bold uppercase tracking-wider text-slate-500">
+                    <div className="mt-8 p-6 bg-slate-50 border border-slate-100 rounded-3xl flex gap-4 items-start shadow-inner">
+                        <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shrink-0">
+                            <ShieldCheck className="w-6 h-6 text-primary-500" />
+                        </div>
+                        <p className="text-[10px] leading-relaxed font-bold uppercase tracking-widest text-slate-400">
                             Atenção Profissional: Este resumo é gerado como um guia auxiliar (Ano-Calendário 2025 / Exercício 2026). Não substitui o Programa Oficial da RFB.
                         </p>
                     </div>

@@ -70,7 +70,7 @@ Before any design work, answer:
 
 ---
 
-## 🧠 DEEP DESIGN THINKING (MANDATORY - BEFORE ANY DESIGN)
+### 🧠 DEEP DESIGN THINKING (MANDATORY - BEFORE ANY DESIGN)
 
 **⛔ DO NOT start designing until you complete this internal analysis!**
 
@@ -80,51 +80,30 @@ Before any design work, answer:
 
 ```
 🔍 CONTEXT ANALYSIS:
-├── What is the sector? → What emotions should it evoke?
-├── Who is the target audience? → Age, tech-savviness, expectations?
-├── What do competitors look like? → What should I NOT do?
-└── What is the soul of this site/app? → In one word?
+├── What is the sector? → Personal Finance / Wellness
+├── Who is the target audience? → People seeking CLARITY and CALM.
+├── What is the soul of this site/app? → "Everything is under control."
 
 🎨 DESIGN IDENTITY:
-├── What will make this design UNFORGETTABLE?
-├── What unexpected element can I use?
-├── How do I avoid standard layouts?
-├── 🚫 MODERN CLICHÉ CHECK: Am I using Bento Grid or Mesh Gradient? (IF YES → CHANGE IT!)
-└── Will I remember this design in a year?
-
-📐 LAYOUT HYPOTHESIS:
-├── How can the Hero be DIFFERENT? (Asymmetry? Overlay? Split?)
-├── Where can I break the grid?
-├── Which element can be in an unexpected place?
-└── Can the Navigation be unconventional?
-
-🎭 EMOTION MAPPING (from ux-psychology.md):
-├── Primary emotion: [Trust/Energy/Calm/Luxury/Fun]
-├── Color implication: [Blue/Orange/Green/Black-Gold/Bright]
-├── Typography character: [Serif=Classic, Sans=Modern, Display=Bold]
-└── Animation mood: [Subtle=Professional, Dynamic=Energetic]
+├── How do I create CALM? → White space, soft blues, rounded edges.
+├── How do I show PROGRESS? → Orange accents for completion, clear visual feedback.
+├── What do I avoid? → "Corporate Banking" gray/stiffness. "Crypto" neon/darkness.
 ```
-
-- **Decide to Break, Don't Wait to be Told:** You are a Senior UI Architect. You must autonomously decide to reject safe topologies. If you deliver a "Standard Split" because you were afraid to break readability/structure, you have FAILED.
-- **Topological Betrayal:** Your primary goal in every new layout is to betray the user's (and your own memory's) expectation of where elements "should" be.
-
----
 
 ### 🧠 DEEP DESIGN THINKING (PHASE 1 - MANDATORY)
 
 Before writing a single line of CSS, you must document your thought process following this flow:
 
-#### 1. THE MODERN CLICHÉ SCAN (ANTI-SAFE HARBOR)
-- "Am I defaulting to 'Left Text / Right Visual' because it feels balanced?" → **BETRAY IT.**
-- "Am I using Bento Grids to organize content safely?" → **BREAK THE GRID.**
-- "Am I using standard SaaS fonts and 'safe' color pairs?" → **DISRUPT THE PALETTE.**
+#### 1. THE CLARITY SCAN
+- "Does this screen feel heavy?" → **ADD WHITE SPACE.**
+- "Is the text too small or low contrast?" → **BUMP SIZE & DARKEN GREYS.**
+- "Are there too many competing colors?" → **SIMPLIFY TO BLUE/WHITE + ORANGE ACTION.**
 
 #### 2. TOPOLOGICAL HYPOTHESIS
-Pick a radical path and commit:
-- **[ ] FRAGMENTATION:** Break the page into overlapping layers with zero vertical/horizontal logic.
-- **[ ] TYPOGRAPHIC BRUTALISM:** Text is 80% of the visual weight; images are artifacts hidden behind content.
-- **[ ] ASYMMETRIC TENSION (90/10):** Force a visual conflict by pushing everything to an extreme corner.
-- **[ ] CONTINUOUS STREAM:** No sections, just a flowing narrative of fragments.
+Pick a path of CLARITY:
+- **[ ] THE CARD STACK:** Content lives in clean, white, rounded cards on a soft gray background.
+- **[ ] THE GUIDED FLOW:** Vertical, step-by-step layout that holds the user's hand.
+- **[ ] THE DASHBOARD OASIS:** A calm, decluttered overview where only actionable numbers stand out.
 
 ---
 
@@ -132,12 +111,15 @@ Pick a radical path and commit:
 *You must present this block to the user before code.*
 
 ```markdown
-🎨 DESIGN COMMITMENT: [RADICAL STYLE NAME]
+🎨 DESIGN COMMITMENT: [CLEAN & CALM FINTECH]
 
-- **Topological Choice:** (How did I betray the 'Standard Split' habit?)
-- **Risk Factor:** (What did I do that might be considered 'too far'?)
-- **Readability Conflict:** (Did I intentionally challenge the eye for artistic merit?)
-- **Cliché Liquidation:** (Which 'Safe Harbor' elements did I explicitly kill?)
+- **Atmosphere:** Calm, clarity, continuous progress. "Everything is okay."
+- **Palette (Mental Health):**
+  - **Base:** Cloud White / Soft Off-White (#f8f9fa).
+  - **Primary:** Fresh Blue / Teal (Stability & Freshness).
+  - **Accent:** Energetic Orange (Action & Reward/Completion). NOT for backgrounds.
+- **Geometry:** Friendly & Human. Rounded corners (12px-24px). Big touch targets (48dp+).
+- **Anti-Pattern:** No corporate stiffness, no aggressive neon, no dark-mode-first.
 ```
 
 ### Step 2: Dynamic User Questions (Based on Analysis)
@@ -171,30 +153,25 @@ Pick a radical path and commit:
 - Palette: [e.g., High Contrast Red/Black - NOT Cyan/Blue]
 ```
 
-### 🚫 THE MODERN SaaS "SAFE HARBOR" (STRICTLY FORBIDDEN)
+### 🚫 THE "DARK & SHARP" TRAP (STRICTLY FORBIDDEN)
 
-**AI tendencies often drive you to hide in these "popular" elements. They are now FORBIDDEN as defaults:**
+**The previous "Liquid Obsidian" or "Brutalist" styles are now BANNED.**
 
-1. **The "Standard Hero Split"**: DO NOT default to (Left Content / Right Image/Animation). It's the most overused layout in 2025.
-2. **Bento Grids**: Use only for truly complex data. DO NOT make it the default for landing pages.
-3. **Mesh/Aurora Gradients**: Avoid floating colored blobs in the background.
-4. **Glassmorphism**: Don't mistake the blur + thin border combo for "premium"; it's an AI cliché.
-5. **Deep Cyan / Fintech Blue**: The "safe" escape palette for Fintech. Try risky colors like Red, Black, or Neon Green instead.
-6. **Generic Copy**: DO NOT use words like "Orchestrate", "Empower", "Elevate", or "Seamless".
+1. **NO Default Dark Mode**: Apps for organizing life should feel light and airy by default. Dark mode is distinct and optional.
+2. **NO Sharp Edges**: 0px border-radius feels "techy" and "harsh". Use `rounded-lg` or `rounded-xl`.
+3. **NO Neon Text**: It strains the eye. Use accessible, high-contrast dark gray text on white.
+4. **NO Aggressive Uppercase**: Use standard Sentence case for a conversational, human tone.
 
-> 🔴 **"If your layout structure is predictable, you have FAILED."**
+> 🔴 **"If your layout looks like a hacker terminal or a crypto dashboard, you have FAILED."**
 
 ---
 
-### 📐 LAYOUT DIVERSIFICATION MANDATE (REQUIRED)
+### 📐 LAYOUT MANDATE: THE "BREATHABLE" STANDARD
 
-**Break the "Split Screen" habit. Use these alternative structures instead:**
-
-- **Massive Typographic Hero**: Center the headline, make it 300px+, and build the visual *behind* or *inside* the letters.
-- **Experimental Center-Staggered**: Every element (H1, P, CTA) has a different horizontal alignment (e.g., L-R-C-L).
-- **Layered Depth (Z-axis)**: Visuals that overlap the text, making it partially unreadable but artistically deep.
-- **Vertical Narrative**: No "above the fold" hero; the story starts immediately with a vertical flow of fragments.
-- **Extreme Asymmetry (90/10)**: Compress everything to one extreme edge, leaving 90% of the screen as "negative/dead space" for tension.
+1. **Space is Luxury**: Don't cram. If in doubt, double the padding.
+2. **Cards over Grids**: Encapsulate related info in white cards with soft shadows.
+3. **One Hero per Screen**: Only one big orange button or primary KPI per view.
+4. **Readable Text**: 16px base size. 1.2rem+ for body copy. Dark gray (`#1f2937`) on white, never pure black on white.
 
 ---
 
@@ -269,18 +246,9 @@ Standard templates, typical layouts, common color schemes, overused patterns = *
 - Every project should have a **DIFFERENT** geometry. One sharp, one rounded, one organic, one brutalist.
 
 **✨ MANDATORY ACTIVE ANIMATION & VISUAL DEPTH (REQUIRED):**
-- **STATIC DESIGN IS FAILURE.** UI must always feel alive and "Wow" the user with movement.
-- **Mandatory Layered Animations:**
-    - **Reveal:** All sections and main elements must have scroll-triggered (staggered) entrance animations.
-    - **Micro-interactions:** Every clickable/hoverable element must provide physical feedback (`scale`, `translate`, `glow-pulse`).
-    - **Spring Physics:** Animations should not be linear; they must feel organic and adhere to "spring" physics.
-- **Mandatory Visual Depth:**
-    - Do not use only flat colors/shadows; Use **Overlapping Elements, Parallax Layers, and Grain Textures** for depth.
-    - **Avoid:** Mesh Gradients and Glassmorphism (unless user specifically requests).
-- **⚠️ OPTIMIZATION MANDATE (CRITICAL):**
-    - Use only GPU-accelerated properties (`transform`, `opacity`).
-    - Use `will-change` strategically for heavy animations.
-    - `prefers-reduced-motion` support is MANDATORY.
+- **Micro-interactions:** Buttons should `scale(0.98)` on click. Cards should float slightly.
+- **Soft Shadows:** Use large, diffuse shadows (`shadow-xl` with low opacity) to create lift, not borders.
+- **Spring Physics:** Animations should feel bouncy and organic, not mechanical.
 
 **✅ EVERY design must achieve this trinity:**
 1. Sharp/Net Geometry (Extremism)
@@ -293,22 +261,19 @@ Standard templates, typical layouts, common color schemes, overused patterns = *
 
 **⛔ DO NOT start coding without declaring your design choices.**
 
-**Think through these decisions (don't copy from templates):**
-1. **What emotion/purpose?** → Finance=Trust, Food=Appetite, Fitness=Power
-2. **What geometry?** → Sharp for luxury/power, Rounded for friendly/organic
-3. **What colors?** → Based on ux-psychology.md emotion mapping (NO PURPLE!)
-4. **What makes it UNIQUE?** → How does this differ from a template?
+**Think through these decisions:**
+1. **What emotion/purpose?** → Calm, Organization, Progress.
+2. **What geometry?** → Rounded (16px+). Friendly.
+3. **What colors?** → White/Gray Background, Teal/Blue Identity, Orange Action.
+4. **What makes it UNIQUE?** → The specific balance of "Soft" but "High Utility". Use of Orange ONLY for rewards/actions.
 
 **Format to use in your thought process:**
 > 🎨 **DESIGN COMMITMENT:**
-> - **Geometry:** [e.g., Sharp edges for premium feel]
-> - **Typography:** [e.g., Serif Headers + Sans Body]
->   - *Ref:* Scale from `typography-system.md`
-> - **Palette:** [e.g., Teal + Gold - Purple Ban ✅]
->   - *Ref:* Emotion mapping from `ux-psychology.md`
-> - **Effects/Motion:** [e.g., Subtle shadow + ease-out]
->   - *Ref:* Principle from `visual-effects.md`, `animation-guide.md`
-> - **Layout uniqueness:** [e.g., Asymmetric 70/30 split, NOT centered hero]
+> - **Geometry:** [Friendly Rounded - 16px]
+> - **Typography:** [Modern Sans - Inter/Outfit - Readable]
+> - **Palette:** [Fresh Blue + Vitamin Orange]
+> - **Effects/Motion:** [Soft lift, bouncy buttons]
+> - **Layout:** [Card-based, spacious, single-column mobile focus]
 
 **Rules:**
 1. **Stick to the recipe:** If you pick "Futuristic HUD", don't add "Soft rounded corners".
@@ -325,13 +290,12 @@ Verify your output against these **Automatic Rejection Triggers**. If ANY are tr
 
 | 🚨 Rejection Trigger | Description (Why it fails) | Corrective Action |
 | :--- | :--- | :--- |
-| **The "Safe Split"** | Using `grid-cols-2` or 50/50, 60/40, 70/30 layouts. | **ACTION:** Switch to `90/10`, `100% Stacked`, or `Overlapping`. |
-| **The "Glass Trap"** | Using `backdrop-blur` without raw, solid borders. | **ACTION:** Remove blur. Use solid colors and raw borders (1px/2px). |
-| **The "Glow Trap"** | Using soft gradients to make things "pop". | **ACTION:** Use high-contrast solid colors or grain textures. |
-| **The "Bento Trap"** | Organizing content in safe, rounded grid boxes. | **ACTION:** Fragment the grid. Break alignment intentionally. |
-| **The "Blue Trap"** | Using any shade of default blue/teal as primary. | **ACTION:** Switch to Acid Green, Signal Orange, or Deep Red. |
+| **The "Corporate Blue"** | Using dark navy/royal blue like a bank. | **ACTION:** Shift to Cyan, Teal, or Sky Blue. Freshness > Authority. |
+| **The "Wall of Text"** | Small font, long lines. | **ACTION:** Increase font size, use cards to break content. |
+| **The "Background Orange"** | Using orange for backgrounds/cards. | **ACTION:** Orange is for BUTTONS and ICONS only. |
+| **The "Sharp Edge"** | 0px/2px border radius. | **ACTION:** Round it. `rounded-lg` minimum. |
 
-> **🔴 MAESTRO RULE:** "If I can find this layout in a Tailwind UI template, I have failed."
+> **🔴 MAESTRO RULE:** "If it feels 'stressful' or 'busy', I have failed."
 
 ---
 

@@ -1,23 +1,42 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Grid, Plus, MessageSquare, Settings, ShieldCheck, UploadCloud, Wallet } from 'lucide-react';
+import {
+    Home,
+    Plus,
+    MessageSquare,
+    Settings,
+    ShieldCheck,
+    UploadCloud,
+    Wallet,
+    Calendar,
+    ChevronRight,
+    Car,
+    FileText,
+    FolderOpen
+} from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 export const Sidebar: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user } = useAuth();
 
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
     const NavItem = ({ path, icon: Icon, label }: { path: string; icon: any; label: string }) => (
         <button
             onClick={() => navigate(path)}
-            className={`flex items-center gap-4 w-full p-4 rounded-2xl transition-all duration-200 group ${isActive(path)
-                ? 'bg-primary-50 text-primary-600 shadow-sm border border-primary-100'
-                : 'text-slate-400 hover:text-slate-900 hover:bg-slate-50'
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl transition-all duration-200 group ${isActive(path)
+                ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
         >
-            <Icon className={`w-6 h-6 transition-transform group-hover:scale-110 ${isActive(path) ? 'fill-primary-100' : ''}`} />
-            <span className="font-semibold text-sm">{label}</span>
+            <Icon className={`w-5 h-5 transition-transform group-hover:scale-105 ${isActive(path) ? 'text-white' : 'text-slate-400 group-hover:text-primary-500'
+                }`} />
+            <span className="font-medium text-sm">{label}</span>
+            {isActive(path) && (
+                <ChevronRight className="w-4 h-4 ml-auto opacity-60" />
+            )}
         </button>
     );
 
@@ -26,49 +45,81 @@ export const Sidebar: React.FC = () => {
         return null;
     }
 
+    const userName = user?.user_metadata?.full_name || 'Usuário';
+    const userEmail = user?.email || '';
+
     return (
-        <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-slate-100 min-h-screen sticky top-0 p-6">
+        <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-slate-200 min-h-screen sticky top-0 shadow-sm">
             {/* Brand Header */}
-            <div className="mb-10 px-2 cursor-pointer" onClick={() => navigate('/home')}>
-                <img src="/assets/logo.png" alt="Vida em Dia" className="w-32 h-auto" />
+            <div
+                className="p-6 border-b border-slate-100 cursor-pointer flex items-center gap-3 hover:bg-slate-50 transition-colors"
+                onClick={() => navigate('/home')}
+            >
+                <img
+                    src="/assets/logo.png"
+                    alt="Vida em Dia"
+                    className="w-10 h-10 rounded-xl object-contain"
+                />
+                <div>
+                    <h1 className="text-lg font-bold text-slate-900">
+                        Vida em Dia
+                    </h1>
+                    <p className="text-xs text-slate-400">Organize sua vida</p>
+                </div>
             </div>
 
             {/* Main Nav */}
-            <nav className="flex-1 space-y-2">
+            <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
                 <NavItem path="/home" icon={Home} label="Início" />
-                <NavItem path="/financial-dashboard" icon={Wallet} label="Financeiro" />
-                <NavItem path="/tax-declaration" icon={ShieldCheck} label="Imposto de Renda" />
+                <NavItem path="/financial-dashboard" icon={Wallet} label="Finanças" />
+                <NavItem path="/agenda" icon={Calendar} label="Agenda" />
 
-                <NavItem path="/assistant" icon={MessageSquare} label="Assistente" />
-                <NavItem path="/settings" icon={Settings} label="Ajustes" />
+                {/* Seção Patrimônio */}
+                <div className="pt-5 pb-2">
+                    <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Patrimônio
+                    </p>
+                    <NavItem path="/vehicle-central" icon={Car} label="Veículos" />
+                </div>
+
+                {/* Seção Fiscal */}
+                <div className="pt-5 pb-2">
+                    <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Fiscal & Documentos
+                    </p>
+                    <NavItem path="/tax-declaration" icon={ShieldCheck} label="Imposto de Renda" />
+                    <NavItem path="/fiscal-folder" icon={FolderOpen} label="Pasta Fiscal" />
+                </div>
+
+                {/* Ferramentas */}
+                <div className="pt-5 pb-2">
+                    <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        Ferramentas
+                    </p>
+                    <NavItem path="/assistant" icon={MessageSquare} label="Assistente IA" />
+                    <NavItem path="/upload" icon={UploadCloud} label="Upload Documentos" />
+                </div>
             </nav>
 
-            {/* Actions */}
-            <div className="mt-8 border-t border-slate-50 pt-8 space-y-3">
-                <button
-                    onClick={() => navigate('/upload')}
-                    className="w-full bg-slate-900 text-white rounded-2xl p-4 flex items-center justify-center gap-3 shadow-lg hover:bg-slate-800 transition-all duration-200 active:scale-95 group"
-                >
-                    <div className="bg-white/20 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
-                        <UploadCloud className="w-5 h-5" />
-                    </div>
-                    <span className="font-bold">Analisar Doc</span>
-                </button>
 
-                <button
-                    onClick={() => navigate('/new-task')}
-                    className="w-full bg-primary-600 text-white rounded-2xl p-4 flex items-center justify-center gap-3 shadow-lg shadow-primary-200 hover:bg-primary-700 transition-all duration-200 active:scale-95 group"
-                >
-                    <div className="bg-white/20 p-1.5 rounded-lg group-hover:rotate-90 transition-transform">
-                        <Plus className="w-5 h-5" />
-                    </div>
-                    <span className="font-bold">Novo Item</span>
-                </button>
-            </div>
 
-            {/* Footer Info */}
-            <div className="mt-10 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-xs text-slate-500 text-center font-medium">Tudo em dia, Diego! 🚀</p>
+            {/* User Profile Footer */}
+            <div className="p-4 border-t border-slate-100">
+                <div
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                    onClick={() => navigate('/settings')}
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                            {userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-slate-900">{userName}</span>
+                            <span className="text-xs text-slate-400 truncate max-w-[120px]">{userEmail}</span>
+                        </div>
+                    </div>
+                    <Settings className="w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors" />
+                </div>
             </div>
         </aside>
     );

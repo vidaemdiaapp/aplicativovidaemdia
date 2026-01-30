@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, DollarSign, Wallet, Users, Bell, CheckCircle2 } from 'lucide-react';
-import { incomesService, Income, IncomeType } from '../services/incomes';
+import { incomesService, IncomeType } from '../services/incomes';
 import { useAuth } from '../hooks/useAuth';
 import { tasksService } from '../services/tasks';
 import { Household } from '../types';
@@ -107,48 +107,48 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white w-full max-w-lg rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-8">
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-                                <Wallet className="w-6 h-6 text-primary-600" />
+                            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                <Wallet className="w-6 h-6 text-primary" />
                                 Gestão de Renda
                             </h2>
                             <p className="text-slate-500 text-sm font-medium mt-1">Configure as entradas do mês</p>
                         </div>
                         <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <X className="w-6 h-6 text-slate-400" />
+                            <X className="w-6 h-6 text-slate-400 hover:text-slate-600" />
                         </button>
                     </div>
 
                     {loading ? (
                         <div className="py-20 flex justify-center">
-                            <div className="w-8 h-8 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+                            <div className="w-10 h-10 border-4 border-slate-100 border-t-primary rounded-full animate-spin"></div>
                         </div>
                     ) : (
                         <div className="space-y-8">
                             {/* My Income Section */}
                             <div className="space-y-4">
-                                <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                    <DollarSign className="w-3 h-3" /> Sua Renda Líquida
+                                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                                    <DollarSign className="w-4 h-4" /> Sua Renda Líquida
                                 </label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">R$</span>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-primary transition-colors">R$</span>
                                         <input
                                             type="number"
                                             value={myIncome.amount}
                                             onChange={e => setMyIncome({ ...myIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg text-slate-900 focus:border-primary-500 outline-none transition-colors"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 font-bold text-xl text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-colors placeholder:text-slate-300"
                                         />
                                     </div>
                                     <select
                                         value={myIncome.type}
                                         onChange={e => setMyIncome({ ...myIncome, type: e.target.value as IncomeType })}
-                                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-4 font-bold text-slate-700 focus:border-primary-500 outline-none appearance-none transition-colors"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 px-4 font-bold text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none appearance-none transition-colors cursor-pointer"
                                     >
                                         <option value="clt">CLT</option>
                                         <option value="pj">PJ</option>
@@ -156,16 +156,16 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                         <option value="outros">Outros</option>
                                     </select>
                                 </div>
-                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
                                     <div className="flex items-center gap-3">
                                         <Users className="w-5 h-5 text-slate-400" />
                                         <span className="text-sm font-bold text-slate-700">Compartilhar na vida a dois</span>
                                     </div>
                                     <button
                                         onClick={() => setMyIncome({ ...myIncome, shared: !myIncome.shared })}
-                                        className={`w-12 h-6 rounded-full transition-colors relative ${myIncome.shared ? 'bg-primary-600' : 'bg-slate-300'}`}
+                                        className={`w-12 h-6 rounded-full transition-colors relative border ${myIncome.shared ? 'bg-primary border-primary' : 'bg-slate-200 border-slate-200'}`}
                                     >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${myIncome.shared ? 'left-7' : 'left-1'}`}></div>
+                                        <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${myIncome.shared ? 'left-7' : 'left-1'}`}></div>
                                     </button>
                                 </div>
                             </div>
@@ -173,23 +173,23 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                             {/* Partner Income Section */}
                             {household && partnerIncome.user_id && (
                                 <div className="pt-8 border-t border-slate-100 space-y-4">
-                                    <label className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                        <Users className="w-3 h-3" /> Renda do Parceiro(a)
+                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                                        <Users className="w-4 h-4" /> Renda do Parceiro(a)
                                     </label>
-                                    <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">R$</span>
+                                    <div className="relative group">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-primary transition-colors">R$</span>
                                         <input
                                             type="number"
                                             value={partnerIncome.amount}
                                             onChange={e => setPartnerIncome({ ...partnerIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 pl-12 pr-4 font-black text-lg text-slate-900 focus:border-primary-500 outline-none transition-colors"
+                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 font-bold text-xl text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-colors placeholder:text-slate-300"
                                         />
                                     </div>
                                     {(!partnerIncome.amount || partnerIncome.amount === '0') && (
                                         <button
                                             onClick={handleNotifyPartner}
-                                            className="w-full py-3 rounded-2xl border-2 border-dashed border-primary-200 text-primary-600 font-bold text-xs flex items-center justify-center gap-2 hover:bg-primary-50 transition-colors"
+                                            className="w-full py-3 rounded-xl border border-dashed border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary/5 transition-colors"
                                         >
                                             <Bell className="w-4 h-4" /> Enviar convite para preenchimento
                                         </button>
@@ -201,10 +201,10 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
+                                    className="w-full bg-primary text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-blue-500/20 hover:bg-primary-hover hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
                                 >
                                     {saving ? (
-                                        <div className="w-6 h-6 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                                     ) : (
                                         <>
                                             <CheckCircle2 className="w-6 h-6" />
@@ -212,7 +212,7 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                         </>
                                     )}
                                 </button>
-                                <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">
+                                <p className="text-center text-xs text-slate-400 font-medium mt-4">
                                     Configuração rápida em menos de 30 segundos ⚡
                                 </p>
                             </div>

@@ -462,49 +462,51 @@ export const AssistantScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pb-20">
-      <header className="bg-white p-4 pt-12 flex items-center justify-between sticky top-0 z-10 border-b border-slate-100 shadow-sm transition-all">
+    <div className="min-h-screen bg-white flex flex-col lg:pb-0">
+      <header className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 pt-12 pb-6 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full -ml-2 transition-colors">
-            <ArrowLeft className="w-6 h-6 text-slate-700" />
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 flex items-center justify-center rounded-2xl bg-slate-50 hover:bg-slate-100 transition-all border border-slate-100 active:scale-95"
+          >
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg relative overflow-hidden group">
-              <Sparkles className="w-5 h-5 text-primary-400" />
-              <div className="absolute inset-0 bg-primary-500/10 animate-pulse"></div>
+            <div className="w-10 h-10 bg-primary-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-500/20 relative overflow-hidden group">
+              <Sparkles className="w-5 h-5" />
             </div>
-            <div>
-              <h1 className="text-base font-black text-slate-900 leading-tight">Vida em Dia AI</h1>
+            <div className="space-y-0.5">
+              <h1 className="text-base font-bold text-slate-900 tracking-tight">IA Elara</h1>
               <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                Modo Operacional
+                Operacional
               </p>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto no-scrollbar scroll-smooth">
+      <div className="flex-1 px-6 pt-32 pb-32 space-y-6 overflow-y-auto no-scrollbar scroll-smooth bg-slate-50/30">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
-              className={`max-w-[85%] p-5 rounded-[32px] animate-in slide-in-from-bottom-2 duration-300 ${msg.sender === 'user'
-                ? 'bg-slate-900 text-white rounded-br-none shadow-xl'
-                : 'bg-white text-slate-700 shadow-md border border-slate-100 rounded-bl-none'
+              className={`max-w-[85%] p-5 rounded-[28px] animate-in slide-in-from-bottom-2 duration-300 ${msg.sender === 'user'
+                ? 'bg-primary-500 text-white rounded-br-none shadow-lg shadow-primary-500/10'
+                : 'bg-white text-slate-700 shadow-sm border border-slate-100 rounded-bl-none'
                 }`}
             >
-              <p className="text-sm font-bold leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+              <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{msg.text}</p>
 
               {/* Sprint 19: Structured Key Facts */}
               {msg.answer_json?.key_facts && msg.answer_json.key_facts.length > 0 && (
                 <div className="mt-4 grid grid-cols-1 gap-2">
                   {msg.answer_json.key_facts.map((fact, idx) => (
-                    <div key={idx} className="bg-slate-50 border border-slate-100 p-3 rounded-2xl flex justify-between items-center group hover:bg-slate-100 transition-all">
-                      <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">{fact.label}</span>
-                      <span className="text-xs font-black text-slate-800">{fact.value}</span>
+                    <div key={idx} className="bg-slate-50/50 border border-slate-100/50 p-3 rounded-2xl flex justify-between items-center group hover:bg-white transition-all">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider font-mono">{fact.label}</span>
+                      <span className="text-xs font-bold text-slate-800">{fact.value}</span>
                     </div>
                   ))}
                 </div>
@@ -547,7 +549,7 @@ export const AssistantScreen: React.FC = () => {
                     <button
                       key={s.id}
                       onClick={() => handleSuggestionClick(s.title)}
-                      className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-tight border border-slate-200 hover:bg-slate-100 transition-all active:scale-95"
+                      className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight border border-slate-100 hover:bg-white transition-all active:scale-95"
                     >
                       {s.title}
                     </button>
@@ -555,34 +557,32 @@ export const AssistantScreen: React.FC = () => {
                 </div>
               )}
 
-              {/* Removed Robotic Options Menu as per instruction */}
-
               {msg.sender === 'assistant' && msg.pendingAction && (
                 <div className="mt-5 space-y-3">
                   <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
-                    <p className="text-[9px] text-emerald-600 font-black uppercase mb-1">Ação Planejada</p>
+                    <p className="text-[9px] text-emerald-500 font-bold uppercase mb-1">Ação Planejada</p>
                     <p className="text-xs font-bold text-emerald-900 leading-snug">{msg.pendingAction.summary}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => handleConfirmAction(msg.id, msg.pendingAction!)}
-                      className="py-3.5 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 shadow-lg shadow-emerald-200"
+                      className="py-3.5 bg-emerald-500 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
                     >
                       Confirmar
                     </button>
                     <button
                       onClick={() => handleCancelAction(msg.id)}
-                      className="py-3.5 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
+                      className="py-3.5 bg-slate-100 text-slate-400 rounded-2xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95"
                     >
                       Cancelar
                     </button>
                   </div>
-                  <p className="text-[8px] text-center text-slate-400 font-bold italic">Válido por 5 minutos</p>
+                  <p className="text-[8px] text-center text-slate-400 font-medium italic">Válido por 5 minutos</p>
                 </div>
               )}
 
-              <div className={`mt-3 flex items-center ${msg.sender === 'user' ? 'justify-end' : 'justify-start opacity-30 text-[9px] uppercase font-black'}`}>
-                <span className={msg.sender === 'user' ? 'text-[9px] opacity-40 font-bold' : ''}>
+              <div className={`mt-3 flex items-center ${msg.sender === 'user' ? 'justify-end' : 'justify-start opacity-30 text-[9px] uppercase font-bold'}`}>
+                <span className={msg.sender === 'user' ? 'text-[9px] opacity-60 font-medium' : ''}>
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -592,9 +592,9 @@ export const AssistantScreen: React.FC = () => {
 
         {isLoading && (
           <div className="flex items-start gap-2 animate-pulse">
-            <div className="bg-white p-4 rounded-[32px] rounded-bl-none shadow-sm border border-slate-100 flex items-center gap-3">
+            <div className="bg-white p-4 rounded-[28px] rounded-bl-none shadow-sm border border-slate-100 flex items-center gap-3">
               <Loader2 className="w-4 h-4 text-primary-600 animate-spin" />
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-tighter">Escrevendo...</span>
+              <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Elara está pensando...</span>
             </div>
           </div>
         )}
@@ -602,38 +602,40 @@ export const AssistantScreen: React.FC = () => {
         <div ref={messagesEndRef} className="h-4" />
       </div>
 
-      <form onSubmit={handleSend} className="bg-white p-4 border-t border-slate-100 sticky bottom-20 z-20 shadow-2xl">
-        <div className="flex gap-3 bg-slate-50 p-2 rounded-[32px] border border-slate-100 shadow-inner items-center">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="p-3 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"
-          >
-            <Paperclip className="w-5 h-5" />
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="hidden"
-            accept="image/*,application/pdf"
-          />
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ex: 'Como tá hoje?' ou mande um anexo"
-            className="flex-1 bg-transparent border-0 px-2 py-3 text-sm font-bold text-slate-900 focus:ring-0 outline-none placeholder:text-slate-400"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="bg-slate-900 text-white w-12 h-12 rounded-[24px] flex items-center justify-center hover:bg-slate-800 transition-all shadow-lg active:scale-95 disabled:opacity-30"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </div>
-      </form>
+      <div className="sticky bottom-20 inset-x-0 bg-gradient-to-t from-white via-white to-transparent p-4">
+        <form onSubmit={handleSend} className="max-w-4xl mx-auto">
+          <div className="flex gap-3 bg-white p-2 rounded-[32px] border border-slate-200 shadow-xl shadow-slate-200/50 items-center">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-12 h-12 flex items-center justify-center text-slate-400 hover:text-primary-500 hover:bg-primary-50 rounded-full transition-all"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden"
+              accept="image/*,application/pdf"
+            />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="O que você precisa hoje?"
+              className="flex-1 bg-transparent border-0 px-2 py-3 text-sm font-medium text-slate-900 focus:ring-0 outline-none placeholder:text-slate-300"
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || isLoading}
+              className="bg-primary-500 text-white w-12 h-12 rounded-full flex items-center justify-center hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 active:scale-95 disabled:opacity-30"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
