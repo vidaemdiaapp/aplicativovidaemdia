@@ -38,7 +38,7 @@ export const LoginScreen: React.FC = () => {
           <img
             src="/assets/logo.png"
             alt="Vida em Dia"
-            className="w-20 h-20 rounded-3xl shadow-lg shadow-primary-500/10 mb-6"
+            className="h-16 w-auto mb-6 object-contain"
           />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Bem-vindo de volta</h1>
           <p className="text-slate-500 text-center text-sm">

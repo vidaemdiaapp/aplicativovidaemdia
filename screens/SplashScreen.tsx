@@ -23,7 +23,7 @@ export const SplashScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8">
       <div className="animate-in fade-in zoom-in duration-700">
-        <img src="/assets/logo.png" alt="Vida em Dia" className="w-64 h-auto mb-8" />
+        <img src="/assets/logo.png" alt="Vida em Dia" className="h-24 w-auto mb-8 object-contain" />
       </div>
 
       <div className="absolute bottom-10 flex gap-2">

@@ -58,7 +58,7 @@ export const Sidebar: React.FC = () => {
                 <img
                     src="/assets/logo.png"
                     alt="Vida em Dia"
-                    className="w-10 h-10 rounded-xl object-contain"
+                    className="h-8 w-auto object-contain"
                 />
                 <div>
                     <h1 className="text-lg font-bold text-slate-900">
