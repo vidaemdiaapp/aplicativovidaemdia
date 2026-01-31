@@ -85,6 +85,9 @@ Deno.serve(async (req) => {
         const arrayBuffer = await fileData.arrayBuffer();
         const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
+        const isPdf = storage_path.toLowerCase().endsWith('.pdf');
+        const mimeType = isPdf ? 'application/pdf' : 'image/jpeg';
+
         // 2. Call Gemini
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
             method: "POST",
@@ -95,7 +98,7 @@ Deno.serve(async (req) => {
                         { text: SYSTEM_PROMPT },
                         {
                             inline_data: {
-                                mime_type: "application/pdf", // or image/jpeg, should be dynamic but using PDF as fallback
+                                mime_type: mimeType,
                                 data: base64
                             }
                         },

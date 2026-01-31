@@ -27,6 +27,8 @@ import { VehicleReceiptScreen } from './screens/VehicleReceiptScreen';
 import { VehicleEditScreen } from './screens/VehicleEditScreen';
 import { AgendaScreen } from './screens/AgendaScreen';
 import { AgendaEditScreen } from './screens/AgendaEditScreen';
+import { IncomesScreen } from './screens/IncomesScreen';
+import { ExpensesScreen } from './screens/ExpensesScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -113,6 +115,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/agenda" element={<ProtectedRoute><AgendaScreen /></ProtectedRoute>} />
         <Route path="/agenda/:id" element={<ProtectedRoute><AgendaEditScreen /></ProtectedRoute>} />
         <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
+        <Route path="/incomes" element={<ProtectedRoute><IncomesScreen /></ProtectedRoute>} />
+        <Route path="/expenses" element={<ProtectedRoute><ExpensesScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

@@ -203,8 +203,16 @@ export const AssistantScreen: React.FC = () => {
         }]);
         success = true;
       } else if (action.type === 'GENERATE_TRAFFIC_DEFENSE') {
-        // const markdown = await assistantService.generateTrafficDefense(action.payload.fine, action.payload.answers);
-        const markdown = "Função de defesa em manutenção."; // Placeholder
+        const { data: defenseData, error: defenseError } = await supabase.functions.invoke('generate_traffic_defense_v1', {
+          body: {
+            fine_details: action.payload.fine,
+            user_answers: action.payload.answers
+          }
+        });
+
+        if (defenseError) throw defenseError;
+
+        const markdown = defenseData?.markdown;
         if (markdown) {
           setMessages(prev => [...prev, {
             id: Date.now().toString(),
@@ -324,6 +332,7 @@ export const AssistantScreen: React.FC = () => {
           message: "Analise esta imagem anexada.",
           text: "Analise esta imagem anexada.",
           image_url: publicUrl,
+          storage_path: filePath, // NEW: For server-side processing
           history: recentHistory, // NEW: Context Memory
           household_id: household?.id,
           user_id: user?.id,

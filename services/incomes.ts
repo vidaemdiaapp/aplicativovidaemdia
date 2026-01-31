@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { tasksService } from './tasks';
 
 export type IncomeType = 'clt' | 'pj' | 'autonomo' | 'outros';
+export type IncomeSource = 'salary' | 'freelance' | 'rental' | 'investments' | 'benefits' | 'pension' | 'other';
 
 export interface Income {
     id: string;
@@ -9,10 +10,14 @@ export interface Income {
     household_id?: string;
     amount_monthly: number;
     income_type: IncomeType;
+    source: IncomeSource;
+    description?: string;
     is_shared: boolean;
+    is_partner?: boolean;
     created_at: string;
     updated_at: string;
 }
+
 
 export const incomesService = {
     /**
@@ -179,5 +184,21 @@ export const incomesService = {
             .eq('id', requestId);
 
         return !error;
+    },
+
+    /**
+     * Delete an income entry
+     */
+    deleteIncome: async (incomeId: string): Promise<boolean> => {
+        const { error } = await supabase
+            .from('incomes')
+            .delete()
+            .eq('id', incomeId);
+
+        if (error) {
+            console.error('[Incomes] Delete failed:', error);
+            return false;
+        }
+        return true;
     }
 };

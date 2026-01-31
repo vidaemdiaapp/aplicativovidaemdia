@@ -204,26 +204,48 @@ export const FinancialDashboardScreen: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Main Stats Row */}
+                {/* Main Stats Row - CLICKABLE */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    {/* RENDAS - Clicável e com edição */}
+                    <div
+                        onClick={() => navigate('/incomes')}
+                        className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 cursor-pointer hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group active:scale-[0.98]"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
                             <ArrowUpCircle className="w-6 h-6 text-emerald-600" />
                         </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">Rendas</p>
-                            <p className="text-sm font-bold text-slate-800">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Rendas</p>
+                                <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
                                 {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
                             </p>
                         </div>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsIncomeModalOpen(true); }}
+                            className="w-8 h-8 rounded-lg bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                            title="Editar Renda"
+                        >
+                            <Plus className="w-4 h-4 text-emerald-600" />
+                        </button>
                     </div>
-                    <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100">
-                        <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
+
+                    {/* CONTAS/DESPESAS - Clicável */}
+                    <div
+                        onClick={() => navigate('/expenses')}
+                        className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 cursor-pointer hover:border-rose-200 hover:bg-rose-50/50 transition-all group active:scale-[0.98]"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center group-hover:bg-rose-200 transition-colors">
                             <ArrowDownCircle className="w-6 h-6 text-rose-600" />
                         </div>
-                        <div>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase">Contas</p>
-                            <p className="text-sm font-bold text-slate-800">
+                        <div className="flex-1">
+                            <div className="flex items-center gap-1">
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Contas</p>
+                                <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
+                            </div>
+                            <p className="text-sm font-bold text-slate-800 group-hover:text-rose-700 transition-colors">
                                 {dashboard ? formatCurrency(dashboard.total_bills) : 'R$ 0'}
                             </p>
                         </div>

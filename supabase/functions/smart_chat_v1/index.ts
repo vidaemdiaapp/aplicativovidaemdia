@@ -16,7 +16,55 @@ function getCorsHeaders(origin: string | null) {
     };
 }
 
-// System configuration for IRPF 2026 and safety rules
+// System configuration for IRPF 2025/2026 and safety rules
+// Tax rules embedded directly for Elara's knowledge
+const TAX_RULES_2025 = {
+    year: 2025,
+    ano_calendario: 2024,
+    monthly_exemption: 2259.20,
+    annual_exemption: 27110.40,
+    has_gradual_reducer: false,
+    dependent_deduction: 2275.08,
+    education_limit: 3561.50,
+    simplified_discount_limit: 16754.34,
+    brackets: [
+        { from: 0, to: 2259.20, rate: 0, deduction: 0 },
+        { from: 2259.21, to: 2826.65, rate: 7.5, deduction: 169.44 },
+        { from: 2826.66, to: 3751.05, rate: 15, deduction: 381.44 },
+        { from: 3751.06, to: 4664.68, rate: 22.5, deduction: 662.77 },
+        { from: 4664.69, to: Infinity, rate: 27.5, deduction: 896.00 }
+    ]
+};
+
+const TAX_RULES_2026 = {
+    year: 2026,
+    ano_calendario: 2025,
+    monthly_exemption: 2428.80,
+    effective_monthly_exemption: 5000.00,
+    annual_exemption: 60000.00,
+    gradual_reducer_limit: 88200.00,
+    has_gradual_reducer: true,
+    dependent_deduction: 2275.08,
+    education_limit: 3561.50,
+    simplified_discount_limit: 17640.00,
+    brackets: [
+        { from: 0, to: 2428.80, rate: 0, deduction: 0 },
+        { from: 2428.81, to: 2826.65, rate: 7.5, deduction: 182.16 },
+        { from: 2826.66, to: 3751.05, rate: 15, deduction: 394.16 },
+        { from: 3751.06, to: 4664.68, rate: 22.5, deduction: 675.49 },
+        { from: 4664.69, to: Infinity, rate: 27.5, deduction: 908.73 }
+    ]
+};
+
+// MEI exempt percentages by activity
+const MEI_EXEMPT_RATES = {
+    comercio: 0.08,
+    industria: 0.08,
+    servicos: 0.32,
+    transporte_passageiros: 0.16,
+    transporte_cargas: 0.08
+};
+
 const SYSTEM_PROMPT_LOCKED = `
 Você é a Elara, assistente financeira do Vida em Dia.
 
@@ -24,11 +72,47 @@ REGRA DE OURO (DATA FIRST):
 - JAMAIS peça informações ao usuário sem antes consultar as ferramentas de imposto (get_tax_profile) e estimativa (estimate_irpf).
 - Chame as ferramentas assim que o usuário mencionar "imposto", "IR" ou "leão".
 - Só peça dados se o sistema indicar falta de informações essenciais.
+- SEMPRE verifique qual ano fiscal o usuário está perguntando. Se não especificar, pergunte ou use 2026 como padrão.
+
+REGRAS FISCAIS EMBEDDED (USE ESTES VALORES!):
+
+📅 IR 2025 (Ano-Calendário 2024):
+- Faixa de Isenção: R$ 2.259,20/mês = R$ 27.110,40/ano
+- Tabela: 7,5% | 15% | 22,5% | 27,5%
+- Dependente: R$ 2.275,08/ano
+- Educação: R$ 3.561,50/ano/pessoa
+- Desconto Simplificado: até R$ 16.754,34
+
+📅 IR 2026 (Ano-Calendário 2025) - NOVAS REGRAS!:
+- Faixa de Isenção EFETIVA: R$ 5.000/mês = R$ 60.000/ano (NOVA!)
+- Redutor Gradual: Para rendas entre R$ 60k e R$ 88.200 (NOVO!)
+- Tabela: 7,5% | 15% | 22,5% | 27,5%
+- Dependente: R$ 2.275,08/ano
+- Educação: R$ 3.561,50/ano/pessoa  
+- Desconto Simplificado: até R$ 17.640,00
+
+🧮 REDUTOR GRADUAL 2026:
+Se renda anual entre R$ 60.000 e R$ 88.200:
+Redutor = (88.200 - Renda) / 28.200 × Imposto
+Imposto Final = Imposto - Redutor
+
+📊 MEI - Parcela Isenta por Atividade:
+- Comércio/Indústria: 8% do faturamento
+- Serviços: 32% do faturamento
+- Transporte Passageiros: 16% do faturamento
+- Transporte Cargas: 8% do faturamento
+
+🔴 O QUE MUDOU DE 2025 PARA 2026:
+1. Isenção: R$ 27k → R$ 60k (+121%!)
+2. Novo Redutor Gradual para faixa intermediária
+3. Desconto Simplificado: R$ 16.754 → R$ 17.640
+4. Milhões de brasileiros agora estão ISENTOS!
 
 PERSONALIDADE:
 - Brasileira, clara e direta. Sem tom robótico.
-- SEMPRE chame o usuário pelo nome {{USER_NAME}} de forma natural e amigável, especialmente no início ou final da resposta.
-- Módulo Fiscal: Use sempre dados do sistema e informe a confiança da estimativa. PROIBIDO USAR PLACEHOLDERS como '[valor da faixa]'. Se o dado não existir, diga que não sabe.
+- SEMPRE chame o usuário pelo nome {{USER_NAME}} de forma natural e amigável.
+- Quando perguntar sobre IR, SEMPRE pergunte o ano se não estiver claro.
+- Módulo Fiscal: Use sempre dados do sistema e as regras acima. PROIBIDO USAR PLACEHOLDERS.
 
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
 Sua resposta final DEVE ser um objeto JSON puro, sem markdown extra, contendo:
@@ -117,7 +201,9 @@ const TOOLS_SCHEMA = [
         description: "Extracts traffic fine data from an attached image. Use when user sends an image of a traffic fine/infraction notice.",
         parameters: {
             type: "object",
-            properties: {},
+            properties: {
+                storage_path: { type: "string", description: "Internal path of the uploaded image file." }
+            },
             required: []
         }
     },
@@ -147,6 +233,42 @@ const TOOLS_SCHEMA = [
                 intent_type: { type: "string", enum: ["tax_rule", "tax_deadline", "interest_rate", "government_program"], description: "The intent category for caching rules." }
             },
             required: ["query", "intent_type"]
+        }
+    },
+    {
+        name: "compare_tax_years",
+        description: "Compares tax calculation between 2025 and 2026 for the same income. Use when user asks about differences or savings. Returns the estimated tax for both years and the savings in 2026.",
+        parameters: {
+            type: "object",
+            properties: {
+                annual_income: { type: "number", description: "Annual gross income to compare" },
+                total_deductions: { type: "number", description: "Total deductions (optional)" }
+            },
+            required: ["annual_income"]
+        }
+    },
+    {
+        name: "get_mei_tax",
+        description: "Calculates MEI tax obligations and whether they need to declare IRPF. Use when user mentions MEI, microempreendedor, or similar.",
+        parameters: {
+            type: "object",
+            properties: {
+                annual_revenue: { type: "number", description: "Annual MEI revenue" },
+                activity: { type: "string", enum: ["comercio", "industria", "servicos", "transporte_passageiros", "transporte_cargas"], description: "Main MEI activity" },
+                year: { type: "number", description: "Tax year (2025 or 2026)" }
+            },
+            required: ["annual_revenue", "activity"]
+        }
+    },
+    {
+        name: "get_tax_deductible_documents",
+        description: "Lists tax-deductible documents uploaded by the user for a specific year. Returns categories and total amounts.",
+        parameters: {
+            type: "object",
+            properties: {
+                year: { type: "number", description: "Tax year" }
+            },
+            required: ["year"]
         }
     }
 ];
@@ -414,6 +536,186 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         }
     }
 
+    // --- NEW TOOL: compare_tax_years ---
+    if (toolName === "compare_tax_years") {
+        const annualIncome = args.annual_income || 0;
+        const deductions = args.total_deductions || 0;
+
+        // Calculate for 2025
+        const base2025 = Math.max(annualIncome - deductions, 0);
+        let tax2025 = 0;
+        if (base2025 > TAX_RULES_2025.annual_exemption) {
+            const monthly = base2025 / 12;
+            for (const bracket of TAX_RULES_2025.brackets) {
+                if (monthly >= bracket.from && monthly <= bracket.to) {
+                    tax2025 = ((monthly * bracket.rate / 100) - bracket.deduction) * 12;
+                    break;
+                }
+            }
+        }
+
+        // Calculate for 2026
+        const base2026 = Math.max(annualIncome - deductions, 0);
+        let tax2026 = 0;
+        if (base2026 > TAX_RULES_2026.annual_exemption) {
+            const monthly = base2026 / 12;
+            for (const bracket of TAX_RULES_2026.brackets) {
+                if (monthly >= bracket.from && monthly <= bracket.to) {
+                    tax2026 = ((monthly * bracket.rate / 100) - bracket.deduction) * 12;
+                    break;
+                }
+            }
+            // Apply gradual reducer if applicable
+            if (base2026 >= TAX_RULES_2026.annual_exemption && base2026 < TAX_RULES_2026.gradual_reducer_limit) {
+                const reducerFactor = (TAX_RULES_2026.gradual_reducer_limit - base2026) /
+                    (TAX_RULES_2026.gradual_reducer_limit - TAX_RULES_2026.annual_exemption);
+                tax2026 = tax2026 * (1 - reducerFactor);
+            }
+        }
+
+        const savings = Math.max(tax2025 - tax2026, 0);
+        const percentSaved = tax2025 > 0 ? (savings / tax2025) * 100 : 0;
+
+        const isExempt2026 = base2026 <= TAX_RULES_2026.annual_exemption;
+
+        return {
+            income_compared: annualIncome,
+            deductions: deductions,
+            tax_2025: Math.max(tax2025, 0).toFixed(2),
+            tax_2026: Math.max(tax2026, 0).toFixed(2),
+            savings: savings.toFixed(2),
+            percent_saved: percentSaved.toFixed(1),
+            is_exempt_2026: isExempt2026,
+            summary: isExempt2026
+                ? `🎉 Com a nova regra de 2026, você está ISENTO! Economia de R$ ${savings.toFixed(2)}`
+                : savings > 0
+                    ? `💰 Em 2026 você pagará R$ ${savings.toFixed(2)} a menos (${percentSaved.toFixed(1)}% de economia)`
+                    : `Sem diferença significativa entre os anos para essa renda.`
+        };
+    }
+
+    // --- NEW TOOL: get_mei_tax ---
+    if (toolName === "get_mei_tax") {
+        const revenue = args.annual_revenue || 0;
+        const activity = args.activity || 'servicos';
+        const year = args.year || 2026;
+        const rules = year === 2025 ? TAX_RULES_2025 : TAX_RULES_2026;
+
+        const exemptPercentage = MEI_EXEMPT_RATES[activity] || 0.32;
+        const exemptPortion = revenue * exemptPercentage;
+        const taxablePortion = revenue - exemptPortion;
+
+        const needsToDeclare = taxablePortion > rules.annual_exemption ||
+            exemptPortion > 200000 ||
+            revenue > 81000;
+
+        let estimatedTax = 0;
+        if (taxablePortion > rules.annual_exemption) {
+            const monthly = taxablePortion / 12;
+            for (const bracket of rules.brackets) {
+                if (monthly >= bracket.from && monthly <= bracket.to) {
+                    estimatedTax = ((monthly * bracket.rate / 100) - bracket.deduction) * 12;
+                    break;
+                }
+            }
+            // Apply 2026 reducer if applicable
+            if (year === 2026 && taxablePortion >= rules.annual_exemption && taxablePortion < TAX_RULES_2026.gradual_reducer_limit) {
+                const reducerFactor = (TAX_RULES_2026.gradual_reducer_limit - taxablePortion) /
+                    (TAX_RULES_2026.gradual_reducer_limit - TAX_RULES_2026.annual_exemption);
+                estimatedTax = estimatedTax * (1 - reducerFactor);
+            }
+        }
+
+        return {
+            year: year,
+            activity: activity,
+            annual_revenue: revenue,
+            exempt_percentage: (exemptPercentage * 100).toFixed(0) + '%',
+            exempt_portion: exemptPortion.toFixed(2),
+            taxable_portion: taxablePortion.toFixed(2),
+            needs_to_declare: needsToDeclare,
+            estimated_irpf: Math.max(estimatedTax, 0).toFixed(2),
+            is_exempt: taxablePortion <= rules.annual_exemption,
+            tip: taxablePortion <= rules.annual_exemption
+                ? `✅ Boa notícia! Com faturamento de R$ ${revenue.toFixed(2)} em ${activity}, sua parcela tributável de R$ ${taxablePortion.toFixed(2)} está abaixo da isenção de R$ ${rules.annual_exemption.toFixed(2)}.`
+                : `⚠️ Sua parcela tributável de R$ ${taxablePortion.toFixed(2)} está acima da isenção. Estimativa de IR: R$ ${estimatedTax.toFixed(2)}.`
+        };
+    }
+
+    // --- NEW TOOL: get_tax_deductible_documents ---
+    if (toolName === "get_tax_deductible_documents") {
+        const year = args.year || 2026;
+
+        const { data: docs, error } = await supabase
+            .from('tax_documents')
+            .select('*')
+            .eq('user_id', user_id)
+            .eq('year', year)
+            .eq('is_deductible', true);
+
+        if (error) {
+            return { error: "Erro ao buscar documentos: " + error.message };
+        }
+
+        if (!docs || docs.length === 0) {
+            return {
+                year: year,
+                count: 0,
+                total: 0,
+                categories: [],
+                tip: "Nenhum documento dedutível cadastrado para este ano. Escaneie notas fiscais de saúde, educação, etc."
+            };
+        }
+
+        const byCategory: Record<string, { count: number; total: number }> = {};
+        let total = 0;
+
+        for (const doc of docs) {
+            const cat = doc.deduction_category || 'other';
+            if (!byCategory[cat]) byCategory[cat] = { count: 0, total: 0 };
+            byCategory[cat].count++;
+            byCategory[cat].total += doc.deduction_amount || 0;
+            total += doc.deduction_amount || 0;
+        }
+
+        return {
+            year: year,
+            count: docs.length,
+            total: total.toFixed(2),
+            categories: Object.entries(byCategory).map(([cat, data]) => ({
+                category: cat,
+                ...data,
+                total: data.total.toFixed(2)
+            })),
+            estimated_savings: (total * 0.275).toFixed(2),
+            tip: `Você tem ${docs.length} documentos dedutíveis totalizando R$ ${total.toFixed(2)}, o que pode reduzir seu imposto em até R$ ${(total * 0.275).toFixed(2)}.`
+        };
+    }
+
+    // --- NEW TOOL: vision_extract_fine ---
+    if (toolName === "vision_extract_fine") {
+        const path = args.storage_path || storage_path; // Use argument or context
+        if (!path) return "Nenhum arquivo de imagem encontrado para análise.";
+
+        console.log(`[smart_chat_v1] Calling analyze_traffic_notice_v1 for path: ${path}`);
+
+        try {
+            const { data, error } = await supabase.functions.invoke('analyze_traffic_notice_v1', {
+                body: { storage_path: path, household_id }
+            });
+
+            if (error) {
+                console.error("Traffic fine analysis error:", error);
+                return "Falha ao analisar a imagem da multa.";
+            }
+
+            return data; // Return the full extraction JSON
+        } catch (err) {
+            console.error("Invoke error:", err);
+            return "Erro interno ao processar imagem.";
+        }
+    }
+
     return "Ferramenta não implementada.";
 }
 
@@ -525,7 +827,7 @@ Deno.serve(async (req) => {
         // Use authenticated user_id as fallback or override? 
         // For security, strict matching is better, but for flexibility with "household_id" context we accept body vars.
         // We ensure 'user_id' defaults to the authenticated user if missing.
-        const { domain = 'general', image, images, household_id, history } = body;
+        const { domain = 'general', image, images, image_url, storage_path, household_id, history } = body;
         const user_id = user.id; // Enforce authenticated user
 
         const question = body.question || body.message || body.text || body.input || "";
@@ -879,10 +1181,20 @@ Incentive o usuário a lançar seus rendimentos e despesas no módulo de Imposto
         // =====================================================
         // ROUTER: MULTA - (handled by vision tool if image present)
         // =====================================================
-        else if (detectedIntent === 'MULTA' && (image || images)) {
-            console.log(`[smart_chat_v1] ROUTER: Intent is 'MULTA' with image. Will use vision tool.`);
-            // Let Gemini handle with vision_extract_fine tool
-            routerContext = cachedContext;
+        else if (detectedIntent === 'MULTA' && (image || images || image_url || storage_path)) {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'MULTA' with image/path. Will use vision tool.`);
+            routerContext = `
+[CONTEXTO - MULTA DE TRÂNSITO]:
+O usuário enviou uma imagem que parece ser uma multa ou notificação de autuação.
+VOCÊ DEVE:
+1. Chamar a ferramenta 'vision_extract_fine' para extrair os dados oficiais.
+2. Analisar o resultado retornado (Placa, Natureza, Local, Recomendação).
+3. Explicar ao usuário de forma humana o que aconteceu, os pontos na carteira e o valor.
+4. Mostrar as opções de desconto (SNE 20%/40%) se disponíveis.
+5. Se a recomendação for 'pay', ofereça salvar a multa para pagamento enviando a pendingAction 'ADD_TRAFFIC_FINE'.
+6. Se a recomendação for 'analyze_defense', ofereça iniciar o fluxo de defesa enviando a pendingAction 'ANALYZE_DEFENSE'.
+7. Use o 'summary_human' retornado pela ferramenta como base para sua resposta.
+`;
         }
 
         // =====================================================
