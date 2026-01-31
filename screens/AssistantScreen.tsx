@@ -14,7 +14,36 @@ export const AssistantScreen: React.FC = () => {
   const { user } = useAuth();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+
+  // Load messages from localStorage on init (persist across tab switches)
+  const STORAGE_KEY = 'vida_em_dia_chat_history';
+  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+  const loadStoredMessages = (): Message[] => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (!stored) return [];
+
+      const data = JSON.parse(stored);
+      const now = Date.now();
+
+      // Filter out messages older than 1 week
+      const recentMessages = data.messages.filter((m: any) => {
+        const msgTime = new Date(m.timestamp).getTime();
+        return (now - msgTime) < ONE_WEEK_MS;
+      });
+
+      // Convert timestamps back to Date objects
+      return recentMessages.map((m: any) => ({
+        ...m,
+        timestamp: new Date(m.timestamp)
+      }));
+    } catch {
+      return [];
+    }
+  };
+
+  const [messages, setMessages] = useState<Message[]>(loadStoredMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasLoadedContext = useRef(false);
@@ -34,6 +63,16 @@ export const AssistantScreen: React.FC = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        messages: messages,
+        lastUpdated: new Date().toISOString()
+      }));
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (hasLoadedContext.current) return;
@@ -273,8 +312,56 @@ export const AssistantScreen: React.FC = () => {
     }]);
   };
 
-  const handleSuggestionClick = (title: string) => {
-    setInput(`Quero tratar de "${title}"`);
+  const handleSuggestionClick = async (suggestionId: string, title: string, messageId?: string) => {
+    if (suggestionId.startsWith('add-expense-')) {
+      const msg = messages.find(m => m.id === messageId);
+      const fineData = msg?.answer_json?.raw_data;
+
+      if (!fineData) {
+        setInput(title);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        let finalAmount = typeof fineData.amount === 'number' ? fineData.amount : parseFloat(fineData.amount || '0');
+        if (suggestionId === 'add-expense-40') finalAmount = finalAmount * 0.6;
+        if (suggestionId === 'add-expense-20') finalAmount = finalAmount * 0.8;
+
+        const task = await tasksService.createTask({
+          title: `Multa: ${fineData.plate} - ${fineData.nature?.toUpperCase() || ''}`,
+          category_id: 'vehicle',
+          amount: finalAmount,
+          due_date: fineData.payment_deadline || fineData.date || new Date().toISOString().split('T')[0],
+          description: `Infração: ${fineData.description}\nCódigo: ${fineData.infraction_code}\nLocal: ${fineData.location}\nÓrgão: ${fineData.issuer}`,
+          status: 'pending',
+          entry_type: 'bill'
+        });
+
+        if (task) {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            text: `✅ **Agendado com sucesso!**\n\nAdicionei a multa de **R$ ${finalAmount.toFixed(2)}** às suas despesas. Vencimento: ${task.due_date}.\n\nPosso ajudar com mais alguma coisa?`,
+            sender: 'assistant',
+            timestamp: new Date()
+          }]);
+        }
+      } catch (err) {
+        console.error('[AssistantScreen] Error adding fine as expense:', err);
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          text: "Ops, tive um problema ao agendar essa despesa. Pode tentar novamente?",
+          sender: 'assistant',
+          timestamp: new Date()
+        }]);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (suggestionId === 'generate-defense') {
+      setInput('Gere um modelo de defesa para esta multa');
+    } else {
+      setInput(title);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -338,6 +425,7 @@ export const AssistantScreen: React.FC = () => {
 
       // 4. Format the response
       let responseText = '';
+      let fineActions: any[] | undefined = undefined;
 
       // Check if there's an error in the response
       if (data?.error) {
@@ -347,6 +435,13 @@ export const AssistantScreen: React.FC = () => {
         const amount = data.amount || 0;
         const discount40 = (typeof amount === 'number' ? amount * 0.6 : 0).toFixed(2);
         const discount20 = (typeof amount === 'number' ? amount * 0.8 : 0).toFixed(2);
+
+        fineActions = [
+          { id: 'add-expense-40', title: `💰 Agendar pagamento (R$ ${discount40} com 40% desconto)` },
+          { id: 'add-expense-20', title: `💰 Agendar pagamento (R$ ${discount20} com 20% desconto)` },
+          { id: 'add-expense-full', title: `💰 Agendar pagamento integral (R$ ${typeof (data?.amount || 0) === 'number' ? (data?.amount || 0).toFixed(2) : data?.amount})` },
+          { id: 'generate-defense', title: '🛡️ Gerar modelo de defesa' }
+        ];
 
         // Build defense info section if available
         let defenseSection = '';
@@ -404,6 +499,7 @@ Posso gerar um modelo de defesa para você ou ajudar a agendar o pagamento?`;
           text: responseText,
           sender: 'assistant',
           timestamp: new Date(),
+          suggestions: fineActions,
           answer_json: data ? {
             domain: 'traffic',
             key_facts: [
@@ -413,6 +509,11 @@ Posso gerar um modelo de defesa para você ou ajudar a agendar o pagamento?`;
               { label: 'Data', value: data.date || '-' },
               { label: 'Natureza', value: data.nature || '-' },
               { label: 'Local', value: data.location || '-' },
+              { label: 'Código', value: data.infraction_code || '-' },
+              { label: 'Descrição', value: data.description || '-' },
+              { label: 'Artigo', value: data.legal_article || '-' },
+              { label: 'Órgão', value: data.issuer || '-' },
+              { label: 'Prazo Defesa', value: data.defense_deadline || '-' },
               { label: 'Recomendação', value: data.recommendation || '-' }
             ],
             raw_data: data // Store full data for reference
@@ -519,7 +620,8 @@ Posso gerar um modelo de defesa para você ou ajudar a agendar o pagamento?`;
         confidence_level: data.confidence_level,
         sources: data.sources,
         answer_json: {
-          key_facts: data.key_facts || []
+          key_facts: data.key_facts || [],
+          domain: data.domain || (messageText.toLowerCase().includes('multa') ? 'traffic' : 'general')
         }
       }]);
 
@@ -623,8 +725,8 @@ Posso gerar um modelo de defesa para você ou ajudar a agendar o pagamento?`;
                   {msg.suggestions.map((s) => (
                     <button
                       key={s.id}
-                      onClick={() => handleSuggestionClick(s.title)}
-                      className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight border border-slate-100 hover:bg-white transition-all active:scale-95"
+                      onClick={() => handleSuggestionClick(s.id, s.title, msg.id)}
+                      className="px-4 py-2 bg-slate-50 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight border border-slate-100 hover:bg-white transition-all active:scale-95 text-left max-w-full"
                     >
                       {s.title}
                     </button>
