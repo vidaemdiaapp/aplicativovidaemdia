@@ -157,7 +157,7 @@ export const AgendaEditScreen: React.FC = () => {
                     <input
                         type="text"
                         placeholder="Título do compromisso"
-                        className="w-full bg-transparent border-none p-0 text-2xl font-black text-slate-900 placeholder:text-slate-200 focus:ring-0"
+                        className="w-full bg-transparent border-none p-0 text-2xl font-black text-slate-900 placeholder:text-slate-400 focus:ring-0"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         autoFocus

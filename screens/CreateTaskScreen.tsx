@@ -215,7 +215,7 @@ export const CreateTaskScreen: React.FC = () => {
                                 type="tel"
                                 inputMode="numeric"
                                 placeholder="0,00"
-                                className="bg-transparent text-5xl md:text-6xl font-bold outline-none placeholder:text-slate-100 text-slate-900 w-full text-center tracking-tight"
+                                className="bg-transparent text-5xl md:text-6xl font-bold outline-none placeholder:text-slate-400 text-slate-900 w-full text-center tracking-tight"
                                 value={amount}
                                 onChange={(e) => handleAmountChange(e.target.value)}
                             />

@@ -54,7 +54,7 @@ export const RegisterScreen: React.FC = () => {
                                 placeholder="Seu nome"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-slate-900 placeholder:text-slate-400"
                                 required
                             />
                         </div>
@@ -69,7 +69,7 @@ export const RegisterScreen: React.FC = () => {
                                 placeholder="seu@email.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-slate-900 placeholder:text-slate-400"
                                 required
                             />
                         </div>
@@ -84,7 +84,7 @@ export const RegisterScreen: React.FC = () => {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none"
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-slate-900 placeholder:text-slate-400"
                                 required
                             />
                         </div>
