@@ -182,6 +182,29 @@ Deno.serve(async (req) => {
             console.error("[Analyze] Update error:", updateError);
         }
 
+        // If deductible, also record in tax_deductible_expenses for the summary and pasta fiscal
+        if (analysis.is_deductible && (analysis.deduction_amount || analysis.extracted_data?.amount)) {
+            console.log(`[Analyze] Recording deductible expense...`);
+            const amount = analysis.deduction_amount || analysis.extracted_data?.amount || 0;
+            const { error: expenseError } = await supabase
+                .from("tax_deductible_expenses")
+                .insert({
+                    user_id: document.user_id,
+                    household_id: document.household_id,
+                    doc_id: document_id,
+                    expense_type: analysis.deduction_category === 'none' ? 'other' : analysis.deduction_category,
+                    provider_name: analysis.extracted_data?.provider_name || analysis.document_type || "Prestador não identificado",
+                    amount: amount,
+                    date: analysis.extracted_data?.date || new Date().toISOString().split('T')[0],
+                    confidence_score: analysis.confidence_score,
+                    is_shared: true // Default for documents
+                });
+
+            if (expenseError) {
+                console.error("[Analyze] Failed to insert into tax_deductible_expenses:", expenseError);
+            }
+        }
+
         return new Response(JSON.stringify({
             success: true,
             document_id: document_id,

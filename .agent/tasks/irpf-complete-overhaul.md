@@ -194,3 +194,4 @@ supabase/functions/
 - Armazenar documentos no Supabase Storage bucket `fiscal-documents`
 - Manter compatibilidade retroativa com dados existentes
 - Cache de respostas da Elara por ano fiscal
+npm

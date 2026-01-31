@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Receipt, Calendar, FileText, ChevronRight, Download, Trash2, Heart, GraduationCap, MoreHorizontal, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Receipt, Calendar, FileText, ChevronRight, Download, Trash2, Heart, GraduationCap, MoreHorizontal, AlertTriangle, TrendingUp, Users, Banknote, Landmark } from 'lucide-react';
 import { taxDeductionsService, TaxDeductibleExpense, DeductionType } from '../services/tax_deductions';
 import { useAuth } from '../hooks/useAuth';
+import { TaxDocumentUpload } from '../components/TaxDocumentUpload';
 
 export const FiscalFolderScreen: React.FC = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [deductions, setDeductions] = useState<TaxDeductibleExpense[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<DeductionType | 'all'>('all');
+    const [filter, setFilter] = useState<'all' | DeductionType>('all');
+    const [search, setSearch] = useState('');
+    const [showUpload, setShowUpload] = useState(false);
+    const currentYear = 2026;
+
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const data = await taxDeductionsService.getDeductions(currentYear);
+            setDeductions(data);
+        } catch (error) {
+            console.error('Error fetching deductions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        loadDeductions();
+        fetchData();
     }, []);
-
-    const loadDeductions = async () => {
-        setLoading(true);
-        const currentYear = 2026;
-        const data = await taxDeductionsService.getDeductions(currentYear);
-        setDeductions(data);
-        setLoading(false);
-    };
 
     const handleDelete = async (id: string) => {
         if (window.confirm('Deseja remover este comprovante da pasta fiscal?')) {
@@ -35,8 +43,12 @@ export const FiscalFolderScreen: React.FC = () => {
     const getIcon = (type: DeductionType) => {
         switch (type) {
             case 'health_plan':
-            case 'medical': return <Heart className="w-5 h-5 text-rose-500" />;
+            case 'medical':
+            case 'health': return <Heart className="w-5 h-5 text-rose-500" />;
             case 'education': return <GraduationCap className="w-5 h-5 text-blue-500" />;
+            case 'dependent': return <Users className="w-5 h-5 text-purple-500" />;
+            case 'pension': return <Banknote className="w-5 h-5 text-amber-500" />;
+            case 'pgbl': return <Landmark className="w-5 h-5 text-emerald-500" />;
             default: return <FileText className="w-5 h-5 text-slate-400" />;
         }
     };
@@ -44,11 +56,21 @@ export const FiscalFolderScreen: React.FC = () => {
     const getLabel = (type: DeductionType) => {
         switch (type) {
             case 'health_plan': return 'Plano de Saúde';
-            case 'medical': return 'Saúde / Clínicas';
+            case 'medical':
+            case 'health': return 'Saúde / Clínicas';
             case 'education': return 'Educação';
+            case 'dependent': return 'Dependente';
+            case 'pension': return 'Pensão Alimentícia';
+            case 'pgbl': return 'Previdência PGBL';
             default: return 'Outros';
         }
     };
+
+    const filteredDeductions = deductions.filter(d => {
+        if (filter === 'all') return true;
+        if (filter === 'medical') return ['medical', 'health', 'health_plan'].includes(d.expense_type);
+        return d.expense_type === filter;
+    });
 
     const totalAmount = filteredDeductions.reduce((sum, d) => sum + d.amount, 0);
     const totalSaving = totalAmount * 0.275; // Average tax saving
@@ -63,6 +85,18 @@ export const FiscalFolderScreen: React.FC = () => {
                     <h1 className="text-xl font-black text-white">Pasta Fiscal</h1>
                 </div>
 
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setShowUpload(true)}
+                        className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 hover:text-white transition-colors"
+                    >
+                        <Receipt className="w-6 h-6" />
+                    </button>
+                    <button className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-slate-400">
+                        <Filter className="w-6 h-6" />
+                    </button>
+                </div>
+
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar">
                     <button
                         onClick={() => setFilter('all')}
@@ -73,7 +107,7 @@ export const FiscalFolderScreen: React.FC = () => {
                     </button>
                     <button
                         onClick={() => setFilter('medical')}
-                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'medical' ? 'bg-rose-500 border-rose-500 text-slate-950' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'medical' || filter === 'health' || filter === 'health_plan' ? 'bg-rose-500 border-rose-500 text-slate-950' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
                             }`}
                     >
                         Saúde
@@ -84,6 +118,13 @@ export const FiscalFolderScreen: React.FC = () => {
                             }`}
                     >
                         Educação
+                    </button>
+                    <button
+                        onClick={() => setFilter('pgbl')}
+                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'pgbl' ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                            }`}
+                    >
+                        PGBL
                     </button>
                 </div>
             </header>
@@ -170,7 +211,7 @@ export const FiscalFolderScreen: React.FC = () => {
                             Carregue recibos hoje e veja<br />seu imposto diminuir em tempo real!
                         </p>
                         <button
-                            onClick={() => navigate('/upload')}
+                            onClick={() => setShowUpload(true)}
                             className="mt-8 px-8 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-emerald-500/10 active:scale-95 transition-all"
                         >
                             Fazer Primeiro Upload
@@ -178,6 +219,22 @@ export const FiscalFolderScreen: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Modal de Upload */}
+            {showUpload && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-0">
+                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setShowUpload(false)}></div>
+                    <div className="relative w-full max-w-lg animate-in fade-in zoom-in duration-300">
+                        <TaxDocumentUpload
+                            year={currentYear}
+                            onUploadComplete={() => {
+                                fetchData();
+                            }}
+                            onCancel={() => setShowUpload(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

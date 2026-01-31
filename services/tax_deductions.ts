@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { tasksService } from './tasks';
 
-export type DeductionType = 'health_plan' | 'medical' | 'education' | 'other';
+export type DeductionType = 'health_plan' | 'medical' | 'education' | 'other' | 'health' | 'dependent' | 'pension' | 'pgbl';
 
 export interface TaxDeductibleExpense {
     id: string;
