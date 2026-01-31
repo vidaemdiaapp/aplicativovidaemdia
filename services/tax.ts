@@ -89,5 +89,33 @@ export const taxService = {
             console.error('[TaxService] Failed to fetch readiness:', error);
             return null;
         }
+    },
+    /**
+     * Generate and download professional fiscal PDF
+     */
+    generateFiscalPDF: async (params: {
+        year: number;
+        estimate: any;
+        readiness: any;
+        deductionsSummary: any;
+        capitalGains?: any;
+    }): Promise<{ success: boolean; pdf_base64?: string; error?: string; file_name?: string }> => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return { success: false, error: 'Auth session not found' };
+
+            const { data, error } = await supabase.functions.invoke('generate_fiscal_pdf_v1', {
+                body: {
+                    ...params,
+                    userName: session.user.user_metadata?.full_name || session.user.email
+                }
+            });
+
+            if (error) throw error;
+            return data;
+        } catch (error: any) {
+            console.error('[TaxService] PDF Generation failed:', error);
+            return { success: false, error: error.message };
+        }
     }
 };

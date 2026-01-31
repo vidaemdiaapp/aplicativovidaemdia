@@ -8,7 +8,7 @@
 // =============================================================================
 export const TAX_RULES_2025 = {
     YEAR: 2025,
-    ANO_CALENDARIO: 2024,
+    ANO_CALENDARIO: 2025,
     MONTHLY_EXEMPTION_LIMIT: 2259.20,
     ANNUAL_EXEMPTION_LIMIT: 27110.40,
     HAS_GRADUAL_REDUCER: false,
@@ -32,7 +32,7 @@ export const TAX_RULES_2025 = {
 // =============================================================================
 export const TAX_RULES_2026 = {
     YEAR: 2026,
-    ANO_CALENDARIO: 2025,
+    ANO_CALENDARIO: 2026,
     // Limites mensais
     MONTHLY_EXEMPTION_LIMIT: 5000.00,          // Isento até R$ 5.000/mês
     MONTHLY_REDUCER_LIMIT: 7350.00,            // Redutor gradual até R$ 7.350/mês
@@ -90,6 +90,7 @@ export interface TaxCalculationResult {
     bracketApplied: number;
     appliedRulesYear: number;
     taxpayerType?: TaxpayerType;
+    regime?: 'simplified' | 'complete';
     comparison?: {
         taxIn2025: number;
         taxIn2026: number;
@@ -232,15 +233,32 @@ export function calculateIRPF(
     annualIncome: number,
     totalDeductions: number = 0,
     year: number = 2026,
-    taxpayerType: TaxpayerType = 'CLT'
+    taxpayerType: TaxpayerType = 'CLT',
+    regime: 'simplified' | 'complete' = 'complete'
 ): TaxCalculationResult {
     const rules = getTaxRules(year);
 
-    // 1. Calculate taxable income (after deductions) - DEVE ser calculado primeiro
-    const taxableIncome = Math.max(annualIncome - totalDeductions, 0);
+    // 0. Taxpayer Type specifics
+    let grossTaxableIncome = annualIncome;
+    if (taxpayerType === 'MEI') {
+        // MEI: Apenas uma parcela do lucro é tributável (Regra Geral: 32% para serviços)
+        grossTaxableIncome = annualIncome * 0.32;
+    } else if (taxpayerType === 'AUTONOMO') {
+        // Autônomo (RPA): Geralmente tributa 100% menos despesas do livro-caixa (simplificamos para 100%)
+        grossTaxableIncome = annualIncome;
+    }
 
-    // 2. Check annual exemption (baseado na base de cálculo, não renda bruta)
-    // Para 2026: Isenção de R$ 60.000 na BASE DE CÁLCULO
+    // 1. Calculate final deductions based on regime
+    let finalDeductions = totalDeductions;
+    if (regime === 'simplified') {
+        const simplifiedDiscount = Math.min(grossTaxableIncome * rules.SIMPLIFIED_DISCOUNT_RATE, rules.SIMPLIFIED_DISCOUNT_ANNUAL_LIMIT);
+        finalDeductions = simplifiedDiscount;
+    }
+
+    // 1.1 Calculate taxable income (after deductions)
+    const taxableIncome = Math.max(grossTaxableIncome - finalDeductions, 0);
+
+    // 2. Check annual exemption
     const isExemptByAnnualLimit = taxableIncome <= rules.ANNUAL_EXEMPTION_LIMIT;
 
     if (isExemptByAnnualLimit) {
@@ -248,7 +266,7 @@ export function calculateIRPF(
             year,
             grossIncome: annualIncome,
             taxableIncome: 0,
-            totalDeductions,
+            totalDeductions: finalDeductions,
             estimatedTaxYearly: 0,
             estimatedTaxMonthly: 0,
             effectiveRate: 0,
@@ -257,7 +275,8 @@ export function calculateIRPF(
             gradualReducerApplied: 0,
             bracketApplied: 1,
             appliedRulesYear: year,
-            taxpayerType
+            taxpayerType,
+            regime
         };
     }
 
@@ -269,26 +288,24 @@ export function calculateIRPF(
     let annualTax = monthlyTax * 12;
 
     // 5. Apply gradual reducer (2026 only)
-    // O redutor gradual é aplicado quando a BASE DE CÁLCULO está entre 60k e 88.2k
     let gradualReducerApplied = 0;
     let isExemptByGradualReducer = false;
 
     if (year === 2026 && (rules as typeof TAX_RULES_2026).HAS_GRADUAL_REDUCER) {
         const originalTax = annualTax;
-        // CORREÇÃO: Usar taxableIncome (base de cálculo) no redutor, não annualIncome
         annualTax = applyGradualReducer(taxableIncome, annualTax, rules as typeof TAX_RULES_2026);
         gradualReducerApplied = originalTax - annualTax;
         isExemptByGradualReducer = annualTax === 0 && originalTax > 0;
     }
 
-    // 6. Calculate effective rate (sobre a renda bruta para mostrar % real)
+    // 6. Calculate effective rate
     const effectiveRate = annualIncome > 0 ? annualTax / annualIncome : 0;
 
     return {
         year,
         grossIncome: annualIncome,
         taxableIncome,
-        totalDeductions,
+        totalDeductions: finalDeductions,
         estimatedTaxYearly: Math.max(annualTax, 0),
         estimatedTaxMonthly: Math.max(annualTax / 12, 0),
         effectiveRate,
@@ -297,7 +314,8 @@ export function calculateIRPF(
         gradualReducerApplied,
         bracketApplied: bracket,
         appliedRulesYear: year,
-        taxpayerType
+        taxpayerType,
+        regime
     };
 }
 
@@ -605,3 +623,84 @@ ${result.explanation}
 `.trim();
 }
 
+// =============================================================================
+// CAPITAL GAINS (GCAP)
+// Rules: 15% for gains up to 5 million R$.
+// =============================================================================
+export interface CapitalGainItem {
+    name: string;
+    type: string;
+    profit: number;
+    tax: number;
+}
+
+export interface CapitalGainResult {
+    totalProfit: number;
+    estimatedTax: number;
+    isTaxable: boolean;
+    explanation: string;
+    moveis: {
+        totalProfit: number;
+        estimatedTax: number;
+        items: CapitalGainItem[];
+    };
+    imoveis: {
+        totalProfit: number;
+        estimatedTax: number;
+        items: CapitalGainItem[];
+    };
+}
+
+export function calculateCapitalGains(assets: any[]): CapitalGainResult {
+    const moveis: CapitalGainItem[] = [];
+    const imoveis: CapitalGainItem[] = [];
+
+    let totalMovelProfit = 0;
+    let totalImovelProfit = 0;
+
+    assets.forEach(asset => {
+        if (asset.status === 'sold' && asset.sale_value && asset.purchase_value) {
+            const profit = asset.sale_value - asset.purchase_value;
+            if (profit > 0) {
+                const tax = profit * 0.15;
+                const item = {
+                    name: asset.name + (asset.plate ? ` (${asset.plate})` : ''),
+                    type: asset.type === 'real_estate' ? 'Imóvel' : 'Móvel',
+                    profit,
+                    tax
+                };
+
+                if (asset.type === 'real_estate') {
+                    imoveis.push(item);
+                    totalImovelProfit += profit;
+                } else {
+                    moveis.push(item);
+                    totalMovelProfit += profit;
+                }
+            }
+        }
+    });
+
+    const taxRate = 0.15;
+    const moveisTax = totalMovelProfit * taxRate;
+    const imoveisTax = totalImovelProfit * taxRate;
+
+    return {
+        totalProfit: totalMovelProfit + totalImovelProfit,
+        estimatedTax: moveisTax + imoveisTax,
+        isTaxable: (totalMovelProfit + totalImovelProfit) > 0,
+        explanation: (totalMovelProfit + totalImovelProfit) > 0
+            ? `Apuração separada: Gcáp Bens Móveis e Imóveis.`
+            : 'Nenhum ganho de capital identificado.',
+        moveis: {
+            totalProfit: totalMovelProfit,
+            estimatedTax: moveisTax,
+            items: moveis
+        },
+        imoveis: {
+            totalProfit: totalImovelProfit,
+            estimatedTax: imoveisTax,
+            items: imoveis
+        }
+    };
+}

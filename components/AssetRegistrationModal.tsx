@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Car, Home, Package, Calendar, DollarSign, FileText } from 'lucide-react';
+import { X, Save, Car, Home, Package, Calendar, DollarSign, FileText, Receipt, CheckCircle2, ArrowRight } from 'lucide-react';
 import { assetsService, Asset, AssetType } from '../services/assets';
 
 interface Props {
@@ -11,23 +11,44 @@ interface Props {
 
 export const AssetRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSuccess, assetToEdit }) => {
     const [loading, setLoading] = useState(false);
+    const [purchaseReceipt, setPurchaseReceipt] = useState<File | null>(null);
     const [formData, setFormData] = useState({
         name: assetToEdit?.name || '',
         type: (assetToEdit?.type || 'vehicle') as AssetType,
         purchase_value: assetToEdit?.purchase_value || 0,
         purchase_date: assetToEdit?.purchase_date || new Date().toISOString().split('T')[0],
+        purchase_receipt_url: assetToEdit?.purchase_receipt_url || '',
+        plate: assetToEdit?.plate || '',
         notes: assetToEdit?.notes || ''
     });
 
     if (!isOpen) return null;
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) setPurchaseReceipt(file);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
+        let finalPurchaseReceiptUrl = formData.purchase_receipt_url;
+
+        // If we have a new file, upload it
+        if (purchaseReceipt) {
+            // We need an ID to upload, so if it's a new asset, we save it first without the URL then update,
+            // or we generate a temp ID. Let's assume saveAsset returns the new asset or handles it.
+            // Actually, let's just upload with a random name if assetToEdit doesn't exist yet.
+            const tempId = assetToEdit?.id || `new_${Math.random().toString(36).substring(2)}`;
+            const uploadedUrl = await assetsService.uploadReceipt(purchaseReceipt, tempId, 'purchase');
+            if (uploadedUrl) finalPurchaseReceiptUrl = uploadedUrl;
+        }
+
         const success = await assetsService.saveAsset({
             ...assetToEdit,
-            ...formData
+            ...formData,
+            purchase_receipt_url: finalPurchaseReceiptUrl
         });
 
         if (success) {
@@ -60,8 +81,8 @@ export const AssetRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSuc
                                 type="button"
                                 onClick={() => setFormData({ ...formData, type })}
                                 className={`p-4 rounded-3xl border-2 transition-all flex flex-col items-center gap-2 ${formData.type === type
-                                        ? 'border-primary-600 bg-primary-50 text-primary-600'
-                                        : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
+                                    ? 'border-primary-600 bg-primary-50 text-primary-600'
+                                    : 'border-slate-100 bg-white text-slate-400 hover:border-slate-200'
                                     }`}
                             >
                                 {type === 'vehicle' && <Car className="w-5 h-5" />}
@@ -87,6 +108,24 @@ export const AssetRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSuc
                                 />
                             </div>
                         </div>
+
+                        {formData.type === 'vehicle' && (
+                            <div className="animate-in slide-in-from-top-2 duration-300">
+                                <label className="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2 block">Placa do Veículo (Obrigatório)</label>
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-300 text-sm">ABC</div>
+                                    <input
+                                        type="text"
+                                        placeholder="BRA-2E19"
+                                        className="w-full bg-slate-50 border-0 rounded-2xl py-4 pl-14 pr-4 font-bold text-slate-900 focus:ring-2 focus:ring-primary-500 transition-all uppercase"
+                                        value={formData.plate}
+                                        onChange={(e) => setFormData({ ...formData, plate: e.target.value.toUpperCase() })}
+                                        maxLength={8}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -116,6 +155,38 @@ export const AssetRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSuc
                                     />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Upload de Recibo de Compra */}
+                    <div>
+                        <label className="text-[10px] font-black uppercase text-slate-400 ml-2 mb-2 block">Comprovante de Compra (NF/Recibo)</label>
+                        <div className="relative flex items-center justify-between p-4 bg-slate-50 rounded-2xl border-2 border-slate-100 hover:border-slate-200 transition-all cursor-pointer group" onClick={() => document.getElementById('purchase-receipt-input')?.click()}>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-xl text-slate-400 group-hover:text-primary-500 transition-colors">
+                                    <Receipt className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-slate-700">
+                                        {purchaseReceipt ? purchaseReceipt.name : (formData.purchase_receipt_url ? 'Recibo Enviado' : 'Subir foto/PDF')}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 uppercase tracking-tighter">Opcional • Máximo 10MB</p>
+                                </div>
+                            </div>
+                            <input
+                                id="purchase-receipt-input"
+                                type="file"
+                                accept="image/*,application/pdf"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                            {purchaseReceipt || formData.purchase_receipt_url ? (
+                                <div className="text-emerald-500 bg-emerald-50 p-1.5 rounded-lg border border-emerald-100">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                </div>
+                            ) : (
+                                <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-slate-400" />
+                            )}
                         </div>
                     </div>
 

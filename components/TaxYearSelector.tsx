@@ -34,9 +34,9 @@ export const TaxYearSelector: React.FC<TaxYearSelectorProps> = ({
     };
 
     const getYearDescription = (year: number) => {
-        if (year === 2026) return 'Ano-Calendário 2025 • Isenção R$ 60k';
-        if (year === 2025) return 'Ano-Calendário 2024 • Isenção R$ 27k';
-        return `Ano-Calendário ${year - 1}`;
+        if (year === 2026) return 'Referente ao ano de 2026 • Isento 5k';
+        if (year === 2025) return 'Referente ao ano de 2025';
+        return `Referente ao ano de ${year}`;
     };
 
     return (

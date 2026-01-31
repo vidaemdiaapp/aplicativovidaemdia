@@ -135,13 +135,33 @@ export const AssetsScreen: React.FC = () => {
                                 )}
 
                                 {asset.status === 'sold' && asset.sale_value && (
-                                    <div className="mt-5 p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
-                                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-[10px] font-black text-amber-800 uppercase mb-0.5">Aviso de Ganho de Capital</p>
-                                            <p className="text-[11px] text-amber-700 leading-tight">
-                                                A venda por {formatCurrency(asset.sale_value)} pode gerar obrigações fiscais sobre o lucro de {formatCurrency(asset.sale_value - asset.purchase_value)}. Verifique com seu contador.
-                                            </p>
+                                    <div className="mt-5 space-y-4">
+                                        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-3">
+                                            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-[10px] font-black text-amber-800 uppercase mb-0.5">Aviso de Ganho de Capital</p>
+                                                <p className="text-[11px] text-amber-700 leading-tight">
+                                                    A venda por {formatCurrency(asset.sale_value)} pode gerar obrigações fiscais sobre o lucro de {formatCurrency(asset.sale_value - asset.purchase_value)}. Verifique com seu contador.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedAssetForSale(asset);
+                                                    setIsSaleModalOpen(true);
+                                                }}
+                                                className="flex-1 py-3 px-4 bg-slate-100 text-slate-600 rounded-2xl text-[11px] font-black uppercase tracking-tight flex items-center justify-center gap-2 hover:bg-slate-200 transition-all"
+                                            >
+                                                <MoreHorizontal className="w-3 h-3" /> Corrigir Venda
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(asset.id)}
+                                                className="p-3 bg-slate-50 text-slate-400 rounded-2xl hover:text-rose-500 transition-colors"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
                                         </div>
                                     </div>
                                 )}

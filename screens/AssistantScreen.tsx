@@ -299,79 +299,134 @@ export const AssistantScreen: React.FC = () => {
 
     try {
       // 1. Upload to Storage
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
       const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `chat_uploads/${fileName}`;
+
+      console.log('[AssistantScreen] Step 1: Uploading file to storage...', { filePath, fileSize: file.size, fileType: file.type });
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('[AssistantScreen] Upload to storage failed:', uploadError);
+        throw uploadError;
+      }
 
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('documents')
-        .getPublicUrl(filePath);
+      console.log('[AssistantScreen] Step 1 complete: File uploaded successfully');
 
-      // 3. Send to Edge Function
+      // 2. Get household
       const household = await tasksService.getHousehold();
 
-      // Prepare History for Image context too
-      const recentHistory = messages
-        .filter(m => m.id !== 'init-suggestions' && m.id !== 'processing-img' && m.text)
-        .slice(-5)
-        .map(m => ({
-          role: m.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        }));
+      // 3. Call analyze_traffic_notice_v1 directly for images (faster, no timeout issues)
+      console.log('[AssistantScreen] Calling analyze_traffic_notice_v1 with path:', filePath);
 
-      const { data, error } = await supabase.functions.invoke('smart_chat_v1', {
+      const { data, error } = await supabase.functions.invoke('analyze_traffic_notice_v1', {
         body: {
-          question: "Analise esta imagem anexada.",
-          message: "Analise esta imagem anexada.",
-          text: "Analise esta imagem anexada.",
-          image_url: publicUrl,
-          storage_path: filePath, // NEW: For server-side processing
-          history: recentHistory, // NEW: Context Memory
-          household_id: household?.id,
-          user_id: user?.id,
-          domain: 'general'
+          storage_path: filePath,
+          household_id: household?.id
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[AssistantScreen] analyze_traffic_notice error:', error);
+        throw error;
+      }
 
-      // 4. Update UI (Remove "Lendo..." and show response)
+      console.log('[AssistantScreen] Analysis result:', JSON.stringify(data, null, 2));
+
+      // 4. Format the response
+      let responseText = '';
+
+      // Check if there's an error in the response
+      if (data?.error) {
+        responseText = `❌ Erro ao analisar a imagem: ${data.error}`;
+      } else if (data && (data.plate || data.infraction_code || data.amount)) {
+        // It's a traffic fine!
+        const amount = data.amount || 0;
+        const discount40 = (typeof amount === 'number' ? amount * 0.6 : 0).toFixed(2);
+        const discount20 = (typeof amount === 'number' ? amount * 0.8 : 0).toFixed(2);
+
+        // Build defense info section if available
+        let defenseSection = '';
+        if (data.possible_defenses && data.possible_defenses.length > 0) {
+          defenseSection = `\n\n**🛡️ Possíveis Argumentos de Defesa:**\n${data.possible_defenses.map((d: string) => `• ${d}`).join('\n')}`;
+        }
+
+        let inconsistenciesSection = '';
+        if (data.formal_inconsistencies && data.formal_inconsistencies.length > 0) {
+          inconsistenciesSection = `\n\n**⚠️ Pontos a Verificar para Defesa:**\n${data.formal_inconsistencies.map((d: string) => `• ${d}`).join('\n')}`;
+        }
+
+        responseText = `🚗 **Multa de Trânsito Identificada!**
+
+${data.summary_human || 'Documento analisado com sucesso.'}
+
+**📋 Dados Completos:**
+• **Placa:** ${data.plate || 'Não identificada'}
+• **Veículo:** ${data.vehicle_brand || ''} ${data.vehicle_model || ''} ${data.vehicle_color ? `(${data.vehicle_color})` : ''}
+• **Data da Infração:** ${data.date || 'Não identificada'} às ${data.time || '--:--'}
+• **Local:** ${data.location || 'Não identificado'}
+• **Código:** ${data.infraction_code || 'N/A'}
+• **Descrição:** ${data.description || 'Não disponível'}
+• **Artigo:** ${data.legal_article || 'Não informado'}
+• **Natureza:** ${data.nature?.toUpperCase() || 'N/A'} (${data.points || 0} pontos na CNH)
+• **Valor:** R$ ${typeof amount === 'number' ? amount.toFixed(2) : amount}
+• **Órgão:** ${data.issuer || 'Não identificado'}
+• **Nº Auto:** ${data.auto_number || 'N/A'}
+
+**📅 Prazos:**
+• Defesa até: ${data.defense_deadline || 'Verificar na notificação'}
+• Pagamento até: ${data.payment_deadline || 'Verificar na notificação'}
+
+**💰 Opções de Pagamento:**
+• Com 40% de desconto (SNE): R$ ${discount40}
+• Com 20% de desconto: R$ ${discount20}
+${defenseSection}${inconsistenciesSection}
+
+**💡 Recomendação:** ${data.recommendation_text || (data.nature === 'grave' || data.nature === 'gravissima' ? 'Considere analisar as possibilidades de defesa antes de pagar.' : 'Para infrações leves/médias, geralmente vale pagar com desconto.')}
+
+Posso gerar um modelo de defesa para você ou ajudar a agendar o pagamento?`;
+      } else if (data) {
+        // Something was returned but not recognized as a fine
+        responseText = `📄 Imagem analisada!\n\n${data?.summary_human || JSON.stringify(data)}`;
+      } else {
+        // No data returned
+        responseText = `📄 Recebi a imagem mas não consegui extrair informações. Tente enviar uma foto mais nítida da multa.`;
+      }
+
+      // 5. Update UI
       setMessages(prev => {
         const filtered = prev.filter(m => m.id !== 'processing-img');
         return [...filtered, {
           id: (Date.now() + 1).toString(),
-          text: data.answer_text,
+          text: responseText,
           sender: 'assistant',
           timestamp: new Date(),
-          // NEW LOGIC for File Upload too
-          pendingAction: data.pending_action ? {
-            id: `action-${Date.now()}`,
-            type: data.pending_action.type,
-            taskId: data.pending_action.payload?.task_id || 'none',
-            payload: data.pending_action.payload || {},
-            summary: "Ação Identificada na Imagem",
-            created_at: new Date().toISOString(),
-            expires_at: new Date(Date.now() + 5 * 60000).toISOString()
+          answer_json: data ? {
+            domain: 'traffic',
+            key_facts: [
+              { label: 'Placa', value: data.plate || '-' },
+              { label: 'Valor', value: `R$ ${typeof data.amount === 'number' ? data.amount.toFixed(2) : data.amount || '0'}` },
+              { label: 'Pontos', value: data.points?.toString() || '0' },
+              { label: 'Data', value: data.date || '-' },
+              { label: 'Natureza', value: data.nature || '-' },
+              { label: 'Local', value: data.location || '-' },
+              { label: 'Recomendação', value: data.recommendation || '-' }
+            ],
+            raw_data: data // Store full data for reference
           } : undefined,
-          answer_json: {
-            key_facts: data.key_facts || []
-          },
           is_cached: false
         }];
       });
 
     } catch (error) {
-      console.error(error);
+      console.error('[AssistantScreen] File upload error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido';
       setMessages(prev => prev.filter(m => m.id !== 'processing-img').concat({
         id: (Date.now() + 1).toString(),
-        text: "Não consegui ler a imagem. Tente novamente.",
+        text: `Não consegui ler a imagem. Erro: ${errorMsg}`,
         sender: 'assistant',
         timestamp: new Date()
       }));
@@ -409,14 +464,25 @@ export const AssistantScreen: React.FC = () => {
       // 1. Get Household context
       const household = await tasksService.getHousehold();
 
-      // History for standard send
+      // History for standard send - include answer_json data for context
       const recentHistory = messages
         .filter(m => m.id !== 'init-suggestions' && m.id !== 'processing-img' && m.text)
-        .slice(-5)
-        .map(m => ({
-          role: m.sender === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        }));
+        .slice(-10) // Increase to 10 for better context
+        .map(m => {
+          // If this message has traffic fine data, include it in the text
+          let enrichedText = m.text;
+          if (m.answer_json?.key_facts && m.answer_json.key_facts.length > 0) {
+            const factsStr = m.answer_json.key_facts.map((f: any) => `${f.label}: ${f.value}`).join(', ');
+            enrichedText += `\n[DADOS EXTRAÍDOS: ${factsStr}]`;
+          }
+          if (m.answer_json?.domain === 'traffic') {
+            enrichedText += '\n[CONTEXTO: Esta mensagem contém dados de uma multa de trânsito analisada anteriormente]';
+          }
+          return {
+            role: m.sender === 'user' ? 'user' : 'model',
+            parts: [{ text: enrichedText }]
+          };
+        });
 
       // 2. Call Edge Function
       const { data, error } = await supabase.functions.invoke('smart_chat_v1', {

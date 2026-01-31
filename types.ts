@@ -83,6 +83,8 @@ export interface Category {
   pendingCount?: number;
 }
 
+export type TaxRegime = 'simplified' | 'complete';
+
 export interface IRPFEstimate {
   user_id: string;
   year: number;
@@ -94,6 +96,8 @@ export interface IRPFEstimate {
   tax_rate: number;
   total_deductions_year?: number;
   has_deductions?: boolean;
+  capital_gains_tax?: number;
+  tax_regime?: TaxRegime;
 }
 
 export interface IRPFReadiness {

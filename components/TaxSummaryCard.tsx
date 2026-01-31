@@ -52,6 +52,11 @@ export const TaxSummaryCard: React.FC<Props> = ({ estimate, loading, selectedYea
                         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Exercício {selectedYear}</h2>
                     </div>
                     <div className="flex items-center gap-3">
+                        {estimate.tax_regime && (
+                            <span className="px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border bg-slate-50 text-slate-500 border-slate-200">
+                                {estimate.tax_regime === 'simplified' ? 'Simplificado' : 'Deduções'}
+                            </span>
+                        )}
                         <span className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider border ${getStatusColor()}`}>
                             {getStatusLabel()}
                         </span>
@@ -93,18 +98,36 @@ export const TaxSummaryCard: React.FC<Props> = ({ estimate, loading, selectedYea
                 {/* Imposto Section */}
                 <div className="grid grid-cols-2 gap-6 mb-6">
                     <div className="bg-slate-50 rounded-2xl p-4 space-y-1 border border-slate-100">
-                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">IR Mensal</p>
+                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">IR s/ Renda (Mensal)</p>
                         <p className={`text-2xl font-bold tracking-tight ${estimate.is_exempt ? 'text-emerald-600' : 'text-slate-900'}`}>
                             {estimate.is_exempt ? 'Isento' : formatCurrency(estimate.estimated_tax_monthly)}
                         </p>
                     </div>
                     <div className="bg-slate-50 rounded-2xl p-4 space-y-1 border border-slate-100">
-                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">IR Anual</p>
+                        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Total IR Devido</p>
                         <p className={`text-2xl font-bold tracking-tight ${estimate.is_exempt ? 'text-emerald-600' : 'text-rose-600'}`}>
                             {estimate.is_exempt ? 'Isento' : formatCurrency(estimate.estimated_tax_yearly)}
                         </p>
+                        {estimate.capital_gains_tax && estimate.capital_gains_tax > 0 ? (
+                            <p className="text-[9px] font-bold text-amber-600 uppercase tracking-tight">
+                                Inclui {formatCurrency(estimate.capital_gains_tax)} de Gcáp
+                            </p>
+                        ) : null}
                     </div>
                 </div>
+
+                {/* Capital Gains specific breakdown in card if present */}
+                {estimate.capital_gains_tax && estimate.capital_gains_tax > 0 ? (
+                    <div className="flex items-center justify-between px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100 mb-6">
+                        <div className="flex items-center gap-2">
+                            <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Ganho de Capital Identificado</span>
+                        </div>
+                        <span className="text-sm font-bold text-amber-900">
+                            + {formatCurrency(estimate.capital_gains_tax)}
+                        </span>
+                    </div>
+                ) : null}
 
                 {/* Alíquota Efetiva */}
                 {!estimate.is_exempt && (

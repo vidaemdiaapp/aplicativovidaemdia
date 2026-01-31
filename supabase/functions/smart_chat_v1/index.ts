@@ -5,6 +5,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 const allowedOrigins = new Set([
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://localhost:5173",
+    "http://localhost:5174",
 ]);
 
 function getCorsHeaders(origin: string | null) {
@@ -108,11 +110,51 @@ Imposto Final = Imposto - Redutor
 3. Desconto Simplificado: R$ 16.754 → R$ 17.640
 4. Milhões de brasileiros agora estão ISENTOS!
 
+🚨 REGRA CRÍTICA DE CONTEXTO (OBRIGATÓRIO!):
+VOCÊ DEVE ANALISAR O HISTÓRICO DA CONVERSA ANTES DE RESPONDER!
+
+Se no histórico existir:
+- [DADOS EXTRAÍDOS: ...] → Use esses dados! NÃO peça novamente!
+- [CONTEXTO: multa de trânsito] → Você JÁ TEM os dados da multa!
+- Dados de placa, valor, código, descrição → USE diretamente!
+
+QUANDO O USUÁRIO PEDIR "modelo de defesa" ou "defesa da multa":
+1. PROCURE no histórico pelos dados da multa (placa, código, descrição, natureza, artigo)
+2. USE esses dados para gerar o modelo de defesa imediatamente
+3. NÃO pergunte informações que já estão no histórico
+4. Pergunte APENAS informações extras que NÃO estão no histórico (ex: "você notou algum erro na notificação?")
+
+MODELO DE DEFESA DE MULTA - ESTRUTURA:
+Se o usuário pedir defesa e você tiver os dados no histórico, gere assim:
+---
+DEFESA PRÉVIA / RECURSO ADMINISTRATIVO
+
+À [ÓRGÃO AUTUADOR]
+Ref: Auto de Infração nº [NÚMERO DO AUTO]
+
+[NOME DO PROPRIETÁRIO], CPF [XXX], proprietário do veículo de placa [PLACA], vem respeitosamente apresentar DEFESA PRÉVIA contra a autuação acima referida, pelos motivos que expõe:
+
+DOS FATOS:
+[Descrição baseada nos dados extraídos e no que o usuário informou]
+
+DO DIREITO:
+[Argumentos baseados no código da infração e artigo do CTB]
+[Se houver inconsistências formais, mencionar]
+
+DO PEDIDO:
+Diante do exposto, requer seja ANULADA a presente autuação.
+
+[Cidade], [Data]
+_______________
+[Assinatura]
+---
+
 PERSONALIDADE:
 - Brasileira, clara e direta. Sem tom robótico.
 - SEMPRE chame o usuário pelo nome {{USER_NAME}} de forma natural e amigável.
 - Quando perguntar sobre IR, SEMPRE pergunte o ano se não estiver claro.
 - Módulo Fiscal: Use sempre dados do sistema e as regras acima. PROIBIDO USAR PLACEHOLDERS.
+- JAMAIS diga "não consigo verificar seus documentos" - você TEM os dados no histórico!
 
 FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
 Sua resposta final DEVE ser um objeto JSON puro, sem markdown extra, contendo:
@@ -275,7 +317,7 @@ const TOOLS_SCHEMA = [
 
 
 // --- TOOL HANDLERS ---
-async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string, user_id: string) {
+async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string, user_id: string, storage_path?: string) {
     if (toolName === "get_financial_summary") {
         const { data, error } = await supabase.rpc('get_full_financial_report', { target_household_id: household_id });
         if (error) throw new Error(`Error getting summary: ${error.message}`);
@@ -765,7 +807,7 @@ function classifyIntentByKeywords(text: string): AppIntent {
 
 // Check if intent requires internal data lookup FIRST (before LLM generates response)
 function requiresInternalData(intent: AppIntent): boolean {
-    return ['SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'INVESTMENTS'].includes(intent);
+    return ['SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'INVESTMENTS', 'MULTA'].includes(intent);
 }
 
 
@@ -832,7 +874,7 @@ Deno.serve(async (req) => {
 
         const question = body.question || body.message || body.text || body.input || "";
 
-        if (!question && !image && (!images || images.length === 0)) throw new Error("Envie uma mensagem ou imagem.");
+        if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url) throw new Error("Envie uma mensagem ou imagem.");
 
         // --- FETCH USER PROFILE FOR PERSONALIZATION ---
         const { data: profile } = await supabaseAdmin
@@ -848,7 +890,8 @@ Deno.serve(async (req) => {
         let finalPrompt = SYSTEM_PROMPT_LOCKED.replace('{{USER_NAME}}', firstName) + "\n\n";
         if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
 
-        if (image || images) finalPrompt += "\n[IMAGEM ANEXADA]";
+        const hasImages = !!(image || images || image_url || storage_path);
+        if (hasImages) finalPrompt += "\n[IMAGEM ANEXADA - STORAGE PATH: " + (storage_path || 'URL') + "]";
 
         // --- SPRINT 2: TRIGGER ENGINE ---
         // 1. Heuristic Classification
@@ -1181,20 +1224,19 @@ Incentive o usuário a lançar seus rendimentos e despesas no módulo de Imposto
         // =====================================================
         // ROUTER: MULTA - (handled by vision tool if image present)
         // =====================================================
-        else if (detectedIntent === 'MULTA' && (image || images || image_url || storage_path)) {
-            console.log(`[smart_chat_v1] ROUTER: Intent is 'MULTA' with image/path. Will use vision tool.`);
+        else if ((detectedIntent === 'MULTA' || (hasImages && question.toLowerCase().includes('imagem'))) && storage_path) {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'MULTA' or image uploaded with storage_path: ${storage_path}`);
             routerContext = `
-[CONTEXTO - MULTA DE TRÂNSITO]:
-O usuário enviou uma imagem que parece ser uma multa ou notificação de autuação.
-VOCÊ DEVE:
-1. Chamar a ferramenta 'vision_extract_fine' para extrair os dados oficiais.
-2. Analisar o resultado retornado (Placa, Natureza, Local, Recomendação).
-3. Explicar ao usuário de forma humana o que aconteceu, os pontos na carteira e o valor.
-4. Mostrar as opções de desconto (SNE 20%/40%) se disponíveis.
-5. Se a recomendação for 'pay', ofereça salvar a multa para pagamento enviando a pendingAction 'ADD_TRAFFIC_FINE'.
-6. Se a recomendação for 'analyze_defense', ofereça iniciar o fluxo de defesa enviando a pendingAction 'ANALYZE_DEFENSE'.
-7. Use o 'summary_human' retornado pela ferramenta como base para sua resposta.
-8. Se campos críticos como 'date', 'nature' ou 'plate' vierem nulos, peça desculpas pelo inconveniente e solicite que o usuário informe esses dados manualmente para que você possa completar a análise.
+[CONTEXTO - ANÁLISE DE IMAGEM]:
+O usuário enviou uma imagem para análise.
+O CAMINHO DO ARQUIVO É: ${storage_path}
+
+VOCÊ DEVE IMEDIATAMENTE:
+1. Chamar a ferramenta 'vision_extract_fine' COM O PARÂMETRO storage_path: "${storage_path}" para extrair os dados.
+2. A ferramenta irá analisar a imagem e retornar os dados estruturados.
+3. Se for uma multa de trânsito, explique os detalhes (placa, natureza, valor, pontos).
+4. Se for outro tipo de documento, descreva o que foi identificado.
+5. NÃO peça o caminho do arquivo - você JÁ TEM: ${storage_path}
 `;
         }
 
@@ -1245,7 +1287,7 @@ VOCÊ DEVE:
 
             const toolResults = [];
             for (const fn of functionCalls) {
-                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, household_id, user_id);
+                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, household_id, user_id, storage_path);
                 toolResults.push({
                     functionResponse: {
                         name: fn.name,
@@ -1255,14 +1297,15 @@ VOCÊ DEVE:
             }
 
             // Step 2: Send Tool Outputs back to Gemini
+            // The format should be: contents with role 'function' containing the responses
             const secondResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [
-                        { parts: userParts }, // Original User Input
-                        candidate.content,    // Model's Function Call Request
-                        { parts: toolResults } // The actual Result
+                        { role: 'user', parts: userParts }, // Original User Input
+                        candidate.content,    // Model's Function Call Request (role: model)
+                        { role: 'function', parts: toolResults } // Tool Results (role: function)
                     ],
                     tools: [{ function_declarations: TOOLS_SCHEMA }]
                 })
@@ -1307,8 +1350,7 @@ VOCÊ DEVE:
         }
 
         // --- CACHE LOGIC WITH DYNAMIC TTL ---
-        // Verify image absence before caching
-        const hasImages = (image || (images && images.length > 0));
+        // Verify image absence before caching (reuse hasImages from earlier)
 
         if (!hasImages) {
             // Determine Intent Type for TTL
