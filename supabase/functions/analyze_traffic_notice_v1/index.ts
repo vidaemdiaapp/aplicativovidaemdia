@@ -24,27 +24,27 @@ const TRAFFIC_RULES = {
 
 const SYSTEM_PROMPT = `
 Você é um especialista em Processamento de Multas de Trânsito no Brasil.
-Sua tarefa é extrair dados de uma notificação de autuação ou multa de trânsito.
+Sua tarefa é extrair dados de uma notificação de autuação ou multa de trânsito (Auto de Infração).
 
-REGRAS:
-1) IDIOMA: Sempre em Português (PT-BR).
-2) EXTRAÇÃO: Identifique Placa, Data, Hora, Local, Natureza (Leve, Média, Grave, Gravíssima), Órgão Autuador e Código da Infração.
-3) RESUMO: Crie um resumo humanizado explicando o que aconteceu e as consequências.
-4) FORMATO: Responda APENAS em JSON.
+REGRAS CRÍTICAS:
+1) IDIOMA: Responda em Português (PT-BR).
+2) DATA DA INFRAÇÃO: Procure pela data que ocorreu o fato. Converta para o formato ISO (YYYY-MM-DD). Ex: "26/01/2024" vira "2024-01-26".
+3) NATUREZA: Identifique se é "leve", "media", "grave" ou "gravissima". Isso é essencial.
+4) VALOR (AMOUNT): Se houver um valor em reais (R$), extraia. Se não houver, deixe nulo (o sistema calculará pela natureza).
+5) CÓDIGO/DESCRIÇÃO: Extraia o código da infração (ex: 501-0) e uma breve descrição do que ocorreu.
+6) FORMATO: Responda APENAS em JSON puro, sem campos vazios se possível.
 
 FORMATO DE SAÍDA:
 {
   "plate": "ABC1234",
   "date": "2024-01-26",
   "time": "10:30",
-  "location": "Av. Paulista, 1000",
+  "location": "Endereço completo",
   "nature": "grave",
-  "points": 5,
-  "amount": 195.23,
-  "issuer": "CET/SP",
+  "issuer": "CET, PRF, DETRAN...",
   "infraction_code": "501-0",
-  "description": "Excesso de velocidade...",
-  "summary_human": "Você recebeu uma multa por...",
+  "description": "Excesso de velocidade em até 20%",
+  "summary_human": "Breve explicação amigável do que houve.",
   "confidence": 0.95
 }
 `;
@@ -83,10 +83,15 @@ Deno.serve(async (req) => {
         }
 
         const arrayBuffer = await fileData.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+        const uint8 = new Uint8Array(arrayBuffer);
+        let binary = "";
+        for (let i = 0; i < uint8.byteLength; i++) {
+            binary += String.fromCharCode(uint8[i]);
+        }
+        const base64 = btoa(binary);
 
         const isPdf = storage_path.toLowerCase().endsWith('.pdf');
-        const mimeType = isPdf ? 'application/pdf' : 'image/jpeg';
+        const mimeType = isPdf ? 'application/pdf' : 'image/*';
 
         // 2. Call Gemini
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
@@ -102,7 +107,7 @@ Deno.serve(async (req) => {
                                 data: base64
                             }
                         },
-                        { text: "Analise este documento de trânsito." }
+                        { text: "Extraia TODOS os dados deste documento de multa, especialmente a DATA e a NATUREZA da infração." }
                     ]
                 }],
                 generationConfig: { response_mime_type: "application/json" }
@@ -122,16 +127,26 @@ Deno.serve(async (req) => {
         const extraction = JSON.parse(content);
 
         // 3. Post-processing lookup & recommendation logic
-        const natureKey = extraction.nature?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
-        const rule = TRAFFIC_RULES[natureKey as keyof typeof TRAFFIC_RULES];
+        const natureText = (extraction.nature || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
+
+        let foundNature = "";
+        for (const key of Object.keys(TRAFFIC_RULES)) {
+            if (natureText.includes(key)) {
+                foundNature = key;
+                break;
+            }
+        }
+
+        const rule = foundNature ? TRAFFIC_RULES[foundNature as keyof typeof TRAFFIC_RULES] : null;
 
         if (rule) {
+            extraction.nature = foundNature; // Normalize to standard key
             extraction.points = rule.points;
             extraction.amount = rule.base_value;
         }
 
         // Sprint 22 Decision Logic
-        const isSerious = natureKey === 'grave' || natureKey === 'gravissima';
+        const isSerious = extraction.nature === 'grave' || extraction.nature === 'gravissima';
         if (isSerious) {
             extraction.recommendation = "analyze_defense";
             extraction.recommendation_text = "Esta é uma infração séria. Recomendamos analisar se há inconsistências para uma possível defesa antes de pagar.";

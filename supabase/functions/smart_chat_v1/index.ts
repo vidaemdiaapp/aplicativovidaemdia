@@ -1194,6 +1194,7 @@ VOCÊ DEVE:
 5. Se a recomendação for 'pay', ofereça salvar a multa para pagamento enviando a pendingAction 'ADD_TRAFFIC_FINE'.
 6. Se a recomendação for 'analyze_defense', ofereça iniciar o fluxo de defesa enviando a pendingAction 'ANALYZE_DEFENSE'.
 7. Use o 'summary_human' retornado pela ferramenta como base para sua resposta.
+8. Se campos críticos como 'date', 'nature' ou 'plate' vierem nulos, peça desculpas pelo inconveniente e solicite que o usuário informe esses dados manualmente para que você possa completar a análise.
 `;
         }
 
