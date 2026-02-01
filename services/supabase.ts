@@ -7,10 +7,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Check .env.local');
 }
 
+// Debug: log URL para confirmar projeto correto
+console.log('[SUPABASE URL]', supabaseUrl);
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
+    storage: window.localStorage,
   }
 });

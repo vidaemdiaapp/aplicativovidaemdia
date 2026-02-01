@@ -311,7 +311,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     SIMULATOR & QUICK STATS
                 ═══════════════════════════════════════════════════════════════ */}
                 <button
-                    onClick={() => navigate('/credit-simulator')}
+                    onClick={() => navigate('/open-finance')}
                     className="w-full bg-gradient-to-br from-primary-500 to-primary-700 p-6 rounded-3xl flex items-center justify-between shadow-xl shadow-primary-500/20 group relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">

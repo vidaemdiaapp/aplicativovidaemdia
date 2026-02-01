@@ -29,6 +29,7 @@ import { AgendaScreen } from './screens/AgendaScreen';
 import { AgendaEditScreen } from './screens/AgendaEditScreen';
 import { IncomesScreen } from './screens/IncomesScreen';
 import { ExpensesScreen } from './screens/ExpensesScreen';
+import { OpenFinanceScreen } from './screens/OpenFinanceScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -117,6 +118,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
         <Route path="/incomes" element={<ProtectedRoute><IncomesScreen /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><ExpensesScreen /></ProtectedRoute>} />
+        <Route path="/open-finance" element={<ProtectedRoute><OpenFinanceScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
