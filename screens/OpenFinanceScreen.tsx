@@ -50,28 +50,90 @@ export const OpenFinanceScreen: React.FC = () => {
         setConnecting(true);
         setError(null);
 
-        // DEBUG: Verificar sessão antes de chamar
+        // DEBUG: Forçar refresh do token antes de usar
+        console.log("[AUTH] Refreshing session...");
+        const { error: refreshErr } = await supabase.auth.refreshSession();
+        if (refreshErr) {
+            console.error("[AUTH] Refresh failed:", refreshErr);
+        }
+
+        // DEBUG: Verificar sessão após refresh
         const { data: sessionData, error: sessErr } = await supabase.auth.getSession();
         console.log("[AUTH] session?", !!sessionData.session, sessionData.session?.user?.id, sessErr);
 
         if (!sessionData.session) {
-            setError('Você precisa estar logado para conectar uma conta bancária');
+            setError('Você precisa estar logado para conectar uma conta bancária. Faça login novamente.');
             setConnecting(false);
             return;
         }
 
-        // DEBUG: Log access token
-        console.log("[AUTH] access_token (first 50 chars):", sessionData.session.access_token?.substring(0, 50) + "...");
+        // DEBUG: Log access token e decodificar JWT
+        const token = sessionData.session.access_token;
+        console.log("[AUTH] access_token (first 50 chars):", token?.substring(0, 50) + "...");
 
+        // Decodificar JWT para verificar o "ref" (project id)
         try {
-            const { connect_url } = await openFinanceService.startConnection();
-            // Abrir em nova aba (web) ou WebView (mobile)
-            window.open(connect_url, '_blank');
-            // Aguardar um pouco e recarregar dados
-            setTimeout(() => {
-                loadData();
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            // Logar payload COMPLETO para diagnóstico
+            console.log("[AUTH] JWT payload COMPLETO:", JSON.stringify(payload, null, 2));
+            console.log("[AUTH] JWT payload resumido:", {
+                iss: payload.iss,
+                aud: payload.aud,
+                ref: payload.ref,
+                role: payload.role,
+                sub: payload.sub,
+                email: payload.email,
+                exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : 'undefined',
+                iat: payload.iat ? new Date(payload.iat * 1000).toISOString() : 'undefined',
+            });
+
+            // Verificar se expirou
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+                console.error("[AUTH] TOKEN EXPIRADO!");
+                setError('Sua sessão expirou. Faça login novamente.');
                 setConnecting(false);
-            }, 3000);
+                return;
+            }
+
+            // Se ref undefined, é tipo de JWT diferente - pode ser aud-based
+            if (!payload.ref && payload.aud) {
+                console.log("[AUTH] JWT usa 'aud' ao invés de 'ref'. aud:", payload.aud);
+            }
+
+            console.log("[AUTH] Continuando com o token...");
+        } catch (e) {
+            console.error("[AUTH] Erro ao decodificar JWT:", e);
+        }
+
+        // DEBUG: Teste de fetch manual para diagnóstico definitivo
+        console.log("[DEBUG] Testando fetch manual com Authorization header...");
+        try {
+            const testResponse = await fetch(
+                "https://qjdldorozbawnohcdgwe.supabase.co/functions/v1/openfinance_connect_start",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: "{}",
+                }
+            );
+            const testText = await testResponse.text();
+            console.log("[DEBUG] Fetch manual - status:", testResponse.status, "body:", testText);
+
+            if (testResponse.ok) {
+                // Funcionou! Usar o resultado
+                const data = JSON.parse(testText);
+                window.open(data.connect_url, '_blank');
+                setTimeout(() => {
+                    loadData();
+                    setConnecting(false);
+                }, 3000);
+                return;
+            } else {
+                throw new Error(`Fetch manual falhou: status=${testResponse.status} body=${testText}`);
+            }
         } catch (err: any) {
             console.error('[OpenFinance] Connect error:', err);
             setError(err.message || 'Erro ao conectar');
