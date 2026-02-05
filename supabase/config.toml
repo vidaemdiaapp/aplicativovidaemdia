@@ -1,0 +1,5 @@
+[functions.smart_chat_v1]
+verify_jwt = false
+
+[functions.whatsapp_webhook_v1]
+verify_jwt = false

@@ -7,7 +7,7 @@ interface AuthContextType {
     session: Session | null;
     loading: boolean;
     signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-    signUp: (email: string, password: string, fullName?: string) => Promise<{ error: AuthError | null }>;
+    signUp: (email: string, password: string, fullName?: string, phone?: string) => Promise<{ error: AuthError | null }>;
     signOut: () => Promise<void>;
 }
 
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log(`[Auth] Event: ${event}`);
 
-            if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+            if (event === 'SIGNED_OUT') {
                 setSession(null);
                 setUser(null);
             } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
@@ -55,12 +55,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error };
     }, []);
 
-    const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
+    const signUp = useCallback(async (email: string, password: string, fullName?: string, phone?: string) => {
         const { error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                data: { full_name: fullName }
+                data: {
+                    full_name: fullName,
+                    phone_digits: phone,
+                    phone_e164: phone ? `+${phone.replace(/\D/g, '')}` : undefined
+                }
             }
         });
         return { error };

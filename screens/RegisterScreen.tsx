@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../components/Button';
-import { Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { normalizePhoneBR } from '../services/phoneUtils';
 
 export const RegisterScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -12,6 +13,7 @@ export const RegisterScreen: React.FC = () => {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
     const [error, setError] = useState<string | null>(null);
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -19,7 +21,14 @@ export const RegisterScreen: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const { error: authError } = await signUp(email, password, name);
+        const cleanPhone = normalizePhoneBR(phone);
+        if (cleanPhone.length < 12 || cleanPhone.length > 13) {
+            setError('Telefone inválido. Informe o DDD e o número.');
+            setLoading(false);
+            return;
+        }
+
+        const { error: authError } = await signUp(email, password, name, cleanPhone);
 
         if (authError) {
             setError(authError.message);
@@ -69,6 +78,29 @@ export const RegisterScreen: React.FC = () => {
                                 placeholder="seu@email.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-slate-900 placeholder:text-slate-400"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-slate-700">Telefone (DDD + Número)</label>
+                        <div className="relative">
+                            <Phone className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                            <input
+                                type="tel"
+                                placeholder="(11) 99999-9999"
+                                value={phone}
+                                onChange={(e) => {
+                                    const v = e.target.value.replace(/\D/g, '');
+                                    if (v.length <= 11) {
+                                        let masked = v;
+                                        if (v.length > 2) masked = `(${v.slice(0, 2)}) ${v.slice(2)}`;
+                                        if (v.length > 7) masked = `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}`;
+                                        setPhone(masked);
+                                    }
+                                }}
                                 className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all outline-none text-slate-900 placeholder:text-slate-400"
                                 required
                             />

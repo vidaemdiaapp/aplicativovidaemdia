@@ -30,6 +30,7 @@ import { AgendaEditScreen } from './screens/AgendaEditScreen';
 import { IncomesScreen } from './screens/IncomesScreen';
 import { ExpensesScreen } from './screens/ExpensesScreen';
 import { OpenFinanceScreen } from './screens/OpenFinanceScreen';
+import { UpdatePhoneScreen } from './screens/UpdatePhoneScreen';
 import { BottomNav } from './components/BottomNav';
 import { Sidebar } from './components/Sidebar';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -52,6 +53,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user) {
     console.log('[ProtectedRoute] No user found, redirecting to login');
     return <Navigate to="/login" replace />;
+  }
+
+  // Mandatory phone check
+  const phone = user.user_metadata?.phone_digits;
+  if (!phone && window.location.hash !== '#/update-phone') {
+    return <Navigate to="/update-phone" replace />;
   }
 
   return <>{children}</>;
@@ -119,6 +126,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/incomes" element={<ProtectedRoute><IncomesScreen /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><ExpensesScreen /></ProtectedRoute>} />
         <Route path="/open-finance" element={<ProtectedRoute><OpenFinanceScreen /></ProtectedRoute>} />
+        <Route path="/update-phone" element={<ProtectedRoute><UpdatePhoneScreen /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>

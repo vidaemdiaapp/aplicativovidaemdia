@@ -845,34 +845,75 @@ Deno.serve(async (req) => {
 
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-        // --- MANUAL AUTH VERIFICATION (Because we disabled --verify-jwt) ---
-        const authHeader = req.headers.get('Authorization');
-        if (!authHeader) {
-            throw new Error("Authorization header missing");
-        }
+        // --- AUTH (supports internal Service Role calls + normal user JWT) ---
+        const authHeader = req.headers.get('Authorization') ?? '';
+        const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
 
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-
-        if (authError || !user) {
-            return new Response(JSON.stringify({ error: "Unauthorized", message: "Invalid Token" }), {
+        if (!bearer) {
+            // For browser/app calls we require a JWT; for internal calls we also require a bearer token.
+            return new Response(JSON.stringify({ error: "Unauthorized", message: "Authorization header missing" }), {
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
                 status: 401,
             });
         }
 
-        console.log(`[smart_chat_v1] User authenticated: ${user.id}`);
+        // Internal call: whatsapp_webhook_v1 (server-to-server) uses Service Role key as Bearer.
+        const isInternal = supabaseServiceKey && bearer === supabaseServiceKey;
 
-        let body;
-        try { body = await req.json(); } catch { throw new Error("Corpo inválido."); }
+        let body: any;
+        try {
+            body = await req.json();
+        } catch {
+            return new Response(JSON.stringify({ error: "BadRequest", message: "Corpo inválido." }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+                status: 400,
+            });
+        }
 
-        // Use authenticated user_id as fallback or override? 
-        // For security, strict matching is better, but for flexibility with "household_id" context we accept body vars.
-        // We ensure 'user_id' defaults to the authenticated user if missing.
+        // Resolve effective user/profile id
+        let user_id: string | null = null;
+
+        if (isInternal) {
+            // For internal calls, we trust profile_id (preferred) or user_id from the body.
+            const candidate = (body.profile_id ?? body.user_id ?? '').toString().trim();
+            const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!candidate || !uuidRe.test(candidate)) {
+                return new Response(JSON.stringify({
+                    error: "BadRequest",
+                    message: "profile_id (uuid) é obrigatório para chamadas internas.",
+                }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                    status: 400,
+                });
+            }
+
+            user_id = candidate;
+            console.log(`[smart_chat_v1] Internal call authorized (service role). profile_id=${user_id}`);
+        } else {
+            // External call: validate JWT and enforce authenticated user id
+            const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(bearer);
+
+            if (authError || !user) {
+                return new Response(JSON.stringify({ error: "Unauthorized", message: "Invalid Token" }), {
+                    headers: { ...corsHeaders, "Content-Type": "application/json" },
+                    status: 401,
+                });
+            }
+
+            user_id = user.id;
+            console.log(`[smart_chat_v1] User authenticated: ${user_id}`);
+
+            // Prevent spoofing: overwrite any incoming user_id/profile_id from client
+            body.user_id = user_id;
+            body.profile_id = user_id;
+        }
+
+        // Domain + inputs
         const { domain = 'general', image, images, image_url, storage_path, household_id, history } = body;
-        const user_id = user.id; // Enforce authenticated user
 
-        const question = body.question || body.message || body.text || body.input || "";
+
+        const question = (body.question ?? body.message_text ?? body.message ?? body.text ?? body.input ?? body.prompt ?? body.user_message ?? "").toString().trim();
 
         if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url) throw new Error("Envie uma mensagem ou imagem.");
 
