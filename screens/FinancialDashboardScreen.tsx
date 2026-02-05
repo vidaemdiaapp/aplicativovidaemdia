@@ -8,7 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../services/supabase';
-import { tasksService, Task } from '../services/tasks';
+import { tasksService, Category, Task } from '../services/tasks';
 import { budgetLimitsService } from '../services/financial';
 import { IncomeRegistrationModal } from '../components/IncomeRegistrationModal';
 import { SpendingDonutChart, MonthlyBarChart } from '../components/charts/SpendingChart';
@@ -46,6 +46,7 @@ export const FinancialDashboardScreen: React.FC = () => {
     const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
     const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
     const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expense: number }[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
 
     useEffect(() => {
         loadData();
@@ -58,10 +59,13 @@ export const FinancialDashboardScreen: React.FC = () => {
             if (!household) return;
 
             // Parallel data fetching
-            const [dashboardRes, tasksRes] = await Promise.all([
+            const [dashboardRes, tasksRes, catsRes] = await Promise.all([
                 supabase.rpc('get_financial_dashboard', { target_household_id: household.id }),
-                tasksService.getUserTasks()
+                tasksService.getUserTasks(),
+                tasksService.getCategories()
             ]);
+
+            if (catsRes) setCategories(catsRes);
 
             if (dashboardRes.data) setDashboard(dashboardRes.data);
 
@@ -131,6 +135,11 @@ export const FinancialDashboardScreen: React.FC = () => {
     };
 
     const getCategoryLabel = (id: string) => {
+        // First try to find in DB categories
+        const cat = categories.find(c => c.id === id);
+        if (cat) return cat.label;
+
+        // Fallback map for legacy or missing cats
         const map: Record<string, string> = {
             'home': 'Casa/Moradia',
             'housing': 'Moradia',
@@ -139,7 +148,7 @@ export const FinancialDashboardScreen: React.FC = () => {
             'health': 'Saúde',
             'leisure': 'Lazer',
             'education': 'Educação',
-            'utilities': 'Contas Fixas',
+            'utilities': 'Utilidades/Contas',
             'vehicle': 'Veículo',
             'shopping': 'Compras',
             'taxes': 'Impostos',

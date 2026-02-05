@@ -301,6 +301,9 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             status: status,
             entry_type: 'immediate',  // Required for 'immediate' report query
             household_id: household_id,
+            user_id: user_id, // Essential for RLS and ownership
+            owner_user_id: user_id, // Essential for ownership
+
             description: `Registered via WhatsApp on ${new Date().toLocaleString('pt-BR')}`
         }).select().single();
 
@@ -1544,10 +1547,12 @@ VOCÊ DEVE IMEDIATAMENTE:
         let geminiOutput;
         try {
             // Clean markdown blocks if present
-            const cleanJson = finalContent.replace(/```json/g, '').replace(/```/g, '').trim();
+            // Improved JSON extraction: Find the first outer {} block
+            const jsonMatch = finalContent.match(/\{[\s\S]*\}/);
+            const cleanJson = jsonMatch ? jsonMatch[0] : finalContent.replace(/```json/g, '').replace(/```/g, '').trim();
             geminiOutput = JSON.parse(cleanJson);
         } catch (e) {
-            console.warn("[smart_chat_v1] Failed to parse strict JSON, wrapping raw text.");
+            console.warn("[smart_chat_v1] Failed to parse strict JSON, wrapping raw text. Content:", finalContent.substring(0, 50) + "...");
             geminiOutput = {
                 answer_text: finalContent,
                 intent_mode: intentMode,
