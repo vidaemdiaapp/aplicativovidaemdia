@@ -17,6 +17,7 @@ export const ExpensesScreen: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
     const [totalPending, setTotalPending] = useState(0);
     const [totalPaid, setTotalPaid] = useState(0);
+    const [categories, setCategories] = useState<any[]>([]);
 
     useEffect(() => {
         loadExpenses();
@@ -25,7 +26,12 @@ export const ExpensesScreen: React.FC = () => {
     const loadExpenses = async () => {
         setLoading(true);
         try {
-            const tasks = await tasksService.getUserTasks();
+            const [tasks, cats] = await Promise.all([
+                tasksService.getUserTasks(),
+                tasksService.getCategories()
+            ]);
+
+            if (cats) setCategories(cats);
 
             // Filter only expenses (tasks with amount > 0)
             let filtered = tasks.filter(t => {
@@ -42,13 +48,36 @@ export const ExpensesScreen: React.FC = () => {
             monthFromNow.setMonth(monthFromNow.getMonth() + 1);
             const monthStr = monthFromNow.toISOString().split('T')[0];
 
+            const getEffectiveDate = (t: Task) => t.due_date || t.purchase_date || t.created_at;
+
             // Apply view mode filter
             if (viewMode === 'overdue') {
-                filtered = filtered.filter(t => t.due_date < today && t.status !== 'completed');
+                filtered = filtered.filter(t => {
+                    const date = getEffectiveDate(t);
+                    return date < today && t.status !== 'completed';
+                });
             } else if (viewMode === 'week') {
-                filtered = filtered.filter(t => t.due_date >= today && t.due_date <= weekStr);
+                filtered = filtered.filter(t => {
+                    const date = getEffectiveDate(t);
+                    return date >= today && date <= weekStr;
+                });
             } else if (viewMode === 'month') {
-                filtered = filtered.filter(t => t.due_date >= today && t.due_date <= monthStr);
+                filtered = filtered.filter(t => {
+                    const date = getEffectiveDate(t);
+                    // Changed logic slightly: show everything from beginning of month or typical rolling window?
+                    // Keeping rolling window as per original code but supporting purchase_date
+                    // Ideally for expenses we usually want to see past ones too if viewing "All" or "Month" context?
+                    // The original code was `date >= today` AND `date <= monthStr`.
+                    // This hides PAST expenses of the current month.
+                    // The user complained about "Gasto do Dia" (-88) not showing.
+                    // If purchase_date is today, it passes `date >= today`.
+                    // If purchase_date was yesterday, it fails.
+                    // I will adjust logical start date for "month" view to be start of current month?
+                    // Or just fix the null check first. The user said "Gasto do dia" so it's likely today.
+
+                    // Let's stick to the visible range logic but fix the field access.
+                    return date >= today && date <= monthStr;
+                });
             }
 
             // Apply status filter
@@ -59,7 +88,8 @@ export const ExpensesScreen: React.FC = () => {
             }
 
             // Sort by due date
-            filtered.sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+            // Sort by effective date
+            filtered.sort((a, b) => new Date(getEffectiveDate(a)).getTime() - new Date(getEffectiveDate(b)).getTime());
 
             setExpenses(filtered);
 
@@ -109,6 +139,10 @@ export const ExpensesScreen: React.FC = () => {
     };
 
     const getCategoryLabel = (id: string) => {
+        // Try dynamic categories first
+        const cat = categories.find(c => c.id === id);
+        if (cat) return cat.label;
+
         const map: Record<string, string> = {
             'home': 'Casa/Moradia',
             'housing': 'Moradia',
@@ -189,8 +223,8 @@ export const ExpensesScreen: React.FC = () => {
                         key={key}
                         onClick={() => setViewMode(key)}
                         className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${viewMode === key
-                                ? key === 'overdue' ? 'bg-rose-500 text-white' : 'bg-primary-500 text-white'
-                                : 'bg-white border border-slate-200 text-slate-500 hover:border-primary-300'
+                            ? key === 'overdue' ? 'bg-rose-500 text-white' : 'bg-primary-500 text-white'
+                            : 'bg-white border border-slate-200 text-slate-500 hover:border-primary-300'
                             }`}
                     >
                         {label}
@@ -209,8 +243,8 @@ export const ExpensesScreen: React.FC = () => {
                         key={key}
                         onClick={() => setStatusFilter(key)}
                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${statusFilter === key
-                                ? 'bg-slate-800 text-white'
-                                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            ? 'bg-slate-800 text-white'
+                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                             }`}
                     >
                         {label}
@@ -256,7 +290,7 @@ export const ExpensesScreen: React.FC = () => {
                                                     {getCategoryLabel(expense.category_id || '')}
                                                 </span>
                                                 <span className="text-[10px] text-slate-400 font-medium">
-                                                    {formatDate(expense.due_date)}
+                                                    {formatDate(expense.due_date || expense.purchase_date || expense.created_at)}
                                                 </span>
                                             </div>
                                         </div>

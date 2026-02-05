@@ -251,11 +251,11 @@ export const FinancialDashboardScreen: React.FC = () => {
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Contas</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Despesas</p>
                                 <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
                             </div>
                             <p className="text-sm font-bold text-slate-800 group-hover:text-rose-700 transition-colors">
-                                {dashboard ? formatCurrency(dashboard.total_bills) : 'R$ 0'}
+                                {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
                             </p>
                         </div>
                     </div>

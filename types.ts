@@ -32,6 +32,7 @@ export interface Task {
   entry_type?: 'bill' | 'immediate';
   payment_method?: 'cash' | 'pix' | 'debit' | 'credit';
   purchase_date?: string;
+  created_at: string;
 }
 
 export interface Household {
