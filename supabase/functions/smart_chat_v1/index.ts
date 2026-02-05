@@ -68,45 +68,33 @@ const MEI_EXEMPT_RATES = {
 };
 
 const SYSTEM_PROMPT_LOCKED = `
-Você é a Elara, I.A. executora do Vida em Dia.
+Você é o Assistente Financeiro do Vida em Dia (Modo ZapGastos).
 
-DIRETRIZES DE PERSONALIDADE (WHATSAPP MODE):
-1. **Executor Implacável**: Seu foco é AGIR. Se o usuário disse "gastei 50 no mercado", APENAS registre. Não explique, não eduque, não converse.
-2. **Zero "Encheção de Linguiça"**:
-   - PROIBIDO: "Olá Diego, tudo bem? Entendi que você quer...", "Que ótimo passo para sua organização!"
-   - PERMITIDO: "Despesa salva ✅", "Feito.", "Quanto foi?"
-3. **Formatação Mobile**:
-   - Máximo 3 linhas por bloco.
-   - Use bullets (•) para listas.
-   - SEM Markdown de títulos (##) ou negrito excessivo.
-4. **Política de Saudação**:
-   - SE {{GREETING_POLICY}} == "SKIP": NÃO use "Oi", "Olá", "Bom dia". Comece a resposta direto no assunto.
-5. **Memória e Contexto**:
-   - Use o [CONTEXTO DE MEMÓRIA] para personalizar (ex: categorias frequentes do usuário).
-   - Se o usuário disser "e mais 20 no uber", entenda que é uma nova despesa seguindo o contexto anterior.
+PERSONALIDADE:
+- **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão.
+- **Executor**: Você registra, calcula e mostra. Não explica "como fazer".
+- **Estilo ZapGastos**:
+   ✅ *Almoço* R$ 50,00
+   📂 Alimentação (hoje)
+   📊 Dia: -R$ 120,00 | Mês: -R$ 3.400
+
+REGRAS:
+1. **Confirmação de Ação**: Se o usuário pediu pra gastar/pagar, CONFIRME os dados chave.
+2. **Resumo Automático**: Sempre que registrar algo, mostre o impacto (Total do dia ou da Categoria).
+3. **Áudio**: Se receber áudio, transcreva mentalmente e execute. Diga "Ouvi: ..." se estiver incerto.
 
 [COMO AGIR]:
-- **Intenção de AÇÃO (Adicionar, Pagar, Agendar)**:
-  1. Verifique se tem todos os dados.
-  2. CHAME A FERRAMENTA IMEDIATAMENTE.
-  3. Resposta final: "✅ Feito. [Detalhe curto]".
+- **AÇÃO**: Chame a tool. Retorne o resumo JSON que a tool devolver.
+- **PERGUNTA**: Responda direto com o dado. "Seu saldo é R$ X".
 
-- **Intenção de INFORMAÇÃO COMPLETA (Resumo, Relatório)**:
-  1. Chame a ferramenta.
-  2. Apresente os dados direto: "Seu saldo é R$ X. Contas vencendo: A, B."
-
-- **Intenção de DÚVIDA (Como fazer, O que é)**:
-  1. AÍ SIM você explica. Seja breve.
-
-REGRAS FISCAIS ( MANTIDAS ):
-- IR 2025: Isento até R$ 2.259,20. Teto Simplificado: R$ 16.754,34.
-- IR 2026: Isenção efetiva R$ 5.000 (R$ 60k/ano). Novo redutor gradual entre 60k-88k.
+REGRAS FISCAIS (IRPF):
+- Isento 2025: R$ 2.259,20.
+- Isento 2026: R$ 5.000 (efetiva).
 
 FORMATO DE RESPOSTA (JSON):
 {
-  "answer_text": "Texto curto para WhatsApp",
-  "intent_mode": "ACTION | CHAT",
-  "key_facts": []
+  "answer_text": "Texto formatado com emojis e quebras de linha para WhatsApp",
+  "intent_mode": "ACTION | CHAT"
 }
 `;
 
@@ -134,6 +122,16 @@ const TOOLS_SCHEMA = [
             },
             required: ["amount", "description"]
         }
+    },
+    {
+        name: "get_weekly_summary",
+        description: "Returns a summary of expenses for the current week (Sunday to Saturday) or last 7 days.",
+        parameters: { type: "object", properties: {}, required: [] }
+    },
+    {
+        name: "get_category_summary",
+        description: "Returns expenses grouped by category for the current month.",
+        parameters: { type: "object", properties: {}, required: [] }
     },
     {
         name: "list_bills_due",
@@ -293,13 +291,16 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         const status = (is_paid ?? true) ? 'completed' : 'pending';
         const validCategory = category || 'other';
 
+        // Fix: Force 'immediate' for daily expenses so they appear in Dashboard
         const { data, error } = await supabase.from('tasks').insert({
             title: description,
             amount: amount,
             category_id: validCategory,
-            due_date: finalDate, // For completed tasks, due_date acts as transaction date
+            due_date: finalDate,
+            purchase_date: finalDate, // Required for 'immediate' report query
             status: status,
-            household_id: household_id, // Context provided
+            entry_type: 'immediate',  // Required for 'immediate' report query
+            household_id: household_id,
             description: `Registered via WhatsApp on ${new Date().toLocaleString('pt-BR')}`
         }).select().single();
 
@@ -308,10 +309,77 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             return "Erro ao salvar despesa. Tente novamente.";
         }
 
+        // Get updated daily total for stats
+        const { data: dailyStats } = await supabase.rpc('get_daily_total', { target_household_id: household_id, target_date: finalDate });
+
         return {
             success: true,
             id: data.id,
-            message: `Despesa de R$ ${amount.toFixed(2)} salva em ${validCategory}!`
+            message: `✅ *${description}* R$ ${amount.toFixed(2)}\n📂 ${validCategory}\n📅 ${finalDate.split('-').reverse().join('/')}`,
+            daily_total: dailyStats || amount
+        };
+    }
+
+    if (toolName === "get_weekly_summary") {
+        const weekStart = new Date();
+        weekStart.setDate(weekStart.getDate() - 7);
+        const startStr = weekStart.toISOString().split('T')[0];
+
+        // Fetch immediate expenses
+        const { data: expenses } = await supabase
+            .from('tasks')
+            .select('amount, category_id')
+            .eq('household_id', household_id)
+            .eq('entry_type', 'immediate')
+            .gte('purchase_date', startStr);
+
+        if (!expenses || expenses.length === 0) return "Sem gastos nos últimos 7 dias.";
+
+        const total = expenses.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+        const byCat: Record<string, number> = {};
+        expenses.forEach((e: any) => {
+            const c = e.category_id || 'outros';
+            byCat[c] = (byCat[c] || 0) + (e.amount || 0);
+        });
+
+        return {
+            period: "Últimos 7 dias",
+            total: total,
+            breakdown: byCat
+        };
+    }
+
+    if (toolName === "get_category_summary") {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        const startStr = startOfMonth.toISOString().split('T')[0];
+
+        const { data: expenses } = await supabase
+            .from('tasks')
+            .select('amount, category_id')
+            .eq('household_id', household_id)
+            .eq('entry_type', 'immediate')
+            .gte('purchase_date', startStr);
+
+        if (!expenses || expenses.length === 0) return "Sem gastos neste mês.";
+
+        const total = expenses.reduce((acc: number, curr: any) => acc + (curr.amount || 0), 0);
+        const byCat: Record<string, number> = {};
+        expenses.forEach((e: any) => {
+            const c = e.category_id || 'outros';
+            byCat[c] = (byCat[c] || 0) + (e.amount || 0);
+        });
+
+        // Format for display
+        const top3 = Object.entries(byCat)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([cat, val]) => `• ${cat}: R$ ${val.toFixed(2)}`);
+
+        return {
+            period: "Este Mês",
+            total: total,
+            top_categories: top3
         };
     }
 
@@ -968,12 +1036,14 @@ Deno.serve(async (req) => {
         }
 
         // Domain + inputs
-        const { domain = 'general', image, images, image_url, storage_path, household_id } = body;
+        const { domain = 'general', image, images, image_url, storage_path, household_id, message_type, audio_base64, audio_mime_type } = body;
         // NOTE: We ignore 'history' from body because we fetch authoritative history from DB now.
 
         const question = (body.question ?? body.message_text ?? body.message ?? body.text ?? body.input ?? body.prompt ?? body.user_message ?? "").toString().trim();
 
-        if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url) throw new Error("Envie uma mensagem ou imagem.");
+        const hasAudio = !!audio_base64;
+
+        if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url && !hasAudio) throw new Error("Envie uma mensagem, imagem ou áudio.");
 
         // --- FETCH CONTEXT & PROFILE ---
         const [{ data: profile }, context] = await Promise.all([
@@ -1014,6 +1084,11 @@ Deno.serve(async (req) => {
 
         const hasImages = !!(image || images || image_url || storage_path);
         if (hasImages) finalPrompt += "\n[IMAGEM ANEXADA - STORAGE PATH: " + (storage_path || 'URL') + "]";
+
+        if (hasAudio) {
+            console.log("[smart_chat_v1] Audio attached.");
+            finalPrompt += "\n[ÁUDIO DO USUÁRIO ANEXADO - Transcrição será feita pelo modelo]";
+        }
 
         // --- SPRINT 2: TRIGGER ENGINE ---
         // 1. Heuristic Classification
@@ -1373,11 +1448,17 @@ VOCÊ DEVE IMEDIATAMENTE:
 
         userParts.push({ text: finalPrompt + routerContext });
 
-        // Build Contents with History
-        let chatContents = [];
+        if (hasAudio) {
+            userParts.push({
+                inlineData: {
+                    mimeType: audio_mime_type || "audio/ogg",
+                    data: audio_base64
+                }
+            });
+        }
 
         // Build Contents with History
-        // chatContents is already declared above
+        let chatContents: any[] = [];
 
         if (context.history && context.history.length > 0) {
             console.log(`[smart_chat_v1] Appending ${context.history.length} history messages from DB.`);

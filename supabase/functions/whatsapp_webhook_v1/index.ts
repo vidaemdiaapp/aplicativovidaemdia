@@ -94,8 +94,13 @@ serve(async (req: Request) => {
     msg?.interactive?.list_reply?.title ??
     "";
 
-  if (!wa_id || !inboundText) {
-    console.log("Mensagem inválida ou vazia");
+  "";
+
+  const isAudio = msg?.type === "audio";
+  const audioId = msg?.audio?.id;
+
+  if (!wa_id || (!inboundText && !isAudio)) {
+    console.log("Mensagem inválida ou vazia (e não é áudio)");
     return json({ ok: true });
   }
 
@@ -188,6 +193,47 @@ serve(async (req: Request) => {
   }
 
   /* =====================================================
+     Handle Audio (Download & Convert)
+  ===================================================== */
+  let audioBase64: string | null = null;
+  let audioMime: string | null = null;
+
+  if (isAudio && audioId) {
+    console.log(`[Webhook] Audio detected: ${audioId}. Fetching URL...`);
+    try {
+      // 1. Get Media URL
+      const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${audioId}`, {
+        headers: { Authorization: `Bearer ${META_TOKEN}` }
+      });
+      const mediaJson = await mediaRes.json();
+      const mediaUrl = mediaJson.url;
+      audioMime = mediaJson.mime_type || "audio/ogg"; // Default WhatsApp voice note
+
+      console.log(`[Webhook] Downloading binary from ${mediaUrl}...`);
+
+      // 2. Download Binary
+      const binaryRes = await fetch(mediaUrl, {
+        headers: { Authorization: `Bearer ${META_TOKEN}` }
+      });
+      const arrayBuffer = await binaryRes.arrayBuffer();
+
+      // 3. Convert to Base64
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binaryString = "";
+      for (let i = 0; i < uint8Array.length; i++) {
+        binaryString += String.fromCharCode(uint8Array[i]);
+      }
+      audioBase64 = btoa(binaryString);
+
+      console.log(`[Webhook] Audio processed. Size: ${audioBase64.length} chars.`);
+
+    } catch (err) {
+      console.error("[Webhook] Failed to process audio", err);
+      // Fallback: Continue without audio, maybe smart_chat will complain
+    }
+  }
+
+  /* =====================================================
      Call smart_chat_v1 (INTERNAL)
   ===================================================== */
   console.log("CALLING smart_chat_v1");
@@ -212,6 +258,11 @@ serve(async (req: Request) => {
         text: inboundText,
         input: inboundText,
         prompt: inboundText,
+
+        // 🎵 Audio Payload
+        message_type: isAudio ? "audio" : "text",
+        audio_base64: audioBase64,
+        audio_mime_type: audioMime
       }),
     }
   );
