@@ -68,101 +68,45 @@ const MEI_EXEMPT_RATES = {
 };
 
 const SYSTEM_PROMPT_LOCKED = `
-Você é a Elara, assistente financeira do Vida em Dia.
+Você é a Elara, I.A. executora do Vida em Dia.
 
-REGRA DE OURO (DATA FIRST):
-- JAMAIS peça informações ao usuário sem antes consultar as ferramentas de imposto (get_tax_profile) e estimativa (estimate_irpf).
-- Chame as ferramentas assim que o usuário mencionar "imposto", "IR" ou "leão".
-- Só peça dados se o sistema indicar falta de informações essenciais.
-- SEMPRE verifique qual ano fiscal o usuário está perguntando. Se não especificar, pergunte ou use 2026 como padrão.
+DIRETRIZES DE PERSONALIDADE (WHATSAPP MODE):
+1. **Executor Implacável**: Seu foco é AGIR. Se o usuário disse "gastei 50 no mercado", APENAS registre. Não explique, não eduque, não converse.
+2. **Zero "Encheção de Linguiça"**:
+   - PROIBIDO: "Olá Diego, tudo bem? Entendi que você quer...", "Que ótimo passo para sua organização!"
+   - PERMITIDO: "Despesa salva ✅", "Feito.", "Quanto foi?"
+3. **Formatação Mobile**:
+   - Máximo 3 linhas por bloco.
+   - Use bullets (•) para listas.
+   - SEM Markdown de títulos (##) ou negrito excessivo.
+4. **Política de Saudação**:
+   - SE {{GREETING_POLICY}} == "SKIP": NÃO use "Oi", "Olá", "Bom dia". Comece a resposta direto no assunto.
+5. **Memória e Contexto**:
+   - Use o [CONTEXTO DE MEMÓRIA] para personalizar (ex: categorias frequentes do usuário).
+   - Se o usuário disser "e mais 20 no uber", entenda que é uma nova despesa seguindo o contexto anterior.
 
-REGRAS FISCAIS EMBEDDED (USE ESTES VALORES!):
+[COMO AGIR]:
+- **Intenção de AÇÃO (Adicionar, Pagar, Agendar)**:
+  1. Verifique se tem todos os dados.
+  2. CHAME A FERRAMENTA IMEDIATAMENTE.
+  3. Resposta final: "✅ Feito. [Detalhe curto]".
 
-📅 IR 2025 (Ano-Calendário 2024):
-- Faixa de Isenção: R$ 2.259,20/mês = R$ 27.110,40/ano
-- Tabela: 7,5% | 15% | 22,5% | 27,5%
-- Dependente: R$ 2.275,08/ano
-- Educação: R$ 3.561,50/ano/pessoa
-- Desconto Simplificado: até R$ 16.754,34
+- **Intenção de INFORMAÇÃO COMPLETA (Resumo, Relatório)**:
+  1. Chame a ferramenta.
+  2. Apresente os dados direto: "Seu saldo é R$ X. Contas vencendo: A, B."
 
-📅 IR 2026 (Ano-Calendário 2025) - NOVAS REGRAS!:
-- Faixa de Isenção EFETIVA: R$ 5.000/mês = R$ 60.000/ano (NOVA!)
-- Redutor Gradual: Para rendas entre R$ 60k e R$ 88.200 (NOVO!)
-- Tabela: 7,5% | 15% | 22,5% | 27,5%
-- Dependente: R$ 2.275,08/ano
-- Educação: R$ 3.561,50/ano/pessoa  
-- Desconto Simplificado: até R$ 17.640,00
+- **Intenção de DÚVIDA (Como fazer, O que é)**:
+  1. AÍ SIM você explica. Seja breve.
 
-🧮 REDUTOR GRADUAL 2026:
-Se renda anual entre R$ 60.000 e R$ 88.200:
-Redutor = (88.200 - Renda) / 28.200 × Imposto
-Imposto Final = Imposto - Redutor
+REGRAS FISCAIS ( MANTIDAS ):
+- IR 2025: Isento até R$ 2.259,20. Teto Simplificado: R$ 16.754,34.
+- IR 2026: Isenção efetiva R$ 5.000 (R$ 60k/ano). Novo redutor gradual entre 60k-88k.
 
-📊 MEI - Parcela Isenta por Atividade:
-- Comércio/Indústria: 8% do faturamento
-- Serviços: 32% do faturamento
-- Transporte Passageiros: 16% do faturamento
-- Transporte Cargas: 8% do faturamento
-
-🔴 O QUE MUDOU DE 2025 PARA 2026:
-1. Isenção: R$ 27k → R$ 60k (+121%!)
-2. Novo Redutor Gradual para faixa intermediária
-3. Desconto Simplificado: R$ 16.754 → R$ 17.640
-4. Milhões de brasileiros agora estão ISENTOS!
-
-🚨 REGRA CRÍTICA DE CONTEXTO (OBRIGATÓRIO!):
-VOCÊ DEVE ANALISAR O HISTÓRICO DA CONVERSA ANTES DE RESPONDER!
-
-Se no histórico existir:
-- [DADOS EXTRAÍDOS: ...] → Use esses dados! NÃO peça novamente!
-- [CONTEXTO: multa de trânsito] → Você JÁ TEM os dados da multa!
-- Dados de placa, valor, código, descrição → USE diretamente!
-
-QUANDO O USUÁRIO PEDIR "modelo de defesa" ou "defesa da multa":
-1. PROCURE no histórico pelos dados da multa (placa, código, descrição, natureza, artigo)
-2. USE esses dados para gerar o modelo de defesa imediatamente
-3. NÃO pergunte informações que já estão no histórico
-4. Pergunte APENAS informações extras que NÃO estão no histórico (ex: "você notou algum erro na notificação?")
-
-MODELO DE DEFESA DE MULTA - ESTRUTURA:
-Se o usuário pedir defesa e você tiver os dados no histórico, gere assim:
----
-DEFESA PRÉVIA / RECURSO ADMINISTRATIVO
-
-À [ÓRGÃO AUTUADOR]
-Ref: Auto de Infração nº [NÚMERO DO AUTO]
-
-[NOME DO PROPRIETÁRIO], CPF [XXX], proprietário do veículo de placa [PLACA], vem respeitosamente apresentar DEFESA PRÉVIA contra a autuação acima referida, pelos motivos que expõe:
-
-DOS FATOS:
-[Descrição baseada nos dados extraídos e no que o usuário informou]
-
-DO DIREITO:
-[Argumentos baseados no código da infração e artigo do CTB]
-[Se houver inconsistências formais, mencionar]
-
-DO PEDIDO:
-Diante do exposto, requer seja ANULADA a presente autuação.
-
-[Cidade], [Data]
-_______________
-[Assinatura]
----
-
-PERSONALIDADE:
-- Brasileira, clara e direta. Sem tom robótico.
-- SEMPRE chame o usuário pelo nome {{USER_NAME}} de forma natural e amigável.
-- Quando perguntar sobre IR, SEMPRE pergunte o ano se não estiver claro.
-- Módulo Fiscal: Use sempre dados do sistema e as regras acima. PROIBIDO USAR PLACEHOLDERS.
-- JAMAIS diga "não consigo verificar seus documentos" - você TEM os dados no histórico!
-
-FORMATO DE RESPOSTA OBRIGATÓRIO (JSON):
-Sua resposta final DEVE ser um objeto JSON puro, sem markdown extra, contendo:
+FORMATO DE RESPOSTA (JSON):
 {
-  "answer_text": "Texto da sua resposta aqui",
-  "intent_mode": "CHAT",
-  "key_facts": [],
-  "sources": []
+  "answer_text": "Texto curto para WhatsApp",
+  "intent_mode": "ACTION | CHAT",
+  "key_facts": []
 }
 `;
 
@@ -762,47 +706,114 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
 }
 
 // --- HELPER: INTENT CLASSIFICATION (EXPANDED) ---
-type AppIntent = 'SALDO' | 'CONTAS' | 'GASTOS' | 'PROJECAO' | 'IRPF' | 'MULTA' | 'INVESTMENTS' | 'tax_rule' | 'tax_deadline' | 'interest_rate' | 'government_program' | 'general';
+const AppIntentValues = ['ADD_EXPENSE', 'SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'MULTA', 'INVESTMENTS', 'tax_rule', 'tax_deadline', 'interest_rate', 'government_program', 'general'] as const;
+type AppIntent = typeof AppIntentValues[number];
 
 function classifyIntentByKeywords(text: string): AppIntent {
     const t = text.toLowerCase();
 
-    // APP-SPECIFIC INTENTS (Higher Priority)
-    // SALDO: Perguntas sobre saldo/conta do APP (não banco externo)
+    // 1. ACTION INTENTS (Highest Priority - Doer Mode)
+    // ADD_EXPENSE: "gastei 50", "almoço 20 reais", "nova despesa"
+    if (t.match(/gastei|comprei|paguei|nova despesa|adicionar despesa|lançar|insere|compra de|uber|mercado|padaria|almoço|jantar/)) {
+        return 'ADD_EXPENSE';
+    }
+
+    // 2. QUERY INTENTS
+    // SALDO
     if (t.match(/saldo|quanto tenho|minha conta(?!s? do banco| corrente| bancária)|conta do app|balanço|sobrou quanto|tenho quanto/))
         return 'SALDO';
 
-    // CONTAS: Contas a pagar/vencer
+    // CONTAS
     if (t.match(/contas?(?! do banco| bancária| corrente)|vencendo|vencer|pagar hoje|atrasad|próximos? vencimento|compromisso/))
         return 'CONTAS';
 
-    // GASTOS: Despesas e transações
-    if (t.match(/gast|onde gasto|gastei|despesas?|quanto paguei|top gastos|maiores gastos|minhas despesas/))
+    // GASTOS
+    if (t.match(/gast|onde gasto|despesas?|quanto paguei|top gastos|maiores gastos|minhas despesas/))
         return 'GASTOS';
 
-    // PROJECAO: Projeção financeira
+    // PROJECAO
     if (t.match(/sobrar|projeção|vai sobrar|fim do mês|próximos meses|previsão|falta quanto|vai dar/))
         return 'PROJECAO';
 
-    // IRPF: Imposto de Renda
+    // IRPF
     if (t.match(/irpf|imposto|leão|declarac|tribut|ir 202|restituição|pagar de ir|minha faixa|faixa do ir/))
         return 'IRPF';
 
-    // MULTA: Multas de trânsito (especialmente com imagem)
+    // MULTA
     if (t.match(/multa|infração|auto de infração|notificação de multa/))
         return 'MULTA';
 
-    // INVESTMENTS: Patrimônio e investimentos
+    // INVESTMENTS
     if (t.match(/investimento|patrimônio|ações|bolsa|tesouro|bitcoin|cripto|ouro|fii|porfólio|carteira|open finance/))
         return 'INVESTMENTS';
 
-    // WEB SEARCH INTENTS (Lower Priority - External Data)
+    // WEB SEARCH INTENTS
     if (t.match(/juros|selic|poupanca|cdi|taxa|rendimento/)) return 'interest_rate';
     if (t.match(/vencimento do ipva|prazo|calendario|ipva|licenciamento|quando vence o/)) return 'tax_deadline';
     if (t.match(/bolsa familia|beneficio|auxilio|fgts|inss/)) return 'government_program';
     if (t.match(/tabela progressiva|alíquota|regra do ir|como funciona o ir/)) return 'tax_rule';
 
     return 'general';
+}
+
+// --- HELPER: MEMORY SUMMARIZATION ---
+async function summarizeAndSaveMemory(supabase: any, user_id: string, history: any[]) {
+    console.log(`[smart_chat_v1] Summarizing memory for ${user_id}...`);
+    // In a real production environment, we would call a separate LLM chain here.
+    // For this Sprint, we log the intent to summarize.
+    // TODO: Implement actual LLM call to generate summary_text
+
+    // Example logic for future implementation:
+    // 1. Fetch current summary
+    // 2. Combine with recent history
+    // 3. Prompt LLM: "Update this profile summary with new info: ..."
+    // 4. Update chat_memory table
+
+    return Promise.resolve();
+}
+
+// --- HELPER: CONTEXT RETRIEVAL ---
+async function getConversationContext(supabase: any, profile_id: string) {
+    if (!profile_id) return { history: [], summary: null, lastOutbound: null };
+
+    // 1. Fetch Chat Memory (Long Term)
+    const { data: memory } = await supabase
+        .from('chat_memory')
+        .select('summary_text')
+        .eq('profile_id', profile_id)
+        .maybeSingle();
+
+    // 2. Fetch Recent Messages (Short Term)
+    const { data: recent } = await supabase
+        .from('whatsapp_messages')
+        .select('message_text, direction, created_at')
+        .eq('profile_id', profile_id)
+        .order('created_at', { ascending: false })
+        .limit(15);
+
+    // Process history
+    let history = [];
+    let lastOutbound = null;
+
+    if (recent && recent.length > 0) {
+        // Reverse to chronological order (API expects old -> new)
+        const chronological = [...recent].reverse();
+
+        history = chronological.map((m: any) => ({
+            role: m.direction === 'inbound' ? 'user' : 'model',
+            parts: [{ text: m.message_text || "" }]
+        }));
+
+        // Find last outbound time (recent is desc, so first outbound found is the latest)
+        const lastOut = recent.find((m: any) => m.direction === 'outbound');
+        if (lastOut) lastOutbound = new Date(lastOut.created_at);
+    }
+
+    return {
+        history,
+        summary: memory?.summary_text || null,
+        lastOutbound
+    };
 }
 
 // Check if intent requires internal data lookup FIRST (before LLM generates response)
@@ -910,25 +921,43 @@ Deno.serve(async (req) => {
         }
 
         // Domain + inputs
-        const { domain = 'general', image, images, image_url, storage_path, household_id, history } = body;
-
+        const { domain = 'general', image, images, image_url, storage_path, household_id } = body;
+        // NOTE: We ignore 'history' from body because we fetch authoritative history from DB now.
 
         const question = (body.question ?? body.message_text ?? body.message ?? body.text ?? body.input ?? body.prompt ?? body.user_message ?? "").toString().trim();
 
         if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url) throw new Error("Envie uma mensagem ou imagem.");
 
-        // --- FETCH USER PROFILE FOR PERSONALIZATION ---
-        const { data: profile } = await supabaseAdmin
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user_id)
-            .single();
+        // --- FETCH CONTEXT & PROFILE ---
+        const [{ data: profile }, context] = await Promise.all([
+            supabaseAdmin.from('profiles').select('full_name').eq('id', user_id).single(),
+            getConversationContext(supabaseAdmin, user_id)
+        ]);
 
         const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'usuário';
 
+        // --- GREETING POLICY ---
+        let greetingPolicy = "NORMAL";
+        if (context.lastOutbound) {
+            const diffMs = new Date().getTime() - context.lastOutbound.getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+            if (diffHours < 6) greetingPolicy = "SKIP";
+        }
+        console.log(`[smart_chat_v1] Greeting Policy: ${greetingPolicy} (Last outbound: ${context.lastOutbound})`);
+
+
         // --- GEMINI PROMPT SETUP ---
         const userParts = [];
-        let finalPrompt = SYSTEM_PROMPT_LOCKED.replace('{{USER_NAME}}', firstName) + "\n\n";
+        let finalPrompt = SYSTEM_PROMPT_LOCKED
+            .replace('{{USER_NAME}}', firstName)
+            .replace('{{GREETING_POLICY}}', greetingPolicy);
+
+        if (context.summary) {
+            finalPrompt += `\n[CONTEXTO DE MEMÓRIA]:\n${context.summary}\n`;
+        }
+
+        finalPrompt += "\n\n";
+
         if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
 
         const hasImages = !!(image || images || image_url || storage_path);
@@ -1294,9 +1323,12 @@ VOCÊ DEVE IMEDIATAMENTE:
         // Build Contents with History
         let chatContents = [];
 
-        if (history && Array.isArray(history) && history.length > 0) {
-            console.log(`[smart_chat_v1] Appending ${history.length} history messages.`);
-            chatContents = [...history]; // Append previous history
+        // Build Contents with History
+        // chatContents is already declared above
+
+        if (context.history && context.history.length > 0) {
+            console.log(`[smart_chat_v1] Appending ${context.history.length} history messages from DB.`);
+            chatContents = [...context.history]; // Append DB history
         }
 
         // Add current turn
@@ -1425,6 +1457,26 @@ VOCÊ DEVE IMEDIATAMENTE:
                 model_provider: 'gemini',
                 model_name: modelName
             }, { onConflict: 'question_hash' });
+        }
+
+        // --- MEMORY UPDATE TRIGGER ---
+        // Fire-and-forget background task to update memory if history length is sufficient
+        if (!isInternal && context.history && (context.history.length + 1) % 10 === 0) {
+            try {
+                // Include current turn in the context to be summarized
+                const fullHistory = [...(context.history || []), { role: 'user', parts: [{ text: question }] }, { role: 'model', parts: [{ text: geminiOutput?.answer_text || "" }] }];
+
+                const summaryPromise = summarizeAndSaveMemory(supabaseAdmin, user_id, fullHistory);
+
+                // Use EdgeRuntime for background execution if available
+                if (typeof EdgeRuntime !== 'undefined') {
+                    EdgeRuntime.waitUntil(summaryPromise);
+                } else {
+                    summaryPromise.catch(e => console.error("Memory update failed", e));
+                }
+            } catch (err) {
+                console.error("Failed to trigger memory update", err);
+            }
         }
 
         return new Response(JSON.stringify({ ...geminiOutput, is_cached: false }), {
