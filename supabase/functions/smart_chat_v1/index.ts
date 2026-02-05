@@ -117,6 +117,25 @@ const TOOLS_SCHEMA = [
         parameters: { type: "object", properties: {}, required: [] }
     },
     {
+        name: "add_expense",
+        description: "Registers a new expense or transaction. Use when user says 'paid', 'spent', 'bought', 'add expense', etc. ALWAYS try to infer category.",
+        parameters: {
+            type: "object",
+            properties: {
+                amount: { type: "number", description: "Value of the expense (e.g., 50.00)" },
+                description: { type: "string", description: "Description or title (e.g., 'Lunch', 'Uber')" },
+                category: {
+                    type: "string",
+                    enum: ["food", "transport", "market", "health", "home", "leisure", "shopping", "debts", "salary", "other"],
+                    description: "Category ID (default: other)"
+                },
+                date: { type: "string", description: "Date YYYY-MM-DD (default: today)" },
+                is_paid: { type: "boolean", description: "True if already paid (default: true)" }
+            },
+            required: ["amount", "description"]
+        }
+    },
+    {
         name: "list_bills_due",
         description: "Lists unpaid bills (tasks with amount > 0) that are due within a specific range or overdue. Use for 'contas vencendo', 'contas atrasadas', 'próximos vencimentos'.",
         parameters: {
@@ -266,6 +285,34 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         const { data, error } = await supabase.rpc('get_full_financial_report', { target_household_id: household_id });
         if (error) throw new Error(`Error getting summary: ${error.message}`);
         return data;
+    }
+
+    if (toolName === "add_expense") {
+        const { amount, description, category, date, is_paid } = args;
+        const finalDate = date || new Date().toISOString().split('T')[0];
+        const status = (is_paid ?? true) ? 'completed' : 'pending';
+        const validCategory = category || 'other';
+
+        const { data, error } = await supabase.from('tasks').insert({
+            title: description,
+            amount: amount,
+            category_id: validCategory,
+            due_date: finalDate, // For completed tasks, due_date acts as transaction date
+            status: status,
+            household_id: household_id, // Context provided
+            description: `Registered via WhatsApp on ${new Date().toLocaleString('pt-BR')}`
+        }).select().single();
+
+        if (error) {
+            console.error("Error adding expense:", error);
+            return "Erro ao salvar despesa. Tente novamente.";
+        }
+
+        return {
+            success: true,
+            id: data.id,
+            message: `Despesa de R$ ${amount.toFixed(2)} salva em ${validCategory}!`
+        };
     }
 
     if (toolName === "list_bills_due") {
