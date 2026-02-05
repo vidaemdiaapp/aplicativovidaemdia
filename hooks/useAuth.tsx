@@ -20,9 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session }, error }) => {
+        supabase.auth.getSession().then(async ({ data: { session }, error }) => {
             if (error) {
                 console.error('[Auth] Initial session error:', error);
+                // Force cleanup if token is invalid
+                if (error.message.includes('Refresh Token') || error.message.includes('not found')) {
+                    await supabase.auth.signOut();
+                }
                 setSession(null);
                 setUser(null);
             } else {
