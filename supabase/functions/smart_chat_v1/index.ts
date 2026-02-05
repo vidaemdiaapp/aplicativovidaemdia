@@ -977,11 +977,16 @@ Deno.serve(async (req) => {
 
         // --- FETCH CONTEXT & PROFILE ---
         const [{ data: profile }, context] = await Promise.all([
-            supabaseAdmin.from('profiles').select('full_name').eq('id', user_id).single(),
+            supabaseAdmin.from('profiles').select('full_name, active_household_id').eq('id', user_id).single(),
             getConversationContext(supabaseAdmin, user_id)
         ]);
 
         const firstName = profile?.full_name ? profile.full_name.split(' ')[0] : 'usuário';
+        const targetHouseholdId = household_id || profile?.active_household_id; // Priority: Body -> Profile
+
+        if (!targetHouseholdId) {
+            console.warn(`[smart_chat_v1] Warning: No household_id found for user ${user_id}. Tools triggering DB actions might fail.`);
+        }
 
         // --- GREETING POLICY ---
         let greetingPolicy = "NORMAL";
@@ -1051,7 +1056,8 @@ Deno.serve(async (req) => {
         // Block LLM from generic answers - force data-driven responses for app intents
 
         let routerContext = "";
-        const targetId = household_id || user_id;
+        // Use resolved targetHouseholdId
+        const targetId = targetHouseholdId || user_id;
         const year = new Date().getFullYear();
         let debugInfo: any = { intent: detectedIntent, tools_called: [], data_sources: [] };
 
@@ -1407,7 +1413,8 @@ VOCÊ DEVE IMEDIATAMENTE:
 
             const toolResults = [];
             for (const fn of functionCalls) {
-                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, household_id, user_id, storage_path);
+                // Pass targetHouseholdId instead of raw household_id
+                const result = await handleToolCall(fn.name, fn.args, supabaseAdmin, targetHouseholdId, user_id, storage_path);
                 toolResults.push({
                     functionResponse: {
                         name: fn.name,
