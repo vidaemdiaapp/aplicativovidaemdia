@@ -248,6 +248,8 @@ serve(async (req: Request) => {
       },
       body: JSON.stringify({
         source: "whatsapp",
+        // Force user_id to be profile.id to resolve mismatch
+        user_id: profile.id,
         profile_id: profile.id,
         wa_id,
         phone_digits: from_phone_digits,
@@ -284,47 +286,6 @@ serve(async (req: Request) => {
         j.message ||
         j.text ||
         reply;
-
-      // --- NEW: Handle Pending Actions (Tool Calls) ---
-      if (j.pending_action) {
-        console.log("EXECUTING ACTION:", j.pending_action.type, j.pending_action.payload);
-
-        const actionType = j.pending_action.type;
-        const payload = j.pending_action.payload || {};
-
-        if (actionType === 'create_task' || actionType === 'add_expense') {
-          // Validate payload
-          const title = payload.title || "Despesa via WhatsApp";
-          const amount = parseFloat(payload.amount);
-          const category_id = payload.category_id || 'outros';
-
-          if (!isNaN(amount) && amount > 0) {
-            const { error: taskError } = await supabase.from('tasks').insert({
-              user_id: profile.id,
-              owner_user_id: profile.id,
-              household_id: profile.active_household_id, // Important: use active household
-              title: title,
-              amount: amount,
-              category_id: category_id,
-              entry_type: 'immediate', // Default for WhatsApp
-              status: 'completed', // Assume immediate is paid? Or pending? Usually immediate is 'completed' logic-wise for expenses paid now. Let's start with pending/bill unless explicitly immediate. AI usually sends entry_type.
-              // Updating to match standard logic:
-              purchase_date: new Date().toISOString().split('T')[0],
-              payment_method: 'pix', // Default or from payload
-              description: `Via WhatsApp: ${inboundText}`,
-              created_at: new Date().toISOString()
-            });
-
-            if (taskError) {
-              console.error("Task insert error:", taskError);
-              reply += "\n\n(Ops, tentei salvar a despesa mas deu erro no banco).";
-            } else {
-              reply += "\n\n✅ Despesa salva no app!";
-            }
-          }
-        }
-      }
-      // ------------------------------------------------
 
     } catch (e) {
       console.error("JSON parse error/Action error:", e);

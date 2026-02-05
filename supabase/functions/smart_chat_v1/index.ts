@@ -285,41 +285,48 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         return data;
     }
 
-    if (toolName === "add_expense") {
-        const { amount, description, category, date, is_paid } = args;
-        const finalDate = date || new Date().toISOString().split('T')[0];
-        const status = (is_paid ?? true) ? 'completed' : 'pending';
-        const validCategory = category || 'other';
+    if (toolName === "add_expense" || toolName === "add_income") {
+        const title = args.title || args.description || (toolName === 'add_expense' ? 'Despesa' : 'Renda');
+        const rawAmount = args.amount;
+        const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount.replace('R$', '').replace(',', '.').trim()) : rawAmount;
 
-        // Fix: Force 'immediate' for daily expenses so they appear in Dashboard
-        const { data, error } = await supabase.from('tasks').insert({
-            title: description,
-            amount: amount,
-            category_id: validCategory,
-            due_date: finalDate,
-            purchase_date: finalDate, // Required for 'immediate' report query
-            status: status,
-            entry_type: 'immediate',  // Required for 'immediate' report query
+        const category_id = args.category || 'Outros';
+        const date = args.date || new Date().toISOString().split('T')[0];
+        const isExpense = toolName === 'add_expense';
+
+        // Ensure amount is valid
+        if (isNaN(amount) || amount <= 0) return "Valor inválido. Tente novamente.";
+
+        const { data: task, error } = await supabase.from('tasks').insert({
+            user_id: user_id,
+            owner_user_id: user_id,
             household_id: household_id,
-            user_id: user_id, // Essential for RLS and ownership
-            owner_user_id: user_id, // Essential for ownership
-
-            description: `Registered via WhatsApp on ${new Date().toLocaleString('pt-BR')}`
+            title: title,
+            description: args.description || `Via WhatsApp/IA: ${title}`,
+            amount: amount,
+            category_id: category_id,
+            entry_type: isExpense ? "expense" : "income", // 🔥 FUNDAMENTAL
+            status: "completed",
+            is_recurring: false,
+            purchase_date: date,
+            due_date: date,
+            auto_generated: true,
+            confidence_score: 90,
+            payment_method: 'pix'
         }).select().single();
 
         if (error) {
-            console.error("Error adding expense:", error);
-            return "Erro ao salvar despesa. Tente novamente.";
+            console.error("Add transaction error:", error);
+            return `Erro ao salvar: ${error.message}`;
         }
 
-        // Get updated daily total for stats
-        const { data: dailyStats } = await supabase.rpc('get_daily_total', { target_household_id: household_id, target_date: finalDate });
-
         return {
-            success: true,
-            id: data.id,
-            message: `✅ *${description}* R$ ${amount.toFixed(2)}\n📂 ${validCategory}\n📅 ${finalDate.split('-').reverse().join('/')}`,
-            daily_total: dailyStats || amount
+            ok: true,
+            action: isExpense ? "ADD_EXPENSE" : "ADD_INCOME",
+            task_id: task.id,
+            answer_text: `✅ ${isExpense ? 'Despesa' : 'Renda'} registrada!\n` +
+                `🧾 ${task.title}: R$ ${Number(task.amount).toFixed(2)}\n` +
+                `📂 ${task.category_id} • ${task.purchase_date}`
         };
     }
 
@@ -333,7 +340,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .eq('entry_type', 'immediate')
+            .in('entry_type', ['expense', 'immediate'])
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos nos últimos 7 dias.";
@@ -361,7 +368,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .eq('entry_type', 'immediate')
+            .in('entry_type', ['expense', 'immediate'])
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos neste mês.";
@@ -1003,22 +1010,25 @@ Deno.serve(async (req) => {
         let user_id: string | null = null;
 
         if (isInternal) {
-            // For internal calls, we trust profile_id (preferred) or user_id from the body.
-            const candidate = (body.profile_id ?? body.user_id ?? '').toString().trim();
-            const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            // INTERNAL CALL (Service Role) - Trust the body
+            // NORMALIZE USER_ID: WhatsApp sends profile_id, App Chat might send user_id
+            user_id = body.user_id ?? body.profile_id;
+            console.log(`[smart_chat_v1] Internal Call. Trusted user_id provided: ${user_id}`);
 
-            if (!candidate || !uuidRe.test(candidate)) {
+            if (!user_id) {
                 return new Response(JSON.stringify({
-                    error: "BadRequest",
-                    message: "profile_id (uuid) é obrigatório para chamadas internas.",
-                }), {
-                    headers: { ...corsHeaders, "Content-Type": "application/json" },
-                    status: 400,
-                });
+                    ok: false,
+                    error: "missing_user_id",
+                    answer_text: "Não consegui identificar seu usuário. Por favor, tente novamente."
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
 
-            user_id = candidate;
-            console.log(`[smart_chat_v1] Internal call authorized (service role). profile_id=${user_id}`);
+            // Optional: validate it looks like a uuid
+            const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRe.test(user_id)) {
+                return new Response(JSON.stringify({ error: "BadRequest", message: "Invalid user_id format" }), { status: 400 });
+            }
+
         } else {
             // External call: validate JWT and enforce authenticated user id
             const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(bearer);
@@ -1032,10 +1042,6 @@ Deno.serve(async (req) => {
 
             user_id = user.id;
             console.log(`[smart_chat_v1] User authenticated: ${user_id}`);
-
-            // Prevent spoofing: overwrite any incoming user_id/profile_id from client
-            body.user_id = user_id;
-            body.profile_id = user_id;
         }
 
         // Domain + inputs
