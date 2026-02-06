@@ -29,7 +29,7 @@ export interface Task {
   confidence_score?: number;
   is_joint?: boolean;
   user_id?: string;
-  entry_type?: 'bill' | 'immediate';
+  entry_type?: 'bill' | 'immediate' | 'expense' | 'income';
   payment_method?: 'cash' | 'pix' | 'debit' | 'credit';
   purchase_date?: string;
   created_at: string;

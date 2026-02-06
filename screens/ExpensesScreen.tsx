@@ -33,50 +33,47 @@ export const ExpensesScreen: React.FC = () => {
 
             if (cats) setCategories(cats);
 
-            // Filter only expenses (tasks with amount > 0)
-            let filtered = tasks.filter(t => {
-                const amount = typeof t.amount === 'number' ? t.amount : parseFloat(t.amount || '0');
-                return amount > 0;
-            });
+            // Filter all tasks (removed amount > 0 restriction for debugging)
+            let filtered = [...tasks];
 
-            const today = new Date().toISOString().split('T')[0];
-            const weekFromNow = new Date();
-            weekFromNow.setDate(weekFromNow.getDate() + 7);
-            const weekStr = weekFromNow.toISOString().split('T')[0];
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
 
-            const monthFromNow = new Date();
-            monthFromNow.setMonth(monthFromNow.getMonth() + 1);
-            const monthStr = monthFromNow.toISOString().split('T')[0];
+            const startOfWeek = new Date();
+            startOfWeek.setDate(today.getDate() - 7);
+            const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
 
-            const getEffectiveDate = (t: Task) => t.due_date || t.purchase_date || t.created_at;
+            const endOfWeek = new Date();
+            endOfWeek.setDate(today.getDate() + 7);
+            const endOfWeekStr = endOfWeek.toISOString().split('T')[0];
+
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+
+            const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const endOfMonthStr = endOfMonth.toISOString().split('T')[0];
+
+            const getEffectiveDate = (t: Task) => {
+                const raw = t.purchase_date || t.due_date || t.created_at;
+                if (!raw) return todayStr;
+                return raw.split('T')[0].split(' ')[0]; // Handle both ISO and Postgres formats
+            };
 
             // Apply view mode filter
             if (viewMode === 'overdue') {
                 filtered = filtered.filter(t => {
                     const date = getEffectiveDate(t);
-                    return date < today && t.status !== 'completed';
+                    return date < todayStr && t.status !== 'completed';
                 });
             } else if (viewMode === 'week') {
                 filtered = filtered.filter(t => {
                     const date = getEffectiveDate(t);
-                    return date >= today && date <= weekStr;
+                    return date >= startOfWeekStr && date <= endOfWeekStr;
                 });
             } else if (viewMode === 'month') {
                 filtered = filtered.filter(t => {
                     const date = getEffectiveDate(t);
-                    // Changed logic slightly: show everything from beginning of month or typical rolling window?
-                    // Keeping rolling window as per original code but supporting purchase_date
-                    // Ideally for expenses we usually want to see past ones too if viewing "All" or "Month" context?
-                    // The original code was `date >= today` AND `date <= monthStr`.
-                    // This hides PAST expenses of the current month.
-                    // The user complained about "Gasto do Dia" (-88) not showing.
-                    // If purchase_date is today, it passes `date >= today`.
-                    // If purchase_date was yesterday, it fails.
-                    // I will adjust logical start date for "month" view to be start of current month?
-                    // Or just fix the null check first. The user said "Gasto do dia" so it's likely today.
-
-                    // Let's stick to the visible range logic but fix the field access.
-                    return date >= today && date <= monthStr;
+                    return date >= startOfMonthStr && date <= endOfMonthStr;
                 });
             }
 
@@ -87,9 +84,12 @@ export const ExpensesScreen: React.FC = () => {
                 filtered = filtered.filter(t => t.status === 'completed');
             }
 
-            // Sort by due date
             // Sort by effective date
-            filtered.sort((a, b) => new Date(getEffectiveDate(a)).getTime() - new Date(getEffectiveDate(b)).getTime());
+            filtered.sort((a, b) => {
+                const dateA = new Date(getEffectiveDate(a)).getTime() || 0;
+                const dateB = new Date(getEffectiveDate(b)).getTime() || 0;
+                return dateA - dateB;
+            });
 
             setExpenses(filtered);
 
@@ -114,15 +114,23 @@ export const ExpensesScreen: React.FC = () => {
         val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
     const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr + 'T00:00:00');
+        if (!dateStr) return 'sem data';
+        // Extract YYYY-MM-DD
+        const cleanDate = dateStr.split('T')[0].split(' ')[0];
+        const date = new Date(cleanDate + 'T12:00:00'); // Use noon to avoid TZ shift
+        if (isNaN(date.getTime())) return 'data inválida';
+
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const dateAtMidnight = new Date(date);
+        dateAtMidnight.setHours(0, 0, 0, 0);
+
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        if (date.getTime() === today.getTime()) return 'Hoje';
-        if (date.getTime() === tomorrow.getTime()) return 'Amanhã';
-        if (date < today) return `Venceu ${date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`;
+        if (dateAtMidnight.getTime() === today.getTime()) return 'Hoje';
+        if (dateAtMidnight.getTime() === tomorrow.getTime()) return 'Amanhã';
+        if (dateAtMidnight < today) return `Venceu ${date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`;
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
     };
 

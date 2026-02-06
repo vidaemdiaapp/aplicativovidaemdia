@@ -67,23 +67,38 @@ export const FinancialDashboardScreen: React.FC = () => {
 
             if (catsRes) setCategories(catsRes);
 
-            if (dashboardRes.data) setDashboard(dashboardRes.data);
+            if (dashboardRes.data) {
+                const data = Array.isArray(dashboardRes.data) ? dashboardRes.data[0] : dashboardRes.data;
+                setDashboard(data);
+            }
 
             // Process tasks
-            const today = new Date().toISOString().split('T')[0];
+            const todayStr = new Date().toISOString().split('T')[0];
             const weekFromNow = new Date();
-            weekFromNow.setDate(weekFromNow.getDate() + 7);
+            weekFromNow.setDate(new Date().getDate() + 7);
             const weekStr = weekFromNow.toISOString().split('T')[0];
 
             const getAmount = (a: string | number | undefined): number =>
                 typeof a === 'number' ? a : parseFloat(a || '0');
 
-            const overdue = tasksRes.filter(t =>
-                t.due_date < today && t.status !== 'completed' && getAmount(t.amount) > 0
-            );
-            const upcoming = tasksRes.filter(t =>
-                t.due_date >= today && t.due_date <= weekStr && t.status !== 'completed' && getAmount(t.amount) > 0
-            ).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+            const getEffectiveDate = (t: Task) => {
+                const raw = t.due_date || t.purchase_date || t.created_at || '';
+                return raw.split('T')[0].split(' ')[0];
+            };
+
+            const overdue = tasksRes.filter(t => {
+                const date = getEffectiveDate(t);
+                return date < todayStr && t.status !== 'completed' && getAmount(t.amount) > 0;
+            });
+
+            const upcoming = tasksRes.filter(t => {
+                const date = getEffectiveDate(t);
+                return date >= todayStr && date <= weekStr && t.status !== 'completed' && getAmount(t.amount) > 0;
+            }).sort((a, b) => {
+                const dateA = new Date(getEffectiveDate(a)).getTime() || 0;
+                const dateB = new Date(getEffectiveDate(b)).getTime() || 0;
+                return dateA - dateB;
+            });
 
             setOverdueBills(overdue.slice(0, 3));
             setUpcomingBills(upcoming.slice(0, 5));
@@ -94,7 +109,7 @@ export const FinancialDashboardScreen: React.FC = () => {
             const spendingRes = await supabase.rpc('get_spending_by_category', {
                 target_household_id: household.id,
                 start_date: startDate.toISOString().split('T')[0],
-                end_date: today
+                end_date: todayStr
             });
             if (spendingRes.data) setSpending(spendingRes.data || []);
 
@@ -106,8 +121,8 @@ export const FinancialDashboardScreen: React.FC = () => {
             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
             const mockMonthlyData = months.map((month) => ({
                 month,
-                income: dashboardRes.data?.total_income ? dashboardRes.data.total_income * (0.8 + Math.random() * 0.4) : 5000 + Math.random() * 3000,
-                expense: dashboardRes.data?.total_commitments ? dashboardRes.data.total_commitments * (0.7 + Math.random() * 0.5) : 3000 + Math.random() * 2500
+                income: data?.total_income ? data.total_income * (0.8 + Math.random() * 0.4) : 5000 + Math.random() * 3000,
+                expense: data?.total_bills ? (data.total_bills + data.total_immediate) * (0.7 + Math.random() * 0.5) : 3000 + Math.random() * 2500
             }));
             setMonthlyData(mockMonthlyData);
 
