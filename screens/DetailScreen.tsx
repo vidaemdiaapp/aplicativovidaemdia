@@ -33,6 +33,19 @@ export const DetailScreen: React.FC = () => {
       tasksService.getAssignableMembers()
     ]);
 
+    // Se for despesa imediata (gasto do dia), redirecionar direto para edição
+    // Identificação: entry_type === 'immediate' OU 'expense' OU (tem purchase_date E não tem due_date)
+    const isImmediateExpense = taskData && (
+      taskData.entry_type === 'immediate' ||
+      taskData.entry_type === 'expense' ||
+      (taskData.purchase_date && !taskData.due_date)
+    );
+
+    if (isImmediateExpense) {
+      navigate(`/edit-task/${id}`, { replace: true });
+      return;
+    }
+
     setTask(taskData);
     if (taskData) {
       setCategory(categoriesData.find(c => c.id === taskData.category_id) || null);

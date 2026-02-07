@@ -108,20 +108,20 @@ export const CreditCardsScreen: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface pb-24 text-slate-900">
+        <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* Header */}
-            <div className="px-6 pt-16 pb-6 bg-white border-b border-slate-100 shadow-sm">
+            <header className="px-6 pt-16 pb-6 bg-surface-elevated border-b border-border-color shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
                 <button
                     onClick={() => navigate('/financial-dashboard')}
-                    className="flex items-center gap-2 text-slate-400 hover:text-primary-600 transition-colors mb-4 group"
+                    className="flex items-center gap-2 text-text-muted hover:text-primary-600 transition-colors mb-4 group"
                 >
                     <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                     <span className="text-xs font-bold uppercase tracking-wider">Voltar</span>
                 </button>
                 <div className="flex justify-between items-center">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Meus Cartões</h1>
-                        <p className="text-sm text-slate-400 font-medium">{cards.length} {cards.length === 1 ? 'cartão cadastrado' : 'cartões cadastrados'}</p>
+                        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Meus Cartões</h1>
+                        <p className="text-sm text-text-secondary font-medium">{cards.length} {cards.length === 1 ? 'cartão cadastrado' : 'cartões cadastrados'}</p>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
@@ -130,20 +130,20 @@ export const CreditCardsScreen: React.FC = () => {
                         <Plus className="w-6 h-6" />
                     </button>
                 </div>
-            </div>
+            </header>
 
             {/* Total Summary */}
             <div className="px-6 -mt-4 relative z-10">
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm">
+                <div className="bg-white border border-border-color rounded-3xl p-6 shadow-sm">
                     <div className="flex justify-between items-center mb-4">
-                        <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Fatura Total</span>
+                        <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest px-1">Fatura Total</span>
                         <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full">
-                            <span className="text-[10px] text-slate-500 font-bold uppercase">
+                            <span className="text-[9px] text-text-muted font-bold uppercase">
                                 Limite Disponível: {formatCurrency(getTotalLimit() - getTotalBalance())}
                             </span>
                         </div>
                     </div>
-                    <p className="text-3xl font-bold text-slate-900 mb-4">{formatCurrency(getTotalBalance())}</p>
+                    <p className="text-3xl font-bold text-text-primary tracking-tight mb-4 px-1">{formatCurrency(getTotalBalance())}</p>
                     <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                         <div
                             className={`h-full ${getUsageColor(getTotalLimit() > 0 ? (getTotalBalance() / getTotalLimit()) * 100 : 0)} transition-all duration-1000 ease-out`}
@@ -244,9 +244,9 @@ export const CreditCardsScreen: React.FC = () => {
                                 <Users className="w-6 h-6 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-[15px] font-bold text-slate-900">Despesas com Terceiros</p>
+                                <p className="text-[15px] font-bold text-text-primary">Despesas com Terceiros</p>
                                 <p className="text-xs text-amber-600 font-medium tracking-tight">
-                                    {thirdPartyExpenses.length} reembolsos pendentes de processamento
+                                    {thirdPartyExpenses.length} reembolsos pendentes
                                 </p>
                             </div>
                         </div>
@@ -299,28 +299,28 @@ export const CreditCardsScreen: React.FC = () => {
                     </div>
 
                     {/* Usage Bar */}
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm mb-6">
-                        <div className="flex justify-between items-center mb-3">
-                            <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Utilização do Limite</span>
-                            <span className="text-sm font-bold text-slate-900">
+                    <div className="bg-white border border-border-color rounded-3xl p-6 shadow-sm mb-6">
+                        <div className="flex justify-between items-center mb-3 px-1">
+                            <span className="text-[11px] text-text-muted font-bold uppercase tracking-widest">Utilização do Limite</span>
+                            <span className="text-sm font-bold text-text-primary">
                                 {getUsagePercent(selectedCard).toFixed(0)}%
                             </span>
                         </div>
-                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden mb-4">
+                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden mb-5">
                             <div
                                 className={`h-full ${getUsageColor(getUsagePercent(selectedCard))} transition-all duration-1000 ease-out`}
                                 style={{ width: `${getUsagePercent(selectedCard)}%` }}
                             ></div>
                         </div>
-                        <div className="flex justify-between">
+                        <div className="flex justify-between px-2">
                             <div className="text-center flex-1">
-                                <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Utilizado</span>
-                                <span className="text-sm font-bold text-slate-700">{formatCurrency(selectedCard.current_balance)}</span>
+                                <span className="text-[10px] text-text-muted font-bold uppercase block mb-1">Utilizado</span>
+                                <span className="text-[15px] font-bold text-text-primary">{formatCurrency(selectedCard.current_balance)}</span>
                             </div>
                             <div className="w-[1px] h-8 bg-slate-100 mx-4"></div>
                             <div className="text-center flex-1">
-                                <span className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Disponível</span>
-                                <span className="text-sm font-bold text-primary-600">{formatCurrency(selectedCard.credit_limit - selectedCard.current_balance)}</span>
+                                <span className="text-[10px] text-text-muted font-bold uppercase block mb-1">Disponível</span>
+                                <span className="text-[15px] font-bold text-primary-600">{formatCurrency(selectedCard.credit_limit - selectedCard.current_balance)}</span>
                             </div>
                         </div>
                     </div>

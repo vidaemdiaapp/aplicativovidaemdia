@@ -29,6 +29,7 @@ export const CreateTaskScreen: React.FC = () => {
     const [isRecurring, setIsRecurring] = useState(false);
     const [description, setDescription] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'pix' | 'debit'>('pix');
+    const [originalStatus, setOriginalStatus] = useState<string>('pending');
 
     const CATEGORY_ICONS: Record<string, any> = {
         'vehicle': Car,
@@ -82,13 +83,15 @@ export const CreateTaskScreen: React.FC = () => {
             if (isEditMode && id) {
                 const task = await tasksService.getTask(id);
                 if (task) {
-                    setEntryType(task.entry_type || 'bill');
+                    const type = (task.entry_type === 'immediate' || task.entry_type === 'expense') ? 'immediate' : 'bill';
+                    setEntryType(type);
                     setTitle(task.title);
                     setAmount(task.amount?.toString() || '');
-                    setDate(task.entry_type === 'immediate' ? task.purchase_date || '' : task.due_date || '');
+                    setDate(type === 'immediate' ? task.purchase_date || '' : task.due_date || '');
                     setSelectedCategory(task.category_id || 'outros');
                     setIsRecurring(task.is_recurring || false);
                     setDescription(task.description || '');
+                    setOriginalStatus(task.status || 'pending');
                     if (task.payment_method) setPaymentMethod(task.payment_method as any);
                 }
             } else if (combinedCats.length > 0) {
@@ -132,11 +135,22 @@ export const CreateTaskScreen: React.FC = () => {
         // Convert "1.234,56" back to "1234.56"
         const cleanAmount = amount.replace(/\./g, '').replace(',', '.');
 
+        // Logic for status:
+        // 1. Immediate expenses are ALWAYS 'completed'
+        // 2. If editing, preserve original status unless it's a type change to immediate
+        // 3. For new bills, default to 'pending'
+        let finalStatus = originalStatus;
+        if (entryType === 'immediate') {
+            finalStatus = 'completed';
+        } else if (!isEditMode) {
+            finalStatus = 'pending';
+        }
+
         const taskData: Partial<Task> = {
             title,
             category_id: selectedCategory,
             amount: amount ? parseFloat(cleanAmount) : undefined,
-            status: entryType === 'immediate' ? 'completed' : 'pending',
+            status: finalStatus as any,
             is_recurring: entryType === 'immediate' ? false : isRecurring,
             description: description || undefined,
             entry_type: entryType,

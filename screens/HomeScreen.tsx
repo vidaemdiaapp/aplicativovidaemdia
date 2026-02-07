@@ -156,8 +156,8 @@ export const HomeScreen: React.FC = () => {
               alt="Vida em Dia"
             />
             <div>
-              <p className="text-slate-400 text-sm font-medium">{greeting},</p>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{userName}</h1>
+              <p className="text-text-secondary text-sm font-medium">{greeting},</p>
+              <h1 className="text-2xl font-bold text-text-primary tracking-tight">{userName}</h1>
             </div>
           </div>
 
@@ -165,7 +165,7 @@ export const HomeScreen: React.FC = () => {
             {/* Mobile Upload Button */}
             <button
               onClick={() => navigate('/upload')}
-              className="lg:hidden p-3 rounded-2xl text-slate-500 hover:text-primary-600 hover:bg-primary-50 border border-slate-100 shadow-sm active:scale-95 transition-all"
+              className="lg:hidden p-3 rounded-2xl text-text-secondary hover:text-primary-600 hover:bg-primary-50 border border-border-color shadow-sm active:scale-95 transition-all"
               aria-label="Upload documento"
             >
               <UploadCloud className="w-5 h-5" />
@@ -173,10 +173,10 @@ export const HomeScreen: React.FC = () => {
 
             <button
               onClick={() => navigate('/notifications')}
-              className="relative p-3 rounded-2xl hover:bg-slate-50 transition-colors"
+              className="relative p-3 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-border-color"
               aria-label="Notificações"
             >
-              <Bell className="w-5 h-5 text-slate-600" />
+              <Bell className="w-5 h-5 text-text-secondary" />
               {urgentTasks.length > 0 && (
                 <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-danger-500 rounded-full border-2 border-white animate-pulse"></span>
               )}
@@ -205,10 +205,10 @@ export const HomeScreen: React.FC = () => {
 
         <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-125">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-slate-800 text-lg">Seu Patrimônio</h2>
+            <h2 className="font-bold text-text-primary text-lg">Seu Patrimônio</h2>
           </div>
-          <div className="bg-white rounded-3xl py-6 shadow-sm border border-slate-100 overflow-hidden">
-            <div className="flex gap-4 px-6 overflow-x-auto no-scrollbar min-w-max pb-2">
+          <div className="bg-white rounded-[32px] py-7 shadow-sm border border-border-color overflow-hidden">
+            <div className="flex gap-6 px-6 overflow-x-auto no-scrollbar min-w-max pb-2">
               <QuickAccessButton
                 icon={Car}
                 label="Veículos"
@@ -242,9 +242,9 @@ export const HomeScreen: React.FC = () => {
         ═══════════════════════════════════════════════════════════════ */}
         <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
           <div className="flex justify-between items-center mb-5">
-            <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+            <h2 className="font-bold text-text-primary text-lg flex items-center gap-2">
               Vida a Dois
-              <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-primary-500 animate-pulse"></span>
             </h2>
           </div>
 
@@ -287,18 +287,18 @@ export const HomeScreen: React.FC = () => {
                   <div
                     key={task.id}
                     onClick={() => navigate(`/detail/${task.id}`)}
-                    className="group bg-white p-5 rounded-2xl shadow-sm border border-slate-100 active:scale-[0.98] transition-all cursor-pointer hover:border-primary-200 hover:shadow-md"
+                    className="group bg-white p-5 rounded-3xl shadow-sm border border-border-color active:scale-[0.98] transition-all cursor-pointer hover:border-primary-200 hover:shadow-md"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`p-3 rounded-xl shrink-0 transition-colors ${task.health_status === 'risk'
+                        <div className={`p-3 rounded-2xl shrink-0 transition-colors ${task.health_status === 'risk'
                           ? 'bg-danger-50 text-danger-500 group-hover:bg-danger-100'
                           : 'bg-warning-50 text-warning-500 group-hover:bg-warning-100'
                           }`}>
                           <IconComponent className="w-5 h-5" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-slate-800 text-[15px] truncate group-hover:text-primary-600 transition-colors">
+                          <h4 className="font-semibold text-text-primary text-[15px] truncate group-hover:text-primary-600 transition-colors">
                             {task.title}
                           </h4>
                           <p className={`text-xs font-medium mt-0.5 ${task.health_status === 'risk' ? 'text-danger-500' : 'text-slate-400'

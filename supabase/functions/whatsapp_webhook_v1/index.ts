@@ -1,27 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
-/* -------------------- utils -------------------- */
-function normalizePhoneDigits(input: string) {
-  let d = (input ?? "").replace(/\D/g, "");
-  if (d.startsWith("00")) d = d.slice(2);
-  if (d.length === 10 || d.length === 11) d = `55${d}`;
-  return d;
-}
-
-function toE164(digits: string) {
-  return digits ? `+${digits}` : null;
-}
-function json(obj: any, status = 200) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-/* -------------------- helper: media -------------------- */
 async function downloadMediaAsBase64(mediaId: string, metaToken: string) {
   try {
     const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
@@ -34,15 +14,34 @@ async function downloadMediaAsBase64(mediaId: string, metaToken: string) {
       headers: { Authorization: `Bearer ${metaToken}` },
     });
     const arrayBuffer = await fileRes.arrayBuffer();
-    return encodeBase64(arrayBuffer);
+    return encodeBase64(new Uint8Array(arrayBuffer));
   } catch (err) {
     console.error("Media download error:", err);
     return null;
   }
 }
 
+/* -------------------- utils -------------------- */
+function normalizePhoneDigits(input: string) {
+  let d = (input ?? "").replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.length === 10 || d.length === 11) d = `55${d}`;
+  return d;
+}
+
+function toE164(digits: string) {
+  return digits ? `+${digits}` : null;
+}
+
+function jsonResponse(obj: any, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 /* -------------------- main -------------------- */
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -78,6 +77,8 @@ serve(async (req: Request) => {
     return new Response("Invalid JSON", { status: 400 });
   }
 
+  console.log("WEBHOOK PAYLOAD:", JSON.stringify(payload, null, 2));
+
   const value = payload?.entry?.[0]?.changes?.[0]?.value;
   const hasMessages = Boolean(value?.messages?.length);
   const hasStatuses = Boolean(value?.statuses?.length);
@@ -87,51 +88,94 @@ serve(async (req: Request) => {
 
   // statuses (delivered/read) -> ignore
   if (!hasMessages) {
-    console.log("Ignorado: evento sem messages[] (status)");
-    return json({ ok: true });
+    console.log("STEP_STATUS_ONLY: evento sem messages[] (status)");
+    return jsonResponse({ ok: true });
   }
+
+  console.log("STEP_INBOUND_RECEIVED");
+
   const msg = value.messages[0];
+  const messageId = msg?.id ?? ""; // wamid - ID único da mensagem
   const wa_id: string = msg?.from ?? value?.contacts?.[0]?.wa_id ?? "";
+  const msgType = msg?.type; // 'text', 'audio', 'image', 'voice', 'interactive', 'button'
 
-  /* ----------- media handling ----------- */
-  let audio_base64: string | null = null;
-  let audio_mime_type: string | null = null;
-  let image_base64: string | null = null;
-  let image_mime_type: string | null = null;
+  // ========== IDEMPOTÊNCIA ==========
+  // Verifica se já processamos esta mensagem (pelo message_id único do WhatsApp)
+  if (messageId && wa_id) {
+    const { error: idempotencyError } = await supabase
+      .from("whatsapp_inbound_events")
+      .insert({
+        provider: "whatsapp",
+        message_id: messageId,
+        from_phone: wa_id,
+        message_type: msgType || "unknown",
+        raw_payload: payload,
+        status: "received"
+      });
 
-  if (msg?.type === "audio" && msg?.audio?.id) {
-    console.log("AUDIO DETECTED:", msg.audio.id);
-    audio_base64 = await downloadMediaAsBase64(msg.audio.id, META_TOKEN);
-    audio_mime_type = msg.audio.mime_type || "audio/ogg";
-  } else if (msg?.type === "image" && msg?.image?.id) {
-    console.log("IMAGE DETECTED:", msg.image.id);
-    image_base64 = await downloadMediaAsBase64(msg.image.id, META_TOKEN);
-    image_mime_type = msg.image.mime_type || "image/jpeg";
-  } else if (msg?.type === "document" && msg?.document?.id) {
-    console.log("DOCUMENT DETECTED:", msg.document.id);
-    image_base64 = await downloadMediaAsBase64(msg.document.id, META_TOKEN);
-    image_mime_type = msg.document.mime_type || "application/pdf";
+    if (idempotencyError) {
+      // Erro de constraint única = mensagem já processada
+      if (idempotencyError.code === "23505") {
+        console.log("STEP_DUPLICATE_IGNORE: message_id já processado:", messageId);
+        return jsonResponse({ ok: true, duplicate: true });
+      }
+      // Outro erro - loga mas continua (não bloqueia o fluxo)
+      console.error("STEP_IDEMPOTENCY_ERROR:", idempotencyError);
+    } else {
+      console.log("STEP_IDEMPOTENCY_OK: nova mensagem registrada:", messageId);
+    }
+  }
+  // ========== FIM IDEMPOTÊNCIA ==========
+
+
+  console.log("MSG_DETAIL:", { wa_id, msgType, hasAudio: !!(msg?.audio || msg?.voice), hasText: !!msg?.text });
+
+  let inboundText = "";
+  let mediaUrl: string | null = null;
+  let mediaMime: string | null = null;
+  let isMedia = false;
+
+  if (msgType === "text") {
+    inboundText = msg.text?.body ?? "";
+  } else if (msgType === "audio" || msgType === "voice" || msg?.audio || msg?.voice) {
+    inboundText = "[audio]";
+    const audioObj = msg.audio || msg.voice;
+    mediaUrl = audioObj?.id;
+    mediaMime = audioObj?.mime_type;
+    isMedia = true;
+  } else if (msgType === "image" || msg?.image) {
+    inboundText = msg.caption ? `[imagem] ${msg.caption}` : "[imagem]";
+    mediaUrl = msg.image?.id;
+    mediaMime = msg.image?.mime_type;
+    isMedia = true;
+  } else if (msgType === "interactive") {
+    // Trata botões de lista ou botões simples em mensagens interativas
+    inboundText = msg.interactive?.button_reply?.title ??
+      msg.interactive?.list_reply?.title ??
+      msg.interactive?.button_reply?.id ?? "";
+  } else if (msgType === "button") {
+    inboundText = msg.button?.text ?? msg.button?.payload ?? "";
+  } else if (msgType === "reaction") {
+    console.log("Ignorado: reaction");
+    return jsonResponse({ ok: true });
+  } else {
+    inboundText = `[${msgType || 'unknown'}]`;
   }
 
-
-  const inboundText: string =
-    msg?.text?.body ??
-    msg?.button?.text ??
-    msg?.interactive?.button_reply?.title ??
-    msg?.interactive?.list_reply?.title ??
-    "";
-
-  const hasMedia = !!audio_base64 || !!image_base64;
-
-  if (!wa_id || (!inboundText && !hasMedia)) {
-    console.log("Mensagem inválida ou vazia (sem texto, áudio ou imagem)");
-    return json({ ok: true });
+  // Se não tem wa_id OU se não tem texto E não tem mídia
+  const trimmedText = inboundText.trim();
+  if (!wa_id || (!trimmedText && !mediaUrl)) {
+    console.log("Mensagem inválida ou vazia:", { wa_id, msgType, text: trimmedText, hasMedia: !!mediaUrl });
+    return jsonResponse({ ok: true });
   }
 
-  const mediaHint = audio_base64
-    ? "[Áudio: Transcrever e processar ações financeiras]"
-    : (image_base64 ? "[Imagem: Extrair dados de Cupom/Nota Fiscal/Documento]" : "");
-
+  // Download media if exists
+  let mediaBase64: string | null = null;
+  if (mediaUrl && META_TOKEN) {
+    console.log("Downloading media:", mediaUrl);
+    mediaBase64 = await downloadMediaAsBase64(mediaUrl, META_TOKEN);
+    if (!mediaBase64) console.warn("Failed to download media.");
+  }
 
   const from_phone_digits = normalizePhoneDigits(wa_id);
   const from_phone_e164 = toE164(from_phone_digits);
@@ -139,7 +183,7 @@ serve(async (req: Request) => {
   const businessDisplay = value?.metadata?.display_phone_number ?? "";
   const to_phone_digits = normalizePhoneDigits(businessDisplay);
 
-  console.log("INBOUND:", { from_phone_digits, inboundText, hasAudio: !!audio_base64, hasImage: !!image_base64 });
+  console.log("INBOUND:", { from_phone_digits, inboundText, isMedia: !!mediaBase64 });
 
   /* ----------- find profile ----------- */
   const { data: profile, error: profErr } = await supabase
@@ -156,7 +200,7 @@ serve(async (req: Request) => {
     lead_id: null,
     wa_id,
     payload,
-    message_text: inboundText || (audio_base64 ? "[Áudio]" : ""),
+    message_text: inboundText,
     direction: "inbound",
     provider_message_id: msg?.id ?? null,
     from_phone: from_phone_digits,
@@ -211,15 +255,16 @@ serve(async (req: Request) => {
       created_at: new Date().toISOString(),
     });
 
-    return json({ ok: true });
+    return jsonResponse({ ok: true });
   }
 
   /* ----------- call smart_chat_v1 ----------- */
+  console.log("STEP_SMARTCHAT_CALL");
   const smartRes = await fetch(`${SUPABASE_URL}/functions/v1/smart_chat_v1`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${SERVICE_ROLE}`,
-      "Content-Type": "application/json",
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       source: "whatsapp",
@@ -227,18 +272,20 @@ serve(async (req: Request) => {
       profile_id: profile.id,  // ok manter
       wa_id,
       phone_digits: from_phone_digits,
-      audio_base64,
-      audio_mime_type,
 
       // aliases do texto
-      message_text: inboundText || mediaHint,
-      message: inboundText || mediaHint,
-      text: inboundText || mediaHint,
-      input: inboundText || mediaHint,
-      prompt: inboundText || mediaHint,
-      input_type: audio_base64 ? "audio" : (image_base64 ? "image" : "text"),
-      image: image_base64,
-      image_mime_type
+      message_text: inboundText,
+      message: inboundText,
+      text: inboundText,
+      input: inboundText,
+      prompt: inboundText,
+      input_type: "text",
+
+      // Add media payload
+      audio_base64: (msgType === 'audio' || msgType === 'voice') ? mediaBase64 : null,
+      audio_mime_type: (msgType === 'audio' || msgType === 'voice') ? mediaMime : null,
+      image: msgType === 'image' ? mediaBase64 : null,
+      image_mime_type: msgType === 'image' ? mediaMime : null,
     }),
   });
 
@@ -246,25 +293,40 @@ serve(async (req: Request) => {
   console.log("smart_chat_v1:", smartRes.status, smartRaw);
 
   let reply = "Recebi sua mensagem ✅";
+  let eventStatus = "saved";
+  let eventError: string | null = null;
 
   if (smartRes.ok) {
+    console.log("STEP_SMARTCHAT_OK");
     try {
       const j = JSON.parse(smartRaw);
-      if (j.ok && j.answer_text) {
-        reply = j.answer_text;
-      } else {
-        reply =
-          j.answer_text ||
-          j.reply ||
-          j.message ||
-          j.text ||
-          reply;
-      }
+      reply =
+        j.answer_text ||
+        j.reply ||
+        j.message ||
+        j.text ||
+        reply;
     } catch {
       reply = smartRaw.trim() || reply;
     }
   } else {
+    console.log("STEP_SMARTCHAT_FAILED:", smartRes.status);
+    eventStatus = "failed";
+    eventError = `smart_chat status: ${smartRes.status}`;
     reply = "Tive um probleminha aqui 😅 Pode tentar de novo em alguns segundos?";
+  }
+
+  // Atualiza status do evento de idempotência
+  if (messageId) {
+    await supabase
+      .from("whatsapp_inbound_events")
+      .update({
+        status: eventStatus,
+        error: eventError,
+        user_id: profile.id
+      })
+      .eq("message_id", messageId);
+    console.log(`STEP_${eventStatus === "saved" ? "DB_SAVED" : "FAILED"}`);
   }
 
   /* ----------- send to WhatsApp ----------- */
@@ -300,5 +362,5 @@ serve(async (req: Request) => {
     created_at: new Date().toISOString(),
   });
 
-  return json({ ok: true });
+  return jsonResponse({ ok: true });
 });

@@ -10,16 +10,16 @@
     /* ═══════════════════════════════════════════════════════════════
        PRIMARY — Azul Mercado Pago (Confiança & Modernidade)
     ═══════════════════════════════════════════════════════════════ */
-    --color-primary-50: #e6f7ff;
-    --color-primary-100: #bae7ff;
-    --color-primary-200: #91d5ff;
-    --color-primary-300: #69c0ff;
-    --color-primary-400: #40a9ff;
-    --color-primary-500: #00AEEF;
-    --color-primary-600: #0096d6;
-    --color-primary-700: #0077b3;
-    --color-primary-800: #005a8c;
-    --color-primary-900: #003d66;
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #0052FF;
+    --color-primary-600: #0041cc;
+    --color-primary-700: #0037a3;
+    --color-primary-800: #002d85;
+    --color-primary-900: #002266;
 
     /* ═══════════════════════════════════════════════════════════════
        ACCENT — Coral/Laranja (CTAs & Ações)
@@ -36,9 +36,9 @@
     /* ═══════════════════════════════════════════════════════════════
        SURFACE — Background Layers
     ═══════════════════════════════════════════════════════════════ */
-    --color-surface: #f5f7fa;
+    --color-surface: #F8FAFF;
     --color-surface-elevated: #ffffff;
-    --color-surface-muted: #f0f2f5;
+    --color-surface-muted: #f1f5f9;
 
     /* ═══════════════════════════════════════════════════════════════
        SUCCESS — Verde (Conclusão & Positivo)
@@ -87,17 +87,17 @@
    ROOT CSS VARIABLES — For Dark Mode Toggle
 ═══════════════════════════════════════════════════════════════ */
 :root {
-    --bg-primary: #f5f7fa;
+    --bg-primary: #F8FAFF;
     --bg-card: #ffffff;
     --bg-elevated: #ffffff;
-    --bg-muted: #f0f2f5;
-    --text-primary: #1a1d23;
-    --text-secondary: #5c6370;
-    --text-muted: #9ca3af;
-    --border-color: #e5e7eb;
-    --shadow-color: rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.1), 0 2px 10px -2px rgba(0, 0, 0, 0.04);
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --bg-muted: #f1f5f9;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --border-color: #f1f5f9;
+    --shadow-color: rgba(0, 82, 255, 0.04);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -228,20 +228,20 @@
 /* Cards — Mercado Pago/Nubank Style */
 .card {
     background: var(--bg-card);
-    border-radius: 16px;
+    border-radius: 24px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-card);
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card:hover {
     box-shadow: var(--shadow-lg);
-    transform: translateY(-1px);
+    border-color: rgba(0, 82, 255, 0.1);
 }
 
 .card-elevated {
     background: var(--bg-elevated);
-    border-radius: 20px;
+    border-radius: 24px;
     box-shadow: var(--shadow-lg);
 }
 
@@ -262,13 +262,14 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #00AEEF 0%, #0096d6 100%);
+    background: #0052FF;
     color: white;
-    box-shadow: 0 4px 14px -3px rgba(0, 174, 239, 0.4);
+    box-shadow: 0 8px 16px -4px rgba(0, 82, 255, 0.2);
 }
 
 .btn-primary:hover {
-    box-shadow: 0 6px 20px -3px rgba(0, 174, 239, 0.5);
+    background: #0041cc;
+    box-shadow: 0 12px 20px -4px rgba(0, 82, 255, 0.3);
     transform: translateY(-1px);
 }
 

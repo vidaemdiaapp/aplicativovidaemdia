@@ -3,7 +3,7 @@ import {
     Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Calendar, ChevronRight,
     TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, CreditCard,
     PiggyBank, Target, BarChart3, Zap, ArrowRight, Bell, Sparkles, LineChart, Landmark, RefreshCw,
-    Car, FileText, ShieldCheck
+    Car, FileText, ShieldCheck, Utensils, ShoppingBag, Home, Heart, Plane, DollarSign, MoreHorizontal
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -67,9 +67,10 @@ export const FinancialDashboardScreen: React.FC = () => {
 
             if (catsRes) setCategories(catsRes);
 
+            let dashboardData: any = null;
             if (dashboardRes.data) {
-                const data = Array.isArray(dashboardRes.data) ? dashboardRes.data[0] : dashboardRes.data;
-                setDashboard(data);
+                dashboardData = Array.isArray(dashboardRes.data) ? dashboardRes.data[0] : dashboardRes.data;
+                setDashboard(dashboardData);
             }
 
             // Process tasks
@@ -121,8 +122,8 @@ export const FinancialDashboardScreen: React.FC = () => {
             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
             const mockMonthlyData = months.map((month) => ({
                 month,
-                income: data?.total_income ? data.total_income * (0.8 + Math.random() * 0.4) : 5000 + Math.random() * 3000,
-                expense: data?.total_bills ? (data.total_bills + data.total_immediate) * (0.7 + Math.random() * 0.5) : 3000 + Math.random() * 2500
+                income: dashboardData?.total_income ? dashboardData.total_income * (0.8 + Math.random() * 0.4) : 5000 + Math.random() * 3000,
+                expense: dashboardData?.total_bills ? (dashboardData.total_bills + dashboardData.total_immediate) * (0.7 + Math.random() * 0.5) : 3000 + Math.random() * 2500
             }));
             setMonthlyData(mockMonthlyData);
 
@@ -198,11 +199,11 @@ export const FinancialDashboardScreen: React.FC = () => {
     const totalSpending = spending.reduce((acc, s) => acc + s.total, 0);
 
     return (
-        <div className="min-h-screen bg-surface pb-24 text-slate-900">
+        <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* ═══════════════════════════════════════════════════════════════
                 HERO: Refined Balance Display
             ═══════════════════════════════════════════════════════════════ */}
-            <div className="bg-white border-b border-slate-100 px-6 pt-16 pb-8 shadow-sm">
+            <header className="bg-surface-elevated px-6 pt-16 pb-8 shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${riskConfig.bg} mb-3`}>
@@ -211,7 +212,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                                 {riskConfig.label}
                             </span>
                         </div>
-                        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-1">
+                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-widest mb-1">
                             Projeção do Mês
                         </p>
                         <h1 className={`text-4xl font-bold tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-600' :
@@ -222,7 +223,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     </div>
                     <button
                         onClick={() => loadData()}
-                        className="p-3 bg-slate-50 rounded-full text-slate-400 hover:text-primary-500 hover:bg-primary-50 transition-all active:rotate-180 duration-500 shadow-sm"
+                        className="p-3 bg-slate-50 rounded-2xl text-text-muted hover:text-primary-500 hover:bg-primary-50 transition-all active:rotate-180 duration-500 shadow-sm border border-border-color"
                     >
                         <RefreshCw className="w-5 h-5" />
                     </button>
@@ -233,55 +234,55 @@ export const FinancialDashboardScreen: React.FC = () => {
                     {/* RENDAS - Clicável e com edição */}
                     <div
                         onClick={() => navigate('/incomes')}
-                        className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 cursor-pointer hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group active:scale-[0.98]"
+                        className="bg-white p-4 rounded-3xl flex items-center gap-3 border border-border-color cursor-pointer hover:border-emerald-200 hover:shadow-md transition-all group active:scale-[0.98]"
                     >
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                            <ArrowUpCircle className="w-6 h-6 text-emerald-600" />
+                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                            <ArrowUpCircle className="w-6 h-6 text-emerald-500" />
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Rendas</p>
+                                <p className="text-[10px] text-text-secondary font-bold uppercase">Rendas</p>
                                 <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
                             </div>
-                            <p className="text-sm font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">
+                            <p className="text-sm font-bold text-text-primary group-hover:text-emerald-600 transition-colors">
                                 {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
                             </p>
                         </div>
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsIncomeModalOpen(true); }}
-                            className="w-8 h-8 rounded-lg bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                            className="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
                             title="Editar Renda"
                         >
-                            <Plus className="w-4 h-4 text-emerald-600" />
+                            <Plus className="w-4 h-4 text-emerald-500" />
                         </button>
                     </div>
 
                     {/* CONTAS/DESPESAS - Clicável */}
                     <div
                         onClick={() => navigate('/expenses')}
-                        className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 cursor-pointer hover:border-rose-200 hover:bg-rose-50/50 transition-all group active:scale-[0.98]"
+                        className="bg-white p-4 rounded-3xl flex items-center gap-3 border border-border-color cursor-pointer hover:border-rose-200 hover:shadow-md transition-all group active:scale-[0.98]"
                     >
-                        <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center group-hover:bg-rose-200 transition-colors">
-                            <ArrowDownCircle className="w-6 h-6 text-rose-600" />
+                        <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                            <ArrowDownCircle className="w-6 h-6 text-rose-500" />
                         </div>
                         <div className="flex-1">
                             <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Despesas</p>
+                                <p className="text-[10px] text-text-secondary font-bold uppercase">Despesas</p>
                                 <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
                             </div>
-                            <p className="text-sm font-bold text-slate-800 group-hover:text-rose-700 transition-colors">
+                            <p className="text-sm font-bold text-text-primary group-hover:text-rose-600 transition-colors">
                                 {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
                             </p>
                         </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {/* ═══════════════════════════════════════════════════════════════
                 QUICK ACCESS SECTION — Fast Navigation
             ═══════════════════════════════════════════════════════════════ */}
             <div className="px-6 py-6 overflow-x-auto no-scrollbar">
-                <div className="flex gap-4 min-w-max">
+                <div className="flex gap-4 min-w-max px-1">
                     <QuickAccessButton
                         icon={ShieldCheck}
                         label="Imposto Renda"
@@ -291,7 +292,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     <QuickAccessButton
                         icon={CreditCard}
                         label="Cartões"
-                        color="bg-cyan-50 text-cyan-600"
+                        color="bg-blue-50 text-primary-600"
                         onClick={() => navigate('/credit-cards')}
                     />
                     <QuickAccessButton
@@ -303,7 +304,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     <QuickAccessButton
                         icon={TrendingUp}
                         label="Investir"
-                        color="bg-violet-50 text-violet-600"
+                        color="bg-indigo-50 text-indigo-600"
                         onClick={() => navigate('/investments')}
                     />
                 </div>
@@ -316,17 +317,17 @@ export const FinancialDashboardScreen: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => navigate('/new-task', { state: { type: 'immediate' } })}
-                        className="bg-primary-500 hover:bg-primary-600 p-5 rounded-2xl flex flex-col items-center gap-2 transition-all active:scale-95 group shadow-lg shadow-primary-500/20"
+                        className="bg-primary-500 hover:bg-primary-600 p-5 rounded-3xl flex flex-col items-center gap-2 transition-all active:scale-95 group shadow-lg shadow-primary-500/20"
                     >
                         <Plus className="w-6 h-6 text-white group-hover:rotate-90 transition-transform" />
                         <span className="text-xs font-bold uppercase text-white">Gasto do Dia</span>
                     </button>
                     <button
                         onClick={() => navigate('/new-task')}
-                        className="bg-white border border-slate-200 hover:border-primary-300 p-5 rounded-2xl flex flex-col items-center gap-2 transition-all active:scale-95 shadow-sm"
+                        className="bg-white border border-border-color hover:border-primary-300 p-5 rounded-3xl flex flex-col items-center gap-2 transition-all active:scale-95 shadow-sm"
                     >
-                        <Calendar className="w-6 h-6 text-slate-400" />
-                        <span className="text-xs font-bold uppercase text-slate-600">Nova Conta</span>
+                        <Calendar className="w-6 h-6 text-text-muted transition-colors group-hover:text-primary-500" />
+                        <span className="text-xs font-bold uppercase text-text-secondary">Nova Conta</span>
                     </button>
                 </div>
 
@@ -354,17 +355,17 @@ export const FinancialDashboardScreen: React.FC = () => {
                 </button>
 
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 text-center">
+                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
                         <p className="text-2xl font-bold text-rose-500">{dashboard?.overdue_count || 0}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Vencidas</p>
+                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">Vencidas</p>
                     </div>
-                    <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 text-center">
+                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
                         <p className="text-2xl font-bold text-amber-500">{dashboard?.today_count || 0}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Hoje</p>
+                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">Hoje</p>
                     </div>
-                    <div className="bg-white border border-slate-100 shadow-sm rounded-2xl p-4 text-center">
+                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
                         <p className="text-2xl font-bold text-emerald-500">{dashboard?.week_count || 0}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">7 Dias</p>
+                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">7 Dias</p>
                     </div>
                 </div>
 
@@ -439,19 +440,19 @@ export const FinancialDashboardScreen: React.FC = () => {
                                 <div
                                     key={bill.id}
                                     onClick={() => navigate(`/detail/${bill.id}`)}
-                                    className="bg-white p-5 rounded-2xl border border-slate-100 flex items-center justify-between hover:border-primary-200 hover:shadow-md transition-all cursor-pointer group"
+                                    className="bg-white p-5 rounded-3xl border border-border-color flex items-center justify-between hover:border-primary-200 hover:shadow-md transition-all cursor-pointer group"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-text-muted group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
                                             <Clock className="w-6 h-6" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-slate-800 group-hover:text-primary-600 transition-colors">{bill.title}</p>
-                                            <p className="text-xs text-slate-400 font-medium tracking-tight">Vence em {formatDate(bill.due_date)}</p>
+                                            <p className="font-bold text-text-primary group-hover:text-primary-600 transition-colors">{bill.title}</p>
+                                            <p className="text-xs text-text-muted font-medium tracking-tight">Vence em {formatDate(bill.due_date)}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-slate-900">{formatCurrency(parseFloat(bill.amount?.toString() || '0'))}</p>
+                                        <p className="font-bold text-text-primary">{formatCurrency(parseFloat(bill.amount?.toString() || '0'))}</p>
                                         <ChevronRight className="w-4 h-4 text-slate-300 ml-auto mt-1 group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </div>
@@ -479,22 +480,87 @@ export const FinancialDashboardScreen: React.FC = () => {
                             <p className="text-slate-400 text-sm italic">Nenhum gasto registrado</p>
                         </div>
                     ) : (
-                        <div className="bg-slate-50/50 rounded-2xl p-4">
-                            <SpendingDonutChart
-                                data={spending.map((cat, idx) => {
+                        <>
+                            <div className="bg-slate-50/50 rounded-2xl p-4">
+                                <SpendingDonutChart
+                                    data={spending.map((cat, idx) => {
+                                        const colors = ['#00AEEF', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b'];
+                                        return {
+                                            category_id: cat.category_id,
+                                            label: getCategoryLabel(cat.category_id),
+                                            total: cat.total,
+                                            count: cat.count,
+                                            color: colors[idx % colors.length]
+                                        };
+                                    })}
+                                    size={180}
+                                    showLegend={true}
+                                />
+                            </div>
+
+                            {/* Detailed Category List */}
+                            <div className="mt-8 space-y-4">
+                                {spending.map((cat, idx) => {
+                                    const totalSpending = spending.reduce((acc, curr) => acc + curr.total, 0);
                                     const colors = ['#00AEEF', '#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b'];
-                                    return {
-                                        category_id: cat.category_id,
-                                        label: getCategoryLabel(cat.category_id),
-                                        total: cat.total,
-                                        count: cat.count,
-                                        color: colors[idx % colors.length]
+                                    const color = colors[idx % colors.length];
+                                    const percentage = totalSpending > 0 ? (cat.total / totalSpending) * 100 : 0;
+
+                                    // Dynamic Category Icon Resolver
+                                    const getCatIcon = (id: string) => {
+                                        const map: Record<string, any> = {
+                                            'food': Utensils,
+                                            'transport': Car,
+                                            'shopping': ShoppingBag,
+                                            'home': Home,
+                                            'utilities': Zap,
+                                            'health': Heart,
+                                            'leisure': Plane,
+                                            'vehicle': Car,
+                                            'taxes': Landmark,
+                                            'contracts': ShieldCheck,
+                                            'documents': FileText,
+                                            'salary': DollarSign,
+                                            'outros': MoreHorizontal
+                                        };
+                                        return map[id] || MoreHorizontal;
                                     };
+                                    const Icon = getCatIcon(cat.category_id);
+
+                                    return (
+                                        <div key={cat.category_id} className="flex items-center gap-4 group">
+                                            <div
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
+                                                style={{ backgroundColor: `${color}15`, color: color }}
+                                            >
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex justify-between items-baseline mb-1">
+                                                    <p className="text-sm font-bold text-slate-700 truncate">
+                                                        {getCategoryLabel(cat.category_id)}
+                                                    </p>
+                                                    <p className="text-sm font-black text-slate-900">
+                                                        {formatCurrency(cat.total)}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full transition-all duration-1000"
+                                                            style={{ backgroundColor: color, width: `${percentage}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-[10px] font-bold text-slate-400 w-8 text-right">
+                                                        {percentage.toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
                                 })}
-                                size={180}
-                                showLegend={true}
-                            />
-                        </div>
+                            </div>
+                        </>
                     )}
                 </section>
 
@@ -559,7 +625,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     loadData();
                 }}
             />
-        </div>
+        </div >
     );
 };
 

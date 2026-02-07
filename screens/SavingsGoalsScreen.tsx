@@ -78,83 +78,88 @@ export const SavingsGoalsScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
+                    <p className="text-text-secondary text-sm font-medium animate-pulse">Carregando cofrinhos...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-24 text-white">
+        <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* Header */}
-            <div className="px-6 pt-16 pb-6">
+            <header className="px-6 pt-16 pb-6 bg-surface-elevated shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
                 <button
-                    onClick={() => navigate('/financial')}
-                    className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-4"
+                    onClick={() => navigate('/financial-dashboard')}
+                    className="flex items-center gap-2 text-text-muted hover:text-primary-600 transition-colors mb-4 group"
                 >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase">Voltar</span>
+                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+                    <span className="text-xs font-bold uppercase tracking-wider">Voltar</span>
                 </button>
                 <div className="flex justify-between items-start">
                     <div>
-                        <h1 className="text-2xl font-black text-white">Meus Cofrinhos</h1>
-                        <p className="text-sm text-slate-500 mt-1">{goals.length} meta(s) ativa(s)</p>
+                        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Meus Cofrinhos</h1>
+                        <p className="text-sm text-text-secondary font-medium mt-1">{goals.length} meta(s) ativa(s)</p>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="w-10 h-10 rounded bg-emerald-500 flex items-center justify-center hover:bg-emerald-400 transition-colors"
+                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white flex items-center justify-center hover:bg-primary-600 shadow-lg shadow-primary-500/20 transition-all active:scale-95"
                     >
-                        <Plus className="w-5 h-5 text-white" />
+                        <Plus className="w-6 h-6" />
                     </button>
                 </div>
-            </div>
+            </header>
 
             {/* Total Summary */}
-            <div className="px-6 mb-6">
-                <div className="bg-gradient-to-r from-emerald-900/50 to-slate-900 border border-emerald-500/20 rounded p-5">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                            <PiggyBank className="w-6 h-6 text-emerald-400" />
+            <div className="px-6 -mt-4 relative z-10">
+                <div className="bg-white border border-border-color rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                            <PiggyBank className="w-7 h-7 text-emerald-500" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-slate-500 font-bold uppercase">Total Poupado</p>
-                            <p className="text-3xl font-black text-emerald-400">{formatCurrency(getTotalSaved())}</p>
+                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">Total Poupado</p>
+                            <p className="text-3xl font-bold text-text-primary tracking-tight">{formatCurrency(getTotalSaved())}</p>
                         </div>
                     </div>
-                    <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-emerald-500 transition-all duration-700"
                             style={{ width: `${getTotalTarget() > 0 ? (getTotalSaved() / getTotalTarget()) * 100 : 0}%` }}
                         ></div>
                     </div>
-                    <div className="flex justify-between mt-2">
-                        <span className="text-[10px] text-slate-500">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% do objetivo</span>
-                        <span className="text-[10px] text-slate-500">Meta: {formatCurrency(getTotalTarget())}</span>
+                    <div className="flex justify-between mt-3 px-1">
+                        <span className="text-[11px] text-text-muted font-medium">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% do objetivo</span>
+                        <span className="text-[11px] text-text-muted font-medium">Meta: {formatCurrency(getTotalTarget())}</span>
                     </div>
                 </div>
             </div>
 
             {/* Goals List */}
             {goals.length === 0 ? (
-                <div className="px-6">
-                    <div className="bg-slate-900 border border-dashed border-slate-700 rounded-lg p-8 text-center">
-                        <PiggyBank className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                        <p className="text-slate-400 font-medium mb-2">Nenhum cofrinho criado</p>
-                        <p className="text-slate-600 text-sm mb-4">Comece sua reserva financeira agora!</p>
+                <div className="px-6 mt-8">
+                    <div className="bg-white border border-dashed border-border-color rounded-3xl p-10 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <PiggyBank className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p className="text-text-primary font-bold mb-2">Nenhum cofrinho criado</p>
+                        <p className="text-text-muted text-sm mb-6 max-w-[220px] mx-auto">Comece sua reserva financeira agora mesmo!</p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 rounded text-sm font-bold transition-colors"
+                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold transition-all shadow-md active:scale-[0.98]"
                         >
                             Criar Cofrinho
                         </button>
                     </div>
                 </div>
             ) : (
-                <section className="px-6 mb-6">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-4">
+                <section className="px-6 mt-10 mb-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-text-muted mb-4 px-1">
                         Seus Cofrinhos
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {goals.map((goal) => {
                             const config = getGoalTypeConfig(goal.goal_type);
                             const Icon = config.icon;
@@ -164,22 +169,22 @@ export const SavingsGoalsScreen: React.FC = () => {
                                 <div
                                     key={goal.id}
                                     onClick={() => handleGoalSelect(goal)}
-                                    className={`p-4 bg-slate-900 border rounded cursor-pointer transition-all ${selectedGoal?.id === goal.id
-                                            ? 'border-emerald-500'
-                                            : 'border-slate-800 hover:border-slate-700'
+                                    className={`p-5 bg-white border rounded-[28px] cursor-pointer transition-all shadow-sm ${selectedGoal?.id === goal.id
+                                        ? 'border-primary-500 ring-4 ring-primary-500/5'
+                                        : 'border-border-color hover:border-primary-200 hover:shadow-md'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className="w-10 h-10 rounded flex items-center justify-center"
-                                                style={{ backgroundColor: `${goal.color}20` }}
+                                                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                                                style={{ backgroundColor: `${goal.color}15` }}
                                             >
-                                                <Icon className="w-5 h-5" style={{ color: goal.color }} />
+                                                <Icon className="w-6 h-6" style={{ color: goal.color }} />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-white">{goal.name}</p>
-                                                <p className="text-[10px] text-slate-500">{config.label}</p>
+                                                <p className="font-bold text-text-primary">{goal.name}</p>
+                                                <p className="text-[11px] text-text-muted font-medium">{config.label}</p>
                                             </div>
                                         </div>
                                         {goal.is_locked && (
@@ -188,17 +193,17 @@ export const SavingsGoalsScreen: React.FC = () => {
                                     </div>
 
                                     <div className="mb-2">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-xl font-black text-white">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <span className="text-2xl font-bold text-text-primary tracking-tight">
                                                 {formatCurrency(goal.current_amount)}
                                             </span>
-                                            <span className="text-xs font-bold text-slate-500">
+                                            <span className="text-xs font-bold text-text-secondary">
                                                 {progress.toFixed(0)}%
                                             </span>
                                         </div>
-                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full transition-all duration-700"
+                                                className="h-full transition-all duration-1000 ease-out"
                                                 style={{
                                                     width: `${progress}%`,
                                                     backgroundColor: goal.color
@@ -207,12 +212,12 @@ export const SavingsGoalsScreen: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-[10px] text-slate-500">
+                                    <div className="flex justify-between items-center mt-3">
+                                        <span className="text-[11px] text-text-muted font-medium">
                                             Meta: {formatCurrency(goal.target_amount)}
                                         </span>
                                         {goal.deadline && (
-                                            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                                            <span className="text-[11px] text-text-muted font-bold flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
                                                 <Calendar className="w-3 h-3" />
                                                 {formatDate(goal.deadline)}
                                             </span>
@@ -227,21 +232,21 @@ export const SavingsGoalsScreen: React.FC = () => {
 
             {/* Selected Goal Actions */}
             {selectedGoal && !selectedGoal.is_locked && (
-                <section className="px-6 mb-6">
-                    <div className="grid grid-cols-2 gap-3">
+                <section className="px-6 mb-8">
+                    <div className="grid grid-cols-2 gap-4">
                         <button
-                            onClick={() => setShowDepositModal(true)}
-                            className="bg-emerald-500 hover:bg-emerald-400 p-4 rounded flex items-center justify-center gap-2 transition-all active:scale-95"
+                            onClick={() => setShowAddModal(true)}
+                            className="bg-primary-500 hover:bg-primary-600 p-5 rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary-500/20"
                         >
                             <ArrowUpCircle className="w-5 h-5 text-white" />
-                            <span className="text-sm font-bold text-white">Depositar</span>
+                            <span className="text-[15px] font-bold text-white">Depositar</span>
                         </button>
                         <button
                             onClick={() => setShowWithdrawModal(true)}
-                            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-4 rounded flex items-center justify-center gap-2 transition-all active:scale-95"
+                            className="bg-white border border-border-color hover:border-primary-200 p-5 rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
                         >
-                            <ArrowDownCircle className="w-5 h-5 text-slate-300" />
-                            <span className="text-sm font-bold text-slate-300">Retirar</span>
+                            <ArrowDownCircle className="w-5 h-5 text-text-secondary" />
+                            <span className="text-[15px] font-bold text-text-secondary">Retirar</span>
                         </button>
                     </div>
                 </section>
@@ -249,38 +254,38 @@ export const SavingsGoalsScreen: React.FC = () => {
 
             {/* Transactions History */}
             {selectedGoal && transactions.length > 0 && (
-                <section className="px-6">
-                    <h3 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-4">
+                <section className="px-6 pb-12">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-text-muted mb-4 px-1">
                         Histórico - {selectedGoal.name}
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {transactions.slice(0, 10).map((tx) => (
                             <div
                                 key={tx.id}
-                                className="flex justify-between items-center p-4 bg-slate-900 border border-slate-800 rounded"
+                                className="flex justify-between items-center p-5 bg-white border border-slate-50 rounded-3xl shadow-sm hover:border-primary-100 transition-all group"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded flex items-center justify-center ${tx.transaction_type === 'deposit'
-                                            ? 'bg-emerald-500/10'
-                                            : 'bg-rose-500/10'
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${tx.transaction_type === 'deposit'
+                                        ? 'bg-emerald-50 text-emerald-500'
+                                        : 'bg-rose-50 text-rose-500'
                                         }`}>
                                         {tx.transaction_type === 'deposit' ? (
-                                            <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+                                            <ArrowUpCircle className="w-6 h-6" />
                                         ) : (
-                                            <ArrowDownCircle className="w-5 h-5 text-rose-500" />
+                                            <ArrowDownCircle className="w-6 h-6" />
                                         )}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-bold text-white">
+                                        <p className="font-bold text-text-primary">
                                             {tx.transaction_type === 'deposit' ? 'Depósito' : 'Retirada'}
                                         </p>
-                                        <p className="text-[10px] text-slate-500">
+                                        <p className="text-[11px] text-text-muted font-medium">
                                             {formatDate(tx.created_at)}
                                             {tx.note && ` • ${tx.note}`}
                                         </p>
                                     </div>
                                 </div>
-                                <p className={`text-sm font-black ${tx.transaction_type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'
+                                <p className={`text-lg font-bold tracking-tight ${tx.transaction_type === 'deposit' ? 'text-emerald-500' : 'text-rose-500'
                                     }`}>
                                     {tx.transaction_type === 'deposit' ? '+' : '-'}{formatCurrency(tx.amount)}
                                 </p>
@@ -384,11 +389,15 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center">
-            <div className="bg-slate-900 w-full max-w-lg rounded-t-2xl p-6 max-h-[85vh] overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-lg font-black text-white">Novo Cofrinho</h2>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center">
+            <div className="bg-white w-full max-w-lg rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300">
+                <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8"></div>
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h2 className="text-2xl font-bold text-text-primary tracking-tight">Novo Cofrinho</h2>
+                        <p className="text-sm text-text-muted font-medium">Defina sua próxima conquista financeira</p>
+                    </div>
+                    <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -396,7 +405,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                 <div className="space-y-4">
                     {/* Goal Type */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-2">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-3">
                             Tipo de Meta
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -406,12 +415,12 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                                     <button
                                         key={type.id}
                                         onClick={() => setForm({ ...form, goal_type: type.id as SavingsGoal['goal_type'], color: type.color })}
-                                        className={`p-3 rounded flex items-center gap-2 transition-colors ${form.goal_type === type.id
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                                        className={`p-4 rounded-2xl flex items-center gap-2 transition-all group ${form.goal_type === type.id
+                                            ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/20 scale-105'
+                                            : 'bg-slate-50 text-text-secondary hover:bg-slate-100'
                                             }`}
                                     >
-                                        <Icon className="w-4 h-4" />
+                                        <Icon className={`w-5 h-5 ${form.goal_type === type.id ? 'text-white' : 'text-text-muted transition-colors group-hover:text-primary-500'}`} />
                                         <span className="text-xs font-bold">{type.label}</span>
                                     </button>
                                 );
@@ -421,21 +430,21 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
 
                     {/* Name */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-2">
                             Nome do Cofrinho
                         </label>
                         <input
                             type="text"
                             value={form.name}
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            placeholder="Ex: Viagem, Carro novo, Reserva 6 meses..."
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                            placeholder="Ex: Reserva, Viagem, Investimento..."
+                            className="w-full bg-slate-50 border border-border-color rounded-2xl px-5 py-4 text-text-primary placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
                         />
                     </div>
 
                     {/* Target Amount */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-2">
                             Valor da Meta
                         </label>
                         <input
@@ -443,26 +452,26 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                             value={form.target_amount || ''}
                             onChange={(e) => setForm({ ...form, target_amount: parseFloat(e.target.value) || 0 })}
                             placeholder="0,00"
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+                            className="w-full bg-slate-50 border border-border-color rounded-2xl px-5 py-4 text-text-primary placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-bold"
                         />
                     </div>
 
                     {/* Deadline */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-2">
                             Data Limite (Opcional)
                         </label>
                         <input
                             type="date"
                             value={form.deadline}
                             onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white focus:outline-none focus:border-emerald-500"
+                            className="w-full bg-slate-50 border border-border-color rounded-2xl px-5 py-4 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
                         />
                     </div>
 
                     {/* Color */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-2">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-3">
                             Cor
                         </label>
                         <div className="flex gap-2">
@@ -479,23 +488,21 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                     </div>
 
                     {/* Lock Toggle */}
-                    <div className="flex items-center justify-between p-3 bg-slate-800 rounded">
-                        <div className="flex items-center gap-3">
-                            <Lock className="w-5 h-5 text-amber-500" />
+                    <div className="flex items-center justify-between p-5 bg-slate-50 rounded-[28px] border border-border-color">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
+                                <Lock className="w-6 h-6 text-amber-500" />
+                            </div>
                             <div>
-                                <p className="text-sm font-bold text-white">Cofrinho Trancado</p>
-                                <p className="text-[10px] text-slate-500">Impede retiradas até a meta</p>
+                                <p className="font-bold text-text-primary">Cofrinho Trancado</p>
+                                <p className="text-[11px] text-text-muted font-medium">Impede retiradas até a meta</p>
                             </div>
                         </div>
                         <button
                             onClick={() => setForm({ ...form, is_locked: !form.is_locked })}
-                            className={`w-12 h-6 rounded-full transition-colors ${form.is_locked ? 'bg-amber-500' : 'bg-slate-700'
-                                }`}
+                            className={`w-12 h-6 rounded-full transition-all flex items-center px-1 ${form.is_locked ? 'bg-amber-500' : 'bg-slate-200'}`}
                         >
-                            <div
-                                className={`w-5 h-5 bg-white rounded-full transition-transform ml-0.5 ${form.is_locked ? 'translate-x-6' : ''
-                                    }`}
-                            ></div>
+                            <div className={`w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${form.is_locked ? 'translate-x-6' : ''}`}></div>
                         </button>
                     </div>
 
@@ -542,8 +549,8 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                                     <button
                                         onClick={() => setForm({ ...form, auto_deposit_frequency: 'weekly' })}
                                         className={`flex-1 px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${form.auto_deposit_frequency === 'weekly'
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-slate-800 text-slate-400'
+                                            ? 'bg-amber-500 text-white'
+                                            : 'bg-slate-800 text-slate-400'
                                             }`}
                                     >
                                         Semanal
@@ -551,8 +558,8 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                                     <button
                                         onClick={() => setForm({ ...form, auto_deposit_frequency: 'monthly' })}
                                         className={`flex-1 px-3 py-2 rounded text-xs font-bold uppercase transition-colors ${form.auto_deposit_frequency === 'monthly'
-                                                ? 'bg-amber-500 text-white'
-                                                : 'bg-slate-800 text-slate-400'
+                                            ? 'bg-amber-500 text-white'
+                                            : 'bg-slate-800 text-slate-400'
                                             }`}
                                     >
                                         Mensal
@@ -566,7 +573,7 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                     <button
                         onClick={handleSubmit}
                         disabled={saving || !form.name.trim() || form.target_amount <= 0}
-                        className="w-full bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700 disabled:cursor-not-allowed p-4 rounded font-bold text-white transition-colors mt-4"
+                        className="w-full bg-primary-500 hover:bg-primary-600 disabled:bg-slate-100 disabled:text-text-muted disabled:cursor-not-allowed py-5 rounded-2xl font-bold text-white transition-all mt-6 shadow-xl shadow-primary-500/20 active:scale-[0.98] text-lg"
                     >
                         {saving ? 'Criando...' : 'Criar Cofrinho'}
                     </button>
@@ -623,16 +630,17 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-end justify-center">
-            <div className="bg-slate-900 w-full max-w-lg rounded-t-2xl p-6">
-                <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center">
+            <div className="bg-white w-full max-w-lg rounded-t-[40px] p-8 max-h-[90vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-300">
+                <div className="w-12 h-1.5 bg-slate-100 rounded-full mx-auto mb-8"></div>
+                <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h2 className="text-lg font-black text-white">
+                        <h2 className="text-2xl font-bold text-text-primary tracking-tight">
                             {type === 'deposit' ? 'Depositar' : 'Retirar'}
                         </h2>
-                        <p className="text-sm text-slate-500">{goalName}</p>
+                        <p className="text-sm text-text-muted font-medium">{goalName}</p>
                     </div>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white">
+                    <button onClick={onClose} className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-text-muted hover:text-text-primary transition-colors">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -640,7 +648,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                 <div className="space-y-4">
                     {/* Amount */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-2">
                             Valor
                         </label>
                         <input
@@ -648,13 +656,13 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             value={amount || ''}
                             onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
                             placeholder="0,00"
-                            className={`w-full bg-slate-800 border rounded px-3 py-3 text-white placeholder:text-slate-600 focus:outline-none ${type === 'deposit'
-                                    ? 'border-emerald-500/50 focus:border-emerald-500'
-                                    : 'border-rose-500/50 focus:border-rose-500'
+                            className={`w-full bg-slate-50 border rounded-2xl px-5 py-4 text-text-primary placeholder:text-slate-300 focus:outline-none focus:ring-2 transition-all font-bold ${type === 'deposit'
+                                ? 'focus:ring-emerald-500/20 focus:border-emerald-500 border-emerald-100'
+                                : 'focus:ring-rose-500/20 focus:border-rose-500 border-rose-100'
                                 }`}
                         />
                         {type === 'withdrawal' && maxAmount && (
-                            <p className="text-[10px] text-slate-500 mt-1">
+                            <p className="text-[11px] text-text-muted font-medium mt-2 px-1">
                                 Disponível: {maxAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </p>
                         )}
@@ -662,7 +670,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
 
                     {/* Note */}
                     <div>
-                        <label className="text-[10px] text-slate-500 font-bold uppercase block mb-1">
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-2">
                             Observação (Opcional)
                         </label>
                         <input
@@ -670,7 +678,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Ex: Bônus, Economia do mês..."
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-slate-600"
+                            className="w-full bg-slate-50 border border-border-color rounded-2xl px-5 py-4 text-text-primary placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
                         />
                     </div>
 
@@ -678,17 +686,12 @@ const TransactionModal: React.FC<TransactionModalProps> = ({
                     <button
                         onClick={handleSubmit}
                         disabled={saving || amount <= 0 || (type === 'withdrawal' && maxAmount && amount > maxAmount)}
-                        className={`w-full p-4 rounded font-bold text-white transition-colors ${type === 'deposit'
-                                ? 'bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-700'
-                                : 'bg-rose-500 hover:bg-rose-400 disabled:bg-slate-700'
-                            } disabled:cursor-not-allowed`}
+                        className={`w-full py-5 rounded-2xl font-bold text-white transition-all mt-6 shadow-xl active:scale-[0.98] text-lg ${type === 'deposit'
+                            ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20'
+                            : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/20'
+                            } disabled:bg-slate-100 disabled:text-text-muted disabled:shadow-none disabled:cursor-not-allowed`}
                     >
-                        {saving
-                            ? 'Processando...'
-                            : type === 'deposit'
-                                ? 'Confirmar Depósito'
-                                : 'Confirmar Retirada'
-                        }
+                        {saving ? 'Processando...' : `Confirmar ${type === 'deposit' ? 'Depósito' : 'Retirada'}`}
                     </button>
                 </div>
             </div>

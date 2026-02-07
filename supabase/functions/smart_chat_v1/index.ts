@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Definite CORS configuration as requested by USER
 const allowedOrigins = new Set([
@@ -68,28 +68,33 @@ const MEI_EXEMPT_RATES = {
 };
 
 const SYSTEM_PROMPT_LOCKED = `
-Você é o Assistente Financeiro "Vida em Dia Inteligente" (Modo ZapGastos Multi-Modal).
-Seu objetivo é ser um executor rápido, útil e que entende tudo (texto, áudio, imagens).
+Você é o Assistente Financeiro do Vida em Dia (Modo ZapGastos).
 
 PERSONALIDADE:
-- **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão. Respostas de 1-4 linhas.
-- **Executor Real**: Se o usuário informar um gasto, ganho ou mudança, você DEVE chamar a ferramenta antes de confirmar.
-- **Sem Repetição**: Não repita "olá" ou saudações se o contexto for recente.
-- **Categorização Semântica**: Se o usuário disser "coxinha", você sabe que é 'food'. Se disser "coca", é 'food'. Use a lista de categorias fornecida no contexto para mapear corretamente. Nunca use 'other' se puder inferir algo melhor.
+- **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão.
+- **Executor**: Você registra, calcula e mostra. Não explica "como fazer".
+- **Estilo ZapGastos**:
+   ✅ *Almoço* R$ 50,00
+   📂 Alimentação (hoje)
+   📊 Dia: -R$ 120,00 | Mês: -R$ 3.400
 
 REGRAS:
-1. **Action-First**: Execute a ferramenta primeiro. Só retorne o emoji ✅ se a ferramenta retornar sucesso.
-2. **Contexto**: Use as [ÚLTIMAS TAREFAS] para entender referências como "muda o valor do anterior" ou "era 50 na verdade".
-3. **Multi-Modal**:
-   - ÁUDIO: Ouça e extraia despesas/pedidos.
-   - IMAGEM: Se for um cupom/nota fiscal, extraia o valor total, estabelecimento e data. Chame 'add_expense' com esses dados.
-4. **Resumo**: Quando solicitado, mostre o total do dia/mês de forma visual.
+1. **Confirmação de Ação**: Se o usuário pediu pra gastar/pagar, CONFIRME os dados chave.
+2. **Resumo Automático**: Sempre que registrar algo, mostre o impacto (Total do dia ou da Categoria).
+3. **Áudio**: Se receber áudio, transcreva mentalmente e execute. Diga "Ouvi: ..." se estiver incerto.
+4. **IMPORTANTE**: SEMPRE retorne no formato JSON abaixo, mesmo que seja apenas uma conversa ou agradecimento. NÃO use formatação markdown fora do answer_text.
 
-SAUDAÇÃO: {{GREETING_POLICY}} (SKIP: Não diga Oi. NORMAL: Diga Oi, {{USER_NAME}}).
+[COMO AGIR]:
+- **AÇÃO**: SEMPRE chame a ferramenta 'add_expense' se detectar um gasto, mesmo que implícito (ex: "250 cafe"). Retorne o resumo JSON que a ferramenta devolver.
+- **PERGUNTA**: Responda direto com o dado. "Seu saldo é R$ X".
+
+REGRAS FISCAIS (IRPF):
+- Isento 2025: R$ 2.259,20.
+- Isento 2026: R$ 5.000 (efetiva).
 
 FORMATO DE RESPOSTA (JSON):
 {
-  "answer_text": "Sua resposta curta aqui",
+  "answer_text": "Texto formatado com emojis e quebras de linha para WhatsApp",
   "intent_mode": "ACTION | CHAT"
 }
 `;
@@ -97,57 +102,26 @@ FORMATO DE RESPOSTA (JSON):
 const TOOLS_SCHEMA = [
     {
         name: "get_financial_summary",
-        description: "Retorna o saldo e resumo financeiro. Use para 'saldo', 'quanto tenho', 'minha conta'.",
+        description: "Returns a summary of the user's financial status from the app panel: current balance, total income, and total pending expenses. Use this for questions about 'saldo', 'quanto tenho', 'minha conta' (NOT external bank).",
         parameters: { type: "object", properties: {}, required: [] }
     },
     {
         name: "add_expense",
-        description: "OBRIGATÓRIO: Registra uma despesa. SEMPRE use para 'gastei', 'paguei', 'morreu tanto', ou ao extrair dados de CUPOM/NOTA FISCAL em imagem/áudio. Se o usuário falar um valor no áudio, CHAME ESTA FERRAMENTA.",
+        description: "Registers a new expense or transaction. Use when user says 'paid', 'spent', 'bought', 'add expense', etc. ALWAYS try to infer category.",
         parameters: {
             type: "object",
             properties: {
-                amount: { type: "number", description: "Valor total (ex: 12.50). Extraia do áudio/texto." },
-                description: { type: "string", description: "O que foi comprado ou nome do lugar (ex: 'Almoço', 'Mercado Livre'). Extraia do áudio/texto." },
+                amount: { type: "number", description: "Value of the expense (e.g., 50.00)" },
+                description: { type: "string", description: "Description or title (e.g., 'Lunch', 'Uber')" },
                 category: {
                     type: "string",
-                    description: "ID da categoria. Veja a lista [CATEGORIAS DISPONÍVEIS] no contexto. Use IDs como 'food', 'market', 'transport', etc."
+                    enum: ["food", "transport", "market", "health", "home", "leisure", "shopping", "debts", "salary", "other"],
+                    description: "Category ID (default: other)"
                 },
-                date: { type: "string", description: "Data ISO (YYYY-MM-DD). Default: hoje." },
-                is_paid: { type: "boolean", description: "Default: true." }
+                date: { type: "string", description: "Date YYYY-MM-DD (default: today)" },
+                is_paid: { type: "boolean", description: "True if already paid (default: true)" }
             },
             required: ["amount", "description"]
-        }
-    },
-    {
-        name: "edit_last_task",
-        description: "Edita a última tarefa financeira criada hoje. Use para 'era 20 não 30', 'muda a categoria do último', 'corrige o valor'.",
-        parameters: {
-            type: "object",
-            properties: {
-                task_id: { type: "string", description: "O ID da tarefa a ser editada (pegue na lista [ÚLTIMAS TAREFAS] se disponível)." },
-                amount: { type: "number", description: "Novo valor." },
-                description: { type: "string", description: "Novo título/descrição." },
-                category: { type: "string", description: "Nova categoria ID." }
-            },
-            required: ["task_id"]
-        }
-    },
-    {
-        name: "get_daily_summary",
-        description: "Returns a summary of all expenses recorded today.",
-        parameters: { type: "object", properties: {}, required: [] }
-    },
-    {
-        name: "manage_categories",
-        description: "Lista, adiciona ou remove categorias. Use para 'quais categorias eu tenho?', 'adicione a categoria Viagens'.",
-        parameters: {
-            type: "object",
-            properties: {
-                action: { type: "string", enum: ["list", "add", "remove"], description: "Ação a realizar." },
-                category_label: { type: "string", description: "Nome da nova categoria (ex: 'Viagens')." },
-                category_id: { type: "string", description: "ID da categoria para deletar." }
-            },
-            required: ["action"]
         }
     },
     {
@@ -304,142 +278,158 @@ const TOOLS_SCHEMA = [
 ];
 
 
+// --- UTILS ---
+// IDs de categorias globais fixos (NÃO criar novas)
+const VALID_CATEGORY_IDS = [
+    'food', 'home', 'shopping', 'utilities', 'contracts', 'debts',
+    'documents', 'taxes', 'leisure', 'market', 'other', 'salary',
+    'health', 'transport', 'vehicle'
+];
+
+// Heurística de palavras-chave para categorização automática
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+    'market': ['mercado', 'supermercado', 'açougue', 'atacado', 'feira', 'hortifruti', 'padaria', 'mercearia'],
+    'food': ['restaurante', 'lanchonete', 'pizzaria', 'ifood', 'rappi', 'uber eats', 'delivery', 'almoço', 'jantar', 'café', 'lanche', 'hamburguer', 'sushi', 'mcdonald', 'burger king', 'subway', 'starbucks'],
+    'transport': ['uber', 'lyft', '99', 'taxi', 'ônibus', 'metrô', 'bilhete único', 'combustível', 'gasolina', 'etanol', 'posto', 'estacionamento', 'pedágio'],
+    'vehicle': ['ipva', 'detran', 'dpvat', 'seguro auto', 'revisão', 'oficina', 'mecânico', 'pneu', 'óleo', 'lavagem carro'],
+    'health': ['farmácia', 'drogaria', 'médico', 'consulta', 'exame', 'hospital', 'clínica', 'dentista', 'psicólogo', 'plano saúde', 'remédio'],
+    'home': ['aluguel', 'condomínio', 'iptu', 'reforma', 'manutenção casa', 'móveis', 'eletrodoméstico'],
+    'utilities': ['luz', 'energia', 'água', 'gás', 'internet', 'telefone', 'celular', 'streaming', 'netflix', 'spotify', 'amazon prime'],
+    'shopping': ['roupa', 'calçado', 'loja', 'renner', 'c&a', 'riachuelo', 'zara', 'hm', 'shein', 'shopee', 'aliexpress', 'amazon', 'magazina luiza', 'americanas'],
+    'leisure': ['cinema', 'show', 'teatro', 'parque', 'viagem', 'hotel', 'airbnb', 'ingresso', 'bar', 'balada', 'festa'],
+    'debts': ['cartão', 'fatura', 'empréstimo', 'financiamento', 'parcela', 'juros', 'dívida'],
+    'taxes': ['imposto', 'irpf', 'inss', 'receita federal', 'darf'],
+    'contracts': ['seguro', 'assinatura', 'mensalidade', 'academia', 'clube'],
+    'documents': ['cartório', 'documento', 'certidão', 'contrato', 'reconhecimento firma']
+};
+
+async function resolveCategoryId(
+    supabase: any,
+    { categoryName, userId, householdId, description }: {
+        categoryName: string | null;
+        userId?: string;
+        householdId?: string;
+        description?: string;
+    }
+): Promise<{ categoryId: string; confidence: number }> {
+    // Normaliza para slug
+    const normalizeSlug = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
+
+    // 1) Se já é um ID válido, usa direto (confidence 100)
+    if (categoryName) {
+        const slug = normalizeSlug(categoryName);
+        if (VALID_CATEGORY_IDS.includes(slug)) {
+            console.log(`[resolveCategoryId] Direct ID match: ${slug}`);
+            return { categoryId: slug, confidence: 100 };
+        }
+
+        // 2) Busca por label na tabela categories
+        const { data: foundByLabel } = await supabase
+            .from("categories")
+            .select("id")
+            .ilike("label", categoryName)
+            .limit(1);
+
+        if (foundByLabel?.[0]?.id && VALID_CATEGORY_IDS.includes(foundByLabel[0].id)) {
+            console.log(`[resolveCategoryId] Found by label: ${categoryName} -> ${foundByLabel[0].id}`);
+            return { categoryId: foundByLabel[0].id, confidence: 95 };
+        }
+    }
+
+    // 3) Busca em category_aliases do usuário
+    const textToMatch = (description || categoryName || "").toLowerCase();
+    if (userId && textToMatch) {
+        const { data: aliasMatch } = await supabase
+            .from("category_aliases")
+            .select("category_id, confidence")
+            .eq("owner_user_id", userId)
+            .ilike("alias", `%${textToMatch.substring(0, 50)}%`)
+            .order("confidence", { ascending: false })
+            .limit(1);
+
+        if (aliasMatch?.[0]?.category_id && VALID_CATEGORY_IDS.includes(aliasMatch[0].category_id)) {
+            console.log(`[resolveCategoryId] Alias match: ${textToMatch} -> ${aliasMatch[0].category_id}`);
+            return { categoryId: aliasMatch[0].category_id, confidence: aliasMatch[0].confidence };
+        }
+    }
+
+    // 4) Heurística de palavras-chave
+    if (textToMatch) {
+        for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+            for (const kw of keywords) {
+                if (textToMatch.includes(kw)) {
+                    console.log(`[resolveCategoryId] Keyword match: "${kw}" -> ${catId}`);
+                    return { categoryId: catId, confidence: 80 };
+                }
+            }
+        }
+    }
+
+    // 5) Fallback para "other" (baixa confiança)
+    console.log(`[resolveCategoryId] Fallback to other: ${categoryName || textToMatch}`);
+    return { categoryId: "other", confidence: 50 };
+}
+
+
 // --- TOOL HANDLERS ---
 async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string, user_id: string, storage_path?: string) {
-    console.log(`[smart_chat_v1] [ACTION] tool=${toolName} user=${user_id}`);
-
     if (toolName === "get_financial_summary") {
         const { data, error } = await supabase.rpc('get_full_financial_report', { target_household_id: household_id });
         if (error) throw new Error(`Error getting summary: ${error.message}`);
         return data;
     }
 
-    if (toolName === "get_daily_summary") {
-        const today = new Date().toISOString().split('T')[0];
-        const { data: tasks, error } = await supabase
-            .from('tasks')
-            .select('title, amount, category_id, entry_type')
-            .eq('household_id', household_id)
-            .eq('purchase_date', today)
-            .eq('status', 'completed');
-
-        if (error) throw new Error(`Error getting daily summary: ${error.message}`);
-
-        const total = (tasks || []).reduce((acc: number, t: any) => acc + Number(t.amount), 0);
-        return {
-            date: today,
-            total,
-            items: tasks || []
-        };
-    }
-
-    if (toolName === "edit_last_task") {
-        const { task_id, amount, description, category } = args;
-
-        let targetId = task_id;
-        if (!targetId) {
-            // Find last auto-generated task for this user today
-            const today = new Date().toISOString().split('T')[0];
-            const { data: lastTask } = await supabase
-                .from('tasks')
-                .select('id')
-                .eq('user_id', user_id)
-                .eq('auto_generated', true)
-                .eq('purchase_date', today)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (!lastTask) return "Não encontrei nenhuma tarefa recente para editar.";
-            targetId = lastTask.id;
-        }
-
-        const updates: any = {};
-        if (amount !== undefined) updates.amount = amount;
-        if (description) updates.title = description;
-        if (category) updates.category_id = category;
-        updates.updated_at = new Date().toISOString();
-
-        const { data, error } = await supabase
-            .from('tasks')
-            .update(updates)
-            .eq('id', targetId)
-            .select()
-            .single();
-
-        if (error) return `Erro ao editar: ${error.message}`;
-        console.log(`[smart_chat_v1] [DB] update OK task_id=${targetId}`);
-
-        return { success: true, message: "Tarefa editada com sucesso!", data };
-    }
-
-    if (toolName === "manage_categories") {
-        const { action, category_label, category_id } = args;
-
-        if (action === "list") {
-            const { data } = await supabase.from('categories').select('id, label').order('label');
-            return data;
-        }
-
-        if (action === "add") {
-            if (!category_label) return "Por favor, informe o nome da categoria.";
-            // Generate simple ID
-            const id = category_label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-            const { data, error } = await supabase.from('categories').insert({
-                id,
-                label: category_label,
-                icon: 'MoreHorizontal',
-                color: '#64748b'
-            }).select().single();
-            if (error) return `Erro ao adicionar: ${error.message}`;
-            return { success: true, message: `Categoria '${category_label}' adicionada!`, data };
-        }
-
-        if (action === "remove") {
-            if (!category_id) return "Por favor, informe o ID da categoria para remover.";
-            const { error } = await supabase.from('categories').delete().eq('id', category_id);
-            if (error) return `Erro ao remover: ${error.message}`;
-            return { success: true, message: "Categoria removida com sucesso!" };
-        }
-    }
-
     if (toolName === "add_expense" || toolName === "add_income") {
-        console.log(`[smart_chat_v1] [ACTION] Adding ${toolName}...`);
+        console.log(`[handleToolCall] ${toolName} called with args:`, JSON.stringify(args));
         const title = args.title || args.description || (toolName === 'add_expense' ? 'Despesa' : 'Renda');
         const rawAmount = args.amount;
+        console.log(`[handleToolCall] rawAmount type: ${typeof rawAmount}, value: ${rawAmount}`);
         const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount.replace('R$', '').replace(',', '.').trim()) : rawAmount;
+        console.log(`[handleToolCall] parsed amount: ${amount}`);
 
-        const category_id = args.category || 'other';
+        const raw_category = args.category || 'other';
+        const { categoryId: category_id, confidence: categoryConfidence } = await resolveCategoryId(supabase, {
+            categoryName: raw_category,
+            userId: user_id,
+            householdId: household_id,
+            description: title
+        });
+        console.log(`[handleToolCall] category resolved: ${raw_category} -> ${category_id} (confidence: ${categoryConfidence})`);
+
         const date = args.date || new Date().toISOString().split('T')[0];
-
-        const isExpense = toolName === 'add_expense'; // vs add_income (future)
+        const isExpense = toolName === 'add_expense';
 
         // Ensure amount is valid
-        if (isNaN(amount) || amount <= 0) return "Valor inválido. Tente novamente.";
+        if (isNaN(amount) || amount <= 0) {
+            console.error(`[handleToolCall] Invalid amount: isNaN=${isNaN(amount)}, amount=${amount}`);
+            return "Valor inválido. Tente novamente.";
+        }
 
-        const { data, error } = await supabase.from('tasks').insert({
-            user_id: user_id,
-            owner_user_id: user_id,
-            household_id: household_id,
-            title: title,
-            amount: amount,
-            category_id: category_id,
-            entry_type: isExpense ? 'expense' : 'income',
-            status: 'completed',
-            is_recurring: false,
-            purchase_date: date,
-            due_date: date,
-            created_at: new Date().toISOString(),
-            payment_method: 'pix',
-            description: `WhatsApp: ${title}`,
-            auto_generated: true
-        }).select().single();
+        console.log(`[handleToolCall] Inserting into tasks: user_id=${user_id}, household_id=${household_id}, title=${title}, amount=${amount}, category_id=${category_id}`);
+
+
+        const { data: task, error } = await supabase
+            .from('tasks')
+            .insert({
+                user_id: user_id,
+                owner_user_id: user_id,
+                household_id,
+                title: title,
+                amount: amount,
+                category_id: category_id,
+                entry_type: 'expense',
+                status: 'completed',
+                purchase_date: date,
+                auto_generated: true,
+                description: args.description || title
+            })
+            .select('id, title, amount, category_id')
+            .single();
 
         if (error) {
-            console.error("[smart_chat_v1] [DB] insert FAILED:", error);
+            console.error("Add transaction error:", error);
             return `Erro ao salvar: ${error.message}`;
         }
-        console.log(`[smart_chat_v1] [DB] insert OK task_id=${data.id}`);
 
         // Get updated daily total for stats if it's today
         let dailyTotal = amount;
@@ -451,7 +441,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         return {
             success: true,
             message: "Registro salvo com sucesso!",
-            data: data,
+            data: task,
             daily_total: dailyTotal
         };
     }
@@ -461,12 +451,12 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         weekStart.setDate(weekStart.getDate() - 7);
         const startStr = weekStart.toISOString().split('T')[0];
 
-        // Fetch immediate expenses
+        // Fetch expense entries
         const { data: expenses } = await supabase
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .in('entry_type', ['immediate', 'expense'])
+            .eq('entry_type', 'expense')
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos nos últimos 7 dias.";
@@ -494,7 +484,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .eq('entry_type', 'immediate')
+            .eq('entry_type', 'expense')
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos neste mês.";
@@ -964,11 +954,13 @@ function classifyIntentByKeywords(text: string): AppIntent {
     const t = text.toLowerCase();
 
     // 1. ACTION INTENTS (Highest Priority - Doer Mode)
-    // Audio check (must be first)
-    if (t.includes("[áudio]")) return 'ADD_EXPENSE';
-
     // ADD_EXPENSE: "gastei 50", "almoço 20 reais", "nova despesa"
-    if (t.match(/gastei|comprei|paguei|nova despesa|adicionar despesa|lançar|insere|compra de|uber|mercado|padaria|almoço|jantar/)) {
+    if (t.match(/gastei|comprei|paguei|nova despesa|adicionar despesa|lançar|insere|compra de|uber|mercado|padaria|almoço|jantar|café|cafe|lanche|combustível|posto|farmácia|pix|reais|real/)) {
+        return 'ADD_EXPENSE';
+    }
+
+    // Heurística de valor: se o texto começar com número seguido de texto (ex: "250 cafe")
+    if (t.match(/^\d+([\.,]\d+)?\s+[a-z]+/)) {
         return 'ADD_EXPENSE';
     }
 
@@ -1028,7 +1020,7 @@ async function summarizeAndSaveMemory(supabase: any, user_id: string, history: a
 
 // --- HELPER: CONTEXT RETRIEVAL ---
 async function getConversationContext(supabase: any, profile_id: string) {
-    if (!profile_id) return { history: [], summary: null, lastOutbound: null, recentTasks: [] };
+    if (!profile_id) return { history: [], summary: null, lastOutbound: null };
 
     // 1. Fetch Chat Memory (Long Term)
     const { data: memory } = await supabase
@@ -1044,15 +1036,6 @@ async function getConversationContext(supabase: any, profile_id: string) {
         .eq('profile_id', profile_id)
         .order('created_at', { ascending: false })
         .limit(15);
-
-    // 3. Fetch Recent Tasks (Financial Context)
-    // We fetch the last 10 tasks to help Gemini understand what was recently added
-    const { data: recentTasks } = await supabase
-        .from('tasks')
-        .select('id, title, amount, category_id, entry_type, created_at')
-        .eq('user_id', profile_id)
-        .order('created_at', { ascending: false })
-        .limit(10);
 
     // Process history
     let history = [];
@@ -1075,8 +1058,7 @@ async function getConversationContext(supabase: any, profile_id: string) {
     return {
         history,
         summary: memory?.summary_text || null,
-        lastOutbound,
-        recentTasks: recentTasks || []
+        lastOutbound
     };
 }
 
@@ -1184,12 +1166,43 @@ Deno.serve(async (req) => {
         }
 
         // Domain + inputs
-        const { domain = 'general', image, images, image_url, storage_path, household_id, message_type, audio_base64, audio_mime_type } = body;
+        const { domain = 'general', image, images, image_url, storage_path, household_id, message_type, audio_base64, audio_mime_type, image_mime_type } = body;
         // NOTE: We ignore 'history' from body because we fetch authoritative history from DB now.
 
         const question = (body.question ?? body.message_text ?? body.message ?? body.text ?? body.input ?? body.prompt ?? body.user_message ?? "").toString().trim();
 
         const hasAudio = !!audio_base64;
+
+        // ========== COMANDO RESUMO ON/OFF ==========
+        const questionUpper = question.toUpperCase().trim();
+        if (questionUpper === "RESUMO ON" || questionUpper === "ATIVAR RESUMO") {
+            await supabaseAdmin
+                .from("user_notification_settings")
+                .upsert({
+                    user_id: user_id,
+                    whatsapp_daily_summary: true,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: "user_id" });
+
+            return new Response(JSON.stringify({
+                answer_text: "✅ Resumo diário ativado! Você receberá um resumo das suas despesas às 20:30. Digite RESUMO OFF para desativar."
+            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+
+        if (questionUpper === "RESUMO OFF" || questionUpper === "DESATIVAR RESUMO" || questionUpper === "PARAR") {
+            await supabaseAdmin
+                .from("user_notification_settings")
+                .upsert({
+                    user_id: user_id,
+                    whatsapp_daily_summary: false,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: "user_id" });
+
+            return new Response(JSON.stringify({
+                answer_text: "🔕 Resumo diário desativado. Digite RESUMO ON para reativar."
+            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        // ========== FIM COMANDO RESUMO ==========
 
         if (!question && !image && (!images || images.length === 0) && !storage_path && !image_url && !hasAudio) throw new Error("Envie uma mensagem, imagem ou áudio.");
 
@@ -1226,34 +1239,41 @@ Deno.serve(async (req) => {
             finalPrompt += `\n[CONTEXTO DE MEMÓRIA]:\n${context.summary}\n`;
         }
 
-        // --- INJECT RECENT DATA ---
-        if (context.recentTasks && context.recentTasks.length > 0) {
-            const tasksText = context.recentTasks.map((t: any) =>
-                `- ID: ${t.id} | ${t.title} | R$ ${t.amount} | Cat: ${t.category_id} | data: ${t.created_at}`
-            ).join('\n');
-            finalPrompt += `\n[ÚLTIMAS TAREFAS/GASTOS REGISTRADOS]:\n${tasksText}\n(Use isso para editar ou deletar itens se o usuário pedir 'muda o anterior', 'não era 20', etc.)\n`;
-        }
-
-        // Fetch categories for semantic mapping
-        const { data: catList } = await supabaseAdmin.from('categories').select('id, label').order('label');
-        if (catList && catList.length > 0) {
-            const categoriesText = catList.map((c: any) => `- ${c.id}: ${c.label}`).join('\n');
-            finalPrompt += `\n[CATEGORIAS DISPONÍVEIS NO APP]:\n${categoriesText}\n(Sempre use um ID da lista acima. Se o item for 'coxinha', use 'food', etc.)\n`;
-        }
-
         finalPrompt += "\n\n";
 
         if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
 
         const hasImages = !!(image || images || image_url || storage_path);
-        if (hasImages) finalPrompt += "\n[IMAGEM ANEXADA - STORAGE PATH: " + (storage_path || 'URL') + "]";
+        const hasImageBase64 = !!image; // Imagem enviada diretamente como base64 (do WhatsApp)
+
+        if (hasImages) {
+            console.log("[smart_chat_v1] Image attached. hasImageBase64:", hasImageBase64);
+            finalPrompt += `
+[IMAGEM DO USUÁRIO ANEXADA]
+INSTRUÇÃO CRÍTICA PARA IMAGENS:
+1. Analise a imagem cuidadosamente.
+2. Se for um COMPROVANTE DE PAGAMENTO, RECIBO, NOTA FISCAL ou documento financeiro:
+   - Extraia o VALOR (amount) do pagamento/compra
+   - Extraia a DESCRIÇÃO do que foi pago (description) - nome do estabelecimento ou serviço
+   - Infira a CATEGORIA apropriada (category): food, transport, market, health, home, leisure, shopping, debts, other
+   - Chame OBRIGATORIAMENTE a ferramenta 'add_expense' para registrar a despesa
+   - NÃO pergunte confirmação - registre diretamente e confirme ao usuário
+3. Se NÃO for um comprovante financeiro, descreva o que você vê na imagem normalmente.
+4. Priorize extrair valores em R$ (reais brasileiros).
+`;
+        }
 
         if (hasAudio) {
             console.log("[smart_chat_v1] Audio attached.");
-            finalPrompt += "\n[ALERTA CRÍTICO]: O usuário enviou um ÁUDIO. Sua tarefa é OUVIR o áudio e AGIR.\n" +
-                "1. Se o áudio descrever um gasto (ex: 'Paguei 50'), você DEVE OBRIGATORIAMENTE chamar a ferramenta 'add_expense'.\n" +
-                "2. Você NUNCA deve retornar o emoji '✅' sem ter chamado a ferramenta de sucesso primeiro.\n" +
-                "3. NÃO responda apenas 'Recebi seu áudio'. Se houver um gasto nele, registre-o.";
+            finalPrompt += `
+[ÁUDIO DO USUÁRIO ANEXADO]
+INSTRUÇÃO CRÍTICA PARA ÁUDIO:
+1. Transcreva o áudio internamente.
+2. Se o usuário mencionar qualquer gasto, compra, pagamento ou despesa no áudio, você DEVE OBRIGATORIAMENTE usar a ferramenta 'add_expense' para registrar.
+3. Extraia: valor (amount), descrição (description) e categoria (category) do que foi dito.
+4. NÃO pergunte confirmação - registre diretamente e depois confirme ao usuário.
+5. Exemplo: se o usuário disser "gastei 50 no mercado", chame add_expense com amount=50, description="Mercado", category="market".
+`;
         }
 
         // --- SPRINT 2: TRIGGER ENGINE ---
@@ -1283,83 +1303,73 @@ Deno.serve(async (req) => {
 
             if (!title) title = "Despesa";
 
-            // SPECIAL CASE: If it's audio, the 'question' is just a hint. 
-            // If heuristic fails (amount=0), we MUST fall through to Gemini to hear the actual audio.
-            if (amount === 0 && hasAudio) {
-                console.log("[smart_chat_v1] Audio detected and no heuristic amount found. Falling through to Gemini...");
-            } else {
+            // category heuristics
+            let categoryNameRaw: string = "Outros";
+            if (lower.match(/mercado|supermercado|compras|padaria|açougue/)) categoryNameRaw = "Mercado";
+            else if (lower.match(/uber|99|taxi|gasolina|combust(í|i)vel|posto|transporte/)) categoryNameRaw = "Transporte";
+            else if (lower.match(/aluguel|condom[ií]nio/)) categoryNameRaw = "Moradia";
+            else if (lower.match(/energia|luz|agua|água|internet|telefone|conta/)) categoryNameRaw = "Contas";
+            else if (lower.match(/farm[aá]cia|rem[eé]dio|sa[uú]de/)) categoryNameRaw = "Saúde";
+            else if (lower.match(/roupa|renner|c&a|shopping|loja/)) categoryNameRaw = "Compras";
 
-                // category heuristics
-                let category_id: string = "other";
-                if (lower.match(/mercado|supermercado|compras|padaria|açougue/)) category_id = "market";
-                else if (lower.match(/uber|99|taxi|gasolina|combust(í|i)vel|posto|transporte/)) category_id = "transport";
-                else if (lower.match(/aluguel|condom[ií]nio/)) category_id = "home";
-                else if (lower.match(/energia|luz|agua|água|internet|telefone|conta/)) category_id = "utilities";
-                else if (lower.match(/farm[aá]cia|rem[eé]dio|sa[uú]de/)) category_id = "health";
-                else if (lower.match(/roupa|renner|c&a|shopping|loja/)) category_id = "shopping";
+            // category resolution
+            const { categoryId: category_id, confidence: categoryConfidence } = await resolveCategoryId(supabaseAdmin, {
+                categoryName: categoryNameRaw,
+                userId: user_id,
+                householdId: targetHouseholdId,
+                description: title
+            });
 
-                // Normalize title casing (simple)
-                title = title.charAt(0).toUpperCase() + title.slice(1);
+            // Normalize title casing (simple)
+            title = title.charAt(0).toUpperCase() + title.slice(1);
 
-                const today = new Date().toISOString().slice(0, 10);
+            const today = new Date().toISOString().slice(0, 10);
 
-                const row: any = {
-                    user_id: user_id!,
-                    owner_user_id: user_id!,
-                    household_id: targetHouseholdId,
-                    title,
-                    description: raw,
-                    amount,
-                    category_id,
-                    entry_type: "expense",
-                    status: "completed",
-                    purchase_date: today,
-                    auto_generated: true,
-                    is_recurring: false,
-                    confidence_score: 90,
-                };
+            const row: any = {
+                user_id: user_id!,
+                owner_user_id: user_id!,
+                household_id: targetHouseholdId,
+                title,
+                description: raw,
+                amount,
+                category_id,
+                entry_type: "expense",
+                status: "completed",
+                purchase_date: today,
+                auto_generated: true,
+                is_recurring: false,
+                confidence_score: categoryConfidence,
+            };
 
-                console.log("[smart_chat_v1] [DB] inserting expense into tasks:", row);
+            console.log("[smart_chat_v1] [DB] inserting expense into tasks:", row);
 
-                const { data: task, error: insErr } = await supabaseAdmin
-                    .from("tasks")
-                    .insert(row)
-                    .select("id, title, amount, category_id, entry_type, status, purchase_date, household_id")
-                    .single();
+            const { data: task, error: insErr } = await supabaseAdmin
+                .from("tasks")
+                .insert(row)
+                .select("id, title, amount, category_id, entry_type, status, purchase_date, household_id")
+                .single();
 
-                if (insErr) {
-                    console.error("[smart_chat_v1] [DB] tasks insert failed:", insErr);
-                    return new Response(JSON.stringify({
-                        ok: false,
-                        intent_mode: "ACTION",
-                        error: "task_insert_failed",
-                        answer_text: "Não consegui salvar essa despesa no app. Pode tentar novamente?",
-                    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-                }
-
-                console.log("[smart_chat_v1] [DB] tasks insert OK. task_id:", task.id);
-
-                const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-                const catLabels: Record<string, string> = {
-                    market: "Mercado",
-                    food: "Alimentação",
-                    transport: "Transporte",
-                    home: "Moradia",
-                    utilities: "Contas",
-                    health: "Saúde",
-                    shopping: "Compras",
-                    other: "Outros"
-                };
-                const displayCat = catLabels[task.category_id] || task.category_id || "Outros";
-
+            if (insErr) {
+                console.error("[smart_chat_v1] [DB] tasks insert failed:", insErr);
                 return new Response(JSON.stringify({
-                    ok: true,
+                    ok: false,
                     intent_mode: "ACTION",
-                    task_id: task.id,
-                    answer_text: `✅ *${task.title}* ${brl.format(Number(task.amount))}\n📂 ${displayCat} (hoje)`,
-                    is_cached: false,
+                    error: "task_insert_failed",
+                    answer_text: "Não consegui salvar essa despesa no app. Pode tentar novamente?",
                 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
+
+            console.log("[smart_chat_v1] [DB] tasks insert OK. task_id:", task.id);
+
+            const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+            return new Response(JSON.stringify({
+                ok: true,
+                intent_mode: "ACTION",
+                task_id: task.id,
+                answer_text: `✅ *${task.title}* ${brl.format(Number(task.amount))}\n📂 ${task.category_id ?? "Outros"} (hoje)\n🆔 ${task.id}`,
+                is_cached: false,
+            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
 
 
@@ -1530,6 +1540,7 @@ Apresente de forma clara. Se houver atrasadas, destaque com urgência.
                     .from('tasks')
                     .select('category_id, amount')
                     .eq('household_id', targetId)
+                    .eq('entry_type', 'expense')
                     .eq('status', 'completed')
                     .gt('amount', 0)
                     .gte('due_date', startDate);
@@ -1725,12 +1736,13 @@ VOCÊ DEVE IMEDIATAMENTE:
             });
         }
 
-        const hasImage = !!body.image;
-        if (hasImage) {
+        // Adicionar imagem ao request (do WhatsApp ou URL)
+        if (hasImageBase64 && image) {
+            console.log("[smart_chat_v1] Adding image inlineData to request");
             userParts.push({
                 inlineData: {
-                    mimeType: body.image_mime_type || "image/jpeg",
-                    data: body.image
+                    mimeType: image_mime_type || "image/jpeg",
+                    data: image
                 }
             });
         }
@@ -1748,15 +1760,23 @@ VOCÊ DEVE IMEDIATAMENTE:
 
         console.log(`[smart_chat_v1] Step 1: Calling Gemini...`);
 
+        // Configuração de ferramentas: forçar chamada quando há áudio OU imagem
+        const shouldForceToolCall = hasAudio || hasImageBase64;
+        const toolCallingMode = shouldForceToolCall ? "ANY" : "AUTO";
+        console.log(`[smart_chat_v1] Tool calling mode: ${toolCallingMode} (hasAudio: ${hasAudio}, hasImageBase64: ${hasImageBase64})`);
+
         const firstResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: chatContents,
                 tools: [{ function_declarations: TOOLS_SCHEMA }],
-                tool_config: { function_calling_config: { mode: "AUTO" } },
-                generationConfig: {
-                    response_mime_type: "application/json"
+                tool_config: {
+                    function_calling_config: {
+                        mode: toolCallingMode,
+                        // Se for áudio ou imagem, permitir apenas add_expense para garantir registro
+                        ...(shouldForceToolCall && { allowed_function_names: ["add_expense"] })
+                    }
                 }
             })
         });
@@ -1809,13 +1829,6 @@ VOCÊ DEVE IMEDIATAMENTE:
             // No tools used, standard text response
             const textPart = candidate?.content?.parts?.find((p: any) => p.text);
             finalContent = textPart ? textPart.text : (candidate?.finishReason ? `[Erro: ${candidate.finishReason}]` : "Não entendi sua mensagem ou o modelo não retornou texto.");
-
-            // SECURITY: If Gemini tries to confirm an action in text without tool call, flag it.
-            if (finalContent.includes("✅") && !functionCalls?.length) {
-                console.warn("[smart_chat_v1] VETO: Gemini tried to simulate a confirmation without a tool call. Refusing response.");
-                finalContent = "Desculpe, ouvi seu áudio mas não consegui registrar o gasto. Pode repetir o valor e o que foi comprado?";
-                intentMode = "CHAT";
-            }
         }
 
         // --- CLEAN UP RESPONSE ---
@@ -1831,16 +1844,34 @@ VOCÊ DEVE IMEDIATAMENTE:
 
         let geminiOutput;
         try {
-            // Clean markdown blocks if present
-            // Improved JSON extraction: Find the first outer {} block
-            const jsonMatch = finalContent.match(/\{[\s\S]*\}/);
-            const cleanJson = jsonMatch ? jsonMatch[0] : finalContent.replace(/```json/g, '').replace(/```/g, '').trim();
-            geminiOutput = JSON.parse(cleanJson);
+            // Se já for um objeto JSON (em alguns ambientes o Gemini retorna parseado)
+            if (typeof finalContent === 'object') {
+                geminiOutput = finalContent;
+            } else {
+                // Tenta extrair JSON de markdown ```json ... ```
+                let cleanJson = finalContent;
+                const jsonBlockMatch = finalContent.match(/```json\s*([\s\S]*?)\s*```/);
+                if (jsonBlockMatch) {
+                    cleanJson = jsonBlockMatch[1];
+                } else {
+                    // Tenta encontrar o primeiro { e o último }
+                    const firstBrace = finalContent.indexOf('{');
+                    const lastBrace = finalContent.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1) {
+                        cleanJson = finalContent.substring(firstBrace, lastBrace + 1);
+                    }
+                }
+                geminiOutput = JSON.parse(cleanJson);
+            }
         } catch (e) {
-            console.warn("[smart_chat_v1] Failed to parse strict JSON, wrapping raw text. Content:", finalContent.substring(0, 50) + "...");
+            console.warn("[smart_chat_v1] Failed to parse strict JSON, wrapping raw text. Error:", e.message);
+            // Heurística: se o texto contém intent_mode ACTION, mas falhou o JSON, tenta limpar
+            let mode = intentMode;
+            if (finalContent.includes("intent_mode") && finalContent.includes("ACTION")) mode = "ACTION";
+
             geminiOutput = {
                 answer_text: finalContent,
-                intent_mode: intentMode,
+                intent_mode: mode,
                 pending_action: null,
                 key_facts: [],
                 answer_json: { domain: domain } // Legacy compat

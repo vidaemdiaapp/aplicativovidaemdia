@@ -2,177 +2,109 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
-    "Access-Control-Allow-Origin": "*", // Em produção, mude para seu domínio
-    "Access-Control-Allow-Credentials": "false", // Com * tem que ser false. Se usar domínio específico, true.
-    "Access-Control-Allow-Headers": "authorization, x-client-info, x-custom-auth, apikey, content-type, accept",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, x-custom-auth, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 /**
  * Open Finance Connect Start
- * Inicia o fluxo de conexão bancária via Belvo
  * 
- * POST /openfinance_connect_start
- * Auth: JWT do usuário
- * Response: { link_id, connect_url }
+ * Versão SPRINT-V15:
+ * - Melhor tratamento para Erros 5xx da Belvo (Infraestrutura/Gateway).
+ * - Payload refinado com Basic Auth.
  */
 Deno.serve(async (req) => {
-    // DEBUG LOG: Request received
-    console.log("openfinance_connect_start: request received", {
-        version: "DEBUG-V4-BELVO-WIDGET-TOKEN",
-        method: req.method,
-        url: req.url,
-        hasAuth: !!req.headers.get("authorization"),
-        authPrefix: req.headers.get("authorization")?.slice(0, 20) ?? null,
-    });
-
-    // Handle CORS preflight
-    if (req.method === "OPTIONS") {
-        return new Response("ok", { status: 200, headers: corsHeaders });
-    }
+    if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
 
     try {
-        // 1. Validate JWT (robusto)
-        const rawAuth =
-            req.headers.get("authorization") ??
-            req.headers.get("Authorization") ??
-            req.headers.get("x-custom-auth");
+        const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization");
+        if (!authHeader) throw new Error("Missing authorization header");
 
-        if (!rawAuth) {
-            console.error("openfinance_connect_start: error - Missing authorization header");
-            return new Response(
-                JSON.stringify({ error: "Missing authorization header" }),
-                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-        }
-
+        const jwt = authHeader.replace(/^Bearer\s+/i, "");
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
         const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-        // Normaliza o Bearer
-        const authHeader = rawAuth.startsWith("Bearer ") ? rawAuth : `Bearer ${rawAuth}`;
-        const jwt = authHeader.slice("Bearer ".length);
-
-        // Verifica formato JWT antes de chamar
-        if (!jwt.includes(".")) {
-            console.error("Invalid JWT format (no dots)");
-            return new Response(JSON.stringify({ error: "Invalid JWT format" }), {
-                status: 401,
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-        }
-
-        // Chama GoTrue diretamente
+        // 1. Auth Supabase
         const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-                apikey: supabaseAnonKey,
-            },
+            headers: { Authorization: `Bearer ${jwt}`, apikey: supabaseAnonKey },
         });
-
-        if (!userRes.ok) {
-            const txt = await userRes.text();
-            console.error("auth/v1/user failed:", userRes.status, txt);
-            return new Response(
-                JSON.stringify({ error: "Unauthorized", details: txt }),
-                { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-        }
-
+        if (!userRes.ok) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
         const user = await userRes.json();
-        console.log(`User ${user.id} initiating Open Finance connection`);
 
-        // 2. Create pending link in DB
+        // 2. Criar Link ID no Banco
         const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
         const { data: link, error: insertError } = await supabaseAdmin
             .from("openfinance_links")
-            .insert({
-                user_id: user.id,
-                status: "pending",
-                provider: "belvo"
-            })
-            .select()
-            .single();
+            .insert({ user_id: user.id, status: "pending", provider: "belvo" })
+            .select().single();
+        if (insertError) throw new Error(`DB Error: ${insertError.message}`);
 
-        if (insertError) {
-            console.error("Insert error:", insertError);
-            throw new Error(`Failed to create link: ${insertError.message}`);
-        }
-
-        console.log(`Created link ${link.id} for user ${user.id}`);
-
-        // 3. Get Belvo credentials
+        // 3. Belvo API
         const belvoSecretId = Deno.env.get("BELVO_SECRET_ID");
         const belvoSecretPassword = Deno.env.get("BELVO_SECRET_PASSWORD");
-        const belvoBaseUrl = Deno.env.get("BELVO_BASE_URL") || "https://sandbox.belvo.com";
+        const belvoBaseUrl = (Deno.env.get("BELVO_BASE_URL") || "https://sandbox.belvo.com").replace(/\/+$/, "");
+        const basic = btoa(`${belvoSecretId}:${belvoSecretPassword}`);
 
-        if (!belvoSecretId || !belvoSecretPassword) {
-            throw new Error("Belvo credentials not configured");
-        }
+        const tokenPayload = {
+            id: belvoSecretId,
+            password: belvoSecretPassword,
+            scopes: "read_institutions,read_links,write_links,read_accounts,read_transactions",
+            openfinance_feature: "consent_link_creation"
+        };
 
-        // 4. Get Belvo Widget Access Token (OFDA spec)
-        // Endpoint correto: /api/widget/token/
-        const widgetTokenUrl = `${belvoBaseUrl}/api/widget/token/`;
-
-        // Basic Auth para o request do token
-        const basicAuth = btoa(`${belvoSecretId}:${belvoSecretPassword}`);
-
-        console.log("Requesting Belvo Widget Token:", widgetTokenUrl);
-
-        const tokenResponse = await fetch(widgetTokenUrl, {
+        console.log("Requesting Belvo SPRINT-V15...");
+        const res = await fetch(`${belvoBaseUrl}/api/token/`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Basic ${basicAuth}`,
+                "Authorization": `Basic ${basic}`,
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                external_id: link.id,
-                locale: "pt",
-                country_codes: ["BR"],
-                fetch_resources: ["ACCOUNTS", "TRANSACTIONS"],
-                scopes: [
-                    "read_institutions",
-                    "write_links",
-                    "read_links",
-                    "read_accounts",
-                    "read_transactions",
-                    // Adicione outros scopes se necessário para OFDA, mas este é um bom set inicial
-                ],
-            }),
+            body: JSON.stringify(tokenPayload),
         });
 
-        if (!tokenResponse.ok) {
-            const errorText = await tokenResponse.text();
-            console.error("Belvo token failed:", {
-                status: tokenResponse.status,
-                body: errorText,
-            });
-            throw new Error(`Belvo Token Error: ${errorText}`);
+        if (!res.ok) {
+            const rawError = await res.text();
+            console.error(`Belvo Error SPRINT-V15 [${res.status}]:`, rawError);
+
+            // Se for 502/503/504, é problema de infra na Belvo
+            if (res.status >= 500) {
+                return new Response(
+                    JSON.stringify({
+                        error: "Belvo Infrastructure Issue",
+                        message: "A Belvo está temporariamente instável (Erro 502/503). Por favor, aguarde alguns minutos e tente novamente.",
+                        code: res.status
+                    }),
+                    { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+            }
+
+            let belvoDetails = rawError;
+            try { belvoDetails = JSON.parse(rawError); } catch (e) { }
+
+            return new Response(
+                JSON.stringify({
+                    error: "Belvo Rejection",
+                    code: res.status,
+                    details: belvoDetails
+                }),
+                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
         }
 
-        const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access; // O token para o widget
-
-        // 5. Build Connect URL
-        // A URL do widget geralmente é https://widget.belvo.io/?access_token=...
-        // Parâmetros adicionais devem estar encapsulados no token ou passados aqui se a doc exigir
-        const connectUrl = `https://widget.belvo.io/?access_token=${accessToken}&external_id=${link.id}&locale=pt&country_codes=BR`;
-
-        console.log(`Connect URL generated successfully`);
+        const data = await res.json();
+        const connect_url = `https://widget.belvo.io/?access_token=${data.access}&locale=pt&country_codes=BR&external_id=${link.id}`;
 
         return new Response(
-            JSON.stringify({
-                link_id: link.id,
-                connect_url: connectUrl,
-            }),
+            JSON.stringify({ link_id: link.id, connect_url }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
 
-    } catch (error) {
-        console.error("Error in openfinance_connect_start:", error);
+    } catch (error: any) {
+        console.error("Fatal Error SPRINT-V15:", error.message);
         return new Response(
-            JSON.stringify({ error: error.message || "Internal server error" }),
+            JSON.stringify({ error: error.message }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
