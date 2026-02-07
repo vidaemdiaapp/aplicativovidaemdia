@@ -68,32 +68,28 @@ const MEI_EXEMPT_RATES = {
 };
 
 const SYSTEM_PROMPT_LOCKED = `
-Você é o Assistente Financeiro do Vida em Dia (Modo ZapGastos).
+Você é o Assistente Financeiro "Vida em Dia Inteligente" (Modo ZapGastos Multi-Modal).
+Seu objetivo é ser um executor rápido, útil e que entende tudo (texto, áudio, imagens).
 
 PERSONALIDADE:
-- **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão.
-- **Executor**: Você registra, calcula e mostra. Não explica "como fazer".
-- **Estilo ZapGastos**:
-   ✅ *Almoço* R$ 50,00
-   📂 Alimentação (hoje)
-   📊 Dia: -R$ 120,00 | Mês: -R$ 3.400
+- **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão. Respostas de 1-4 linhas.
+- **Executor Real**: Se o usuário informar um gasto, ganho ou mudança, você DEVE chamar a ferramenta antes de confirmar.
+- **Sem Repetição**: Não repita "olá" ou saudações se o contexto for recente.
+- **Categorização Semântica**: Se o usuário disser "coxinha", você sabe que é 'food'. Se disser "coca", é 'food'. Use a lista de categorias fornecida no contexto para mapear corretamente. Nunca use 'other' se puder inferir algo melhor.
 
 REGRAS:
-1. **Confirmação de Ação**: Se o usuário pediu pra gastar/pagar, CONFIRME os dados chave.
-2. **Resumo Automático**: Sempre que registrar algo, mostre o impacto (Total do dia ou da Categoria).
-3. **Áudio**: Se receber áudio, transcreva mentalmente e execute. Diga "Ouvi: ..." se estiver incerto.
+1. **Action-First**: Execute a ferramenta primeiro. Só retorne o emoji ✅ se a ferramenta retornar sucesso.
+2. **Contexto**: Use as [ÚLTIMAS TAREFAS] para entender referências como "muda o valor do anterior" ou "era 50 na verdade".
+3. **Multi-Modal**:
+   - ÁUDIO: Ouça e extraia despesas/pedidos.
+   - IMAGEM: Se for um cupom/nota fiscal, extraia o valor total, estabelecimento e data. Chame 'add_expense' com esses dados.
+4. **Resumo**: Quando solicitado, mostre o total do dia/mês de forma visual.
 
-[COMO AGIR]:
-- **AÇÃO**: Chame a tool. Retorne o resumo JSON que a tool devolver.
-- **PERGUNTA**: Responda direto com o dado. "Seu saldo é R$ X".
-
-REGRAS FISCAIS (IRPF):
-- Isento 2025: R$ 2.259,20.
-- Isento 2026: R$ 5.000 (efetiva).
+SAUDAÇÃO: {{GREETING_POLICY}} (SKIP: Não diga Oi. NORMAL: Diga Oi, {{USER_NAME}}).
 
 FORMATO DE RESPOSTA (JSON):
 {
-  "answer_text": "Texto formatado com emojis e quebras de linha para WhatsApp",
+  "answer_text": "Sua resposta curta aqui",
   "intent_mode": "ACTION | CHAT"
 }
 `;
@@ -101,26 +97,57 @@ FORMATO DE RESPOSTA (JSON):
 const TOOLS_SCHEMA = [
     {
         name: "get_financial_summary",
-        description: "Returns a summary of the user's financial status from the app panel: current balance, total income, and total pending expenses. Use this for questions about 'saldo', 'quanto tenho', 'minha conta' (NOT external bank).",
+        description: "Retorna o saldo e resumo financeiro. Use para 'saldo', 'quanto tenho', 'minha conta'.",
         parameters: { type: "object", properties: {}, required: [] }
     },
     {
         name: "add_expense",
-        description: "Registers a new expense or transaction. Use when user says 'paid', 'spent', 'bought', 'add expense', etc. ALWAYS try to infer category.",
+        description: "OBRIGATÓRIO: Registra uma despesa. SEMPRE use para 'gastei', 'paguei', 'morreu tanto', ou ao extrair dados de CUPOM/NOTA FISCAL em imagem/áudio. Se o usuário falar um valor no áudio, CHAME ESTA FERRAMENTA.",
         parameters: {
             type: "object",
             properties: {
-                amount: { type: "number", description: "Value of the expense (e.g., 50.00)" },
-                description: { type: "string", description: "Description or title (e.g., 'Lunch', 'Uber')" },
+                amount: { type: "number", description: "Valor total (ex: 12.50). Extraia do áudio/texto." },
+                description: { type: "string", description: "O que foi comprado ou nome do lugar (ex: 'Almoço', 'Mercado Livre'). Extraia do áudio/texto." },
                 category: {
                     type: "string",
-                    enum: ["food", "transport", "market", "health", "home", "leisure", "shopping", "debts", "salary", "other"],
-                    description: "Category ID (default: other)"
+                    description: "ID da categoria. Veja a lista [CATEGORIAS DISPONÍVEIS] no contexto. Use IDs como 'food', 'market', 'transport', etc."
                 },
-                date: { type: "string", description: "Date YYYY-MM-DD (default: today)" },
-                is_paid: { type: "boolean", description: "True if already paid (default: true)" }
+                date: { type: "string", description: "Data ISO (YYYY-MM-DD). Default: hoje." },
+                is_paid: { type: "boolean", description: "Default: true." }
             },
             required: ["amount", "description"]
+        }
+    },
+    {
+        name: "edit_last_task",
+        description: "Edita a última tarefa financeira criada hoje. Use para 'era 20 não 30', 'muda a categoria do último', 'corrige o valor'.",
+        parameters: {
+            type: "object",
+            properties: {
+                task_id: { type: "string", description: "O ID da tarefa a ser editada (pegue na lista [ÚLTIMAS TAREFAS] se disponível)." },
+                amount: { type: "number", description: "Novo valor." },
+                description: { type: "string", description: "Novo título/descrição." },
+                category: { type: "string", description: "Nova categoria ID." }
+            },
+            required: ["task_id"]
+        }
+    },
+    {
+        name: "get_daily_summary",
+        description: "Returns a summary of all expenses recorded today.",
+        parameters: { type: "object", properties: {}, required: [] }
+    },
+    {
+        name: "manage_categories",
+        description: "Lista, adiciona ou remove categorias. Use para 'quais categorias eu tenho?', 'adicione a categoria Viagens'.",
+        parameters: {
+            type: "object",
+            properties: {
+                action: { type: "string", enum: ["list", "add", "remove"], description: "Ação a realizar." },
+                category_label: { type: "string", description: "Nome da nova categoria (ex: 'Viagens')." },
+                category_id: { type: "string", description: "ID da categoria para deletar." }
+            },
+            required: ["action"]
         }
     },
     {
@@ -279,54 +306,153 @@ const TOOLS_SCHEMA = [
 
 // --- TOOL HANDLERS ---
 async function handleToolCall(toolName: string, args: any, supabase: any, household_id: string, user_id: string, storage_path?: string) {
+    console.log(`[smart_chat_v1] [ACTION] tool=${toolName} user=${user_id}`);
+
     if (toolName === "get_financial_summary") {
         const { data, error } = await supabase.rpc('get_full_financial_report', { target_household_id: household_id });
         if (error) throw new Error(`Error getting summary: ${error.message}`);
         return data;
     }
 
+    if (toolName === "get_daily_summary") {
+        const today = new Date().toISOString().split('T')[0];
+        const { data: tasks, error } = await supabase
+            .from('tasks')
+            .select('title, amount, category_id, entry_type')
+            .eq('household_id', household_id)
+            .eq('purchase_date', today)
+            .eq('status', 'completed');
+
+        if (error) throw new Error(`Error getting daily summary: ${error.message}`);
+
+        const total = (tasks || []).reduce((acc: number, t: any) => acc + Number(t.amount), 0);
+        return {
+            date: today,
+            total,
+            items: tasks || []
+        };
+    }
+
+    if (toolName === "edit_last_task") {
+        const { task_id, amount, description, category } = args;
+
+        let targetId = task_id;
+        if (!targetId) {
+            // Find last auto-generated task for this user today
+            const today = new Date().toISOString().split('T')[0];
+            const { data: lastTask } = await supabase
+                .from('tasks')
+                .select('id')
+                .eq('user_id', user_id)
+                .eq('auto_generated', true)
+                .eq('purchase_date', today)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (!lastTask) return "Não encontrei nenhuma tarefa recente para editar.";
+            targetId = lastTask.id;
+        }
+
+        const updates: any = {};
+        if (amount !== undefined) updates.amount = amount;
+        if (description) updates.title = description;
+        if (category) updates.category_id = category;
+        updates.updated_at = new Date().toISOString();
+
+        const { data, error } = await supabase
+            .from('tasks')
+            .update(updates)
+            .eq('id', targetId)
+            .select()
+            .single();
+
+        if (error) return `Erro ao editar: ${error.message}`;
+        console.log(`[smart_chat_v1] [DB] update OK task_id=${targetId}`);
+
+        return { success: true, message: "Tarefa editada com sucesso!", data };
+    }
+
+    if (toolName === "manage_categories") {
+        const { action, category_label, category_id } = args;
+
+        if (action === "list") {
+            const { data } = await supabase.from('categories').select('id, label').order('label');
+            return data;
+        }
+
+        if (action === "add") {
+            if (!category_label) return "Por favor, informe o nome da categoria.";
+            // Generate simple ID
+            const id = category_label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+            const { data, error } = await supabase.from('categories').insert({
+                id,
+                label: category_label,
+                icon: 'MoreHorizontal',
+                color: '#64748b'
+            }).select().single();
+            if (error) return `Erro ao adicionar: ${error.message}`;
+            return { success: true, message: `Categoria '${category_label}' adicionada!`, data };
+        }
+
+        if (action === "remove") {
+            if (!category_id) return "Por favor, informe o ID da categoria para remover.";
+            const { error } = await supabase.from('categories').delete().eq('id', category_id);
+            if (error) return `Erro ao remover: ${error.message}`;
+            return { success: true, message: "Categoria removida com sucesso!" };
+        }
+    }
+
     if (toolName === "add_expense" || toolName === "add_income") {
+        console.log(`[smart_chat_v1] [ACTION] Adding ${toolName}...`);
         const title = args.title || args.description || (toolName === 'add_expense' ? 'Despesa' : 'Renda');
         const rawAmount = args.amount;
         const amount = typeof rawAmount === 'string' ? parseFloat(rawAmount.replace('R$', '').replace(',', '.').trim()) : rawAmount;
 
-        const category_id = args.category || 'Outros';
+        const category_id = args.category || 'other';
         const date = args.date || new Date().toISOString().split('T')[0];
-        const isExpense = toolName === 'add_expense';
+
+        const isExpense = toolName === 'add_expense'; // vs add_income (future)
 
         // Ensure amount is valid
         if (isNaN(amount) || amount <= 0) return "Valor inválido. Tente novamente.";
 
-        const { data: task, error } = await supabase.from('tasks').insert({
+        const { data, error } = await supabase.from('tasks').insert({
             user_id: user_id,
             owner_user_id: user_id,
             household_id: household_id,
             title: title,
-            description: args.description || `Via WhatsApp/IA: ${title}`,
             amount: amount,
             category_id: category_id,
-            entry_type: isExpense ? "expense" : "income", // 🔥 FUNDAMENTAL
-            status: "completed",
+            entry_type: isExpense ? 'expense' : 'income',
+            status: 'completed',
             is_recurring: false,
             purchase_date: date,
             due_date: date,
-            auto_generated: true,
-            confidence_score: 90,
-            payment_method: 'pix'
+            created_at: new Date().toISOString(),
+            payment_method: 'pix',
+            description: `WhatsApp: ${title}`,
+            auto_generated: true
         }).select().single();
 
         if (error) {
-            console.error("Add transaction error:", error);
+            console.error("[smart_chat_v1] [DB] insert FAILED:", error);
             return `Erro ao salvar: ${error.message}`;
+        }
+        console.log(`[smart_chat_v1] [DB] insert OK task_id=${data.id}`);
+
+        // Get updated daily total for stats if it's today
+        let dailyTotal = amount;
+        if (date === new Date().toISOString().split('T')[0]) {
+            const { data: stats } = await supabase.rpc('get_daily_total', { target_household_id: household_id, target_date: date });
+            dailyTotal = stats || amount;
         }
 
         return {
-            ok: true,
-            action: isExpense ? "ADD_EXPENSE" : "ADD_INCOME",
-            task_id: task.id,
-            answer_text: `✅ ${isExpense ? 'Despesa' : 'Renda'} registrada!\n` +
-                `🧾 ${task.title}: R$ ${Number(task.amount).toFixed(2)}\n` +
-                `📂 ${task.category_id} • ${task.purchase_date}`
+            success: true,
+            message: "Registro salvo com sucesso!",
+            data: data,
+            daily_total: dailyTotal
         };
     }
 
@@ -340,7 +466,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .in('entry_type', ['expense', 'immediate'])
+            .in('entry_type', ['immediate', 'expense'])
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos nos últimos 7 dias.";
@@ -368,7 +494,7 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             .from('tasks')
             .select('amount, category_id')
             .eq('household_id', household_id)
-            .in('entry_type', ['expense', 'immediate'])
+            .eq('entry_type', 'immediate')
             .gte('purchase_date', startStr);
 
         if (!expenses || expenses.length === 0) return "Sem gastos neste mês.";
@@ -838,6 +964,9 @@ function classifyIntentByKeywords(text: string): AppIntent {
     const t = text.toLowerCase();
 
     // 1. ACTION INTENTS (Highest Priority - Doer Mode)
+    // Audio check (must be first)
+    if (t.includes("[áudio]")) return 'ADD_EXPENSE';
+
     // ADD_EXPENSE: "gastei 50", "almoço 20 reais", "nova despesa"
     if (t.match(/gastei|comprei|paguei|nova despesa|adicionar despesa|lançar|insere|compra de|uber|mercado|padaria|almoço|jantar/)) {
         return 'ADD_EXPENSE';
@@ -899,7 +1028,7 @@ async function summarizeAndSaveMemory(supabase: any, user_id: string, history: a
 
 // --- HELPER: CONTEXT RETRIEVAL ---
 async function getConversationContext(supabase: any, profile_id: string) {
-    if (!profile_id) return { history: [], summary: null, lastOutbound: null };
+    if (!profile_id) return { history: [], summary: null, lastOutbound: null, recentTasks: [] };
 
     // 1. Fetch Chat Memory (Long Term)
     const { data: memory } = await supabase
@@ -915,6 +1044,15 @@ async function getConversationContext(supabase: any, profile_id: string) {
         .eq('profile_id', profile_id)
         .order('created_at', { ascending: false })
         .limit(15);
+
+    // 3. Fetch Recent Tasks (Financial Context)
+    // We fetch the last 10 tasks to help Gemini understand what was recently added
+    const { data: recentTasks } = await supabase
+        .from('tasks')
+        .select('id, title, amount, category_id, entry_type, created_at')
+        .eq('user_id', profile_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
     // Process history
     let history = [];
@@ -937,7 +1075,8 @@ async function getConversationContext(supabase: any, profile_id: string) {
     return {
         history,
         summary: memory?.summary_text || null,
-        lastOutbound
+        lastOutbound,
+        recentTasks: recentTasks || []
     };
 }
 
@@ -1087,6 +1226,21 @@ Deno.serve(async (req) => {
             finalPrompt += `\n[CONTEXTO DE MEMÓRIA]:\n${context.summary}\n`;
         }
 
+        // --- INJECT RECENT DATA ---
+        if (context.recentTasks && context.recentTasks.length > 0) {
+            const tasksText = context.recentTasks.map((t: any) =>
+                `- ID: ${t.id} | ${t.title} | R$ ${t.amount} | Cat: ${t.category_id} | data: ${t.created_at}`
+            ).join('\n');
+            finalPrompt += `\n[ÚLTIMAS TAREFAS/GASTOS REGISTRADOS]:\n${tasksText}\n(Use isso para editar ou deletar itens se o usuário pedir 'muda o anterior', 'não era 20', etc.)\n`;
+        }
+
+        // Fetch categories for semantic mapping
+        const { data: catList } = await supabaseAdmin.from('categories').select('id, label').order('label');
+        if (catList && catList.length > 0) {
+            const categoriesText = catList.map((c: any) => `- ${c.id}: ${c.label}`).join('\n');
+            finalPrompt += `\n[CATEGORIAS DISPONÍVEIS NO APP]:\n${categoriesText}\n(Sempre use um ID da lista acima. Se o item for 'coxinha', use 'food', etc.)\n`;
+        }
+
         finalPrompt += "\n\n";
 
         if (question) finalPrompt += `PERGUNTA DO USUÁRIO: ${question}`;
@@ -1096,13 +1250,118 @@ Deno.serve(async (req) => {
 
         if (hasAudio) {
             console.log("[smart_chat_v1] Audio attached.");
-            finalPrompt += "\n[ÁUDIO DO USUÁRIO ANEXADO - Transcrição será feita pelo modelo]";
+            finalPrompt += "\n[ALERTA CRÍTICO]: O usuário enviou um ÁUDIO. Sua tarefa é OUVIR o áudio e AGIR.\n" +
+                "1. Se o áudio descrever um gasto (ex: 'Paguei 50'), você DEVE OBRIGATORIAMENTE chamar a ferramenta 'add_expense'.\n" +
+                "2. Você NUNCA deve retornar o emoji '✅' sem ter chamado a ferramenta de sucesso primeiro.\n" +
+                "3. NÃO responda apenas 'Recebi seu áudio'. Se houver um gasto nele, registre-o.";
         }
 
         // --- SPRINT 2: TRIGGER ENGINE ---
         // 1. Heuristic Classification
         const detectedIntent = classifyIntentByKeywords(question);
         console.log(`[smart_chat_v1] [DECISION] Intent detected: ${detectedIntent}`);
+        // --- ACTION-FIRST: Persist expense into tasks so it appears in the app dashboard ---
+        if (detectedIntent === 'ADD_EXPENSE') {
+            // Lightweight extraction (no Gemini required for execution)
+            const raw = question;
+            const lower = raw.toLowerCase();
+
+            // amount: first number occurrence
+            const amtMatch = raw.match(/(\d{1,3}(?:[\.,]\d{3})*(?:[\.,]\d{1,2})?|\d+(?:[\.,]\d{1,2})?)/);
+            let amount = 0;
+            if (amtMatch) {
+                const norm = amtMatch[1].replace(/\./g, '').replace(',', '.');
+                amount = Number(norm);
+            }
+
+            // title: remove amount and common verbs
+            let title = raw
+                .replace(amtMatch?.[0] ?? '', ' ')
+                .replace(/\b(adiciona(r)?|inser(e|ir)|lança(r)?|paguei|gastei|comprei|coloca(r)?|mais|reais|real|em|no|na|de|do|da)\b/gi, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            if (!title) title = "Despesa";
+
+            // SPECIAL CASE: If it's audio, the 'question' is just a hint. 
+            // If heuristic fails (amount=0), we MUST fall through to Gemini to hear the actual audio.
+            if (amount === 0 && hasAudio) {
+                console.log("[smart_chat_v1] Audio detected and no heuristic amount found. Falling through to Gemini...");
+            } else {
+
+                // category heuristics
+                let category_id: string = "other";
+                if (lower.match(/mercado|supermercado|compras|padaria|açougue/)) category_id = "market";
+                else if (lower.match(/uber|99|taxi|gasolina|combust(í|i)vel|posto|transporte/)) category_id = "transport";
+                else if (lower.match(/aluguel|condom[ií]nio/)) category_id = "home";
+                else if (lower.match(/energia|luz|agua|água|internet|telefone|conta/)) category_id = "utilities";
+                else if (lower.match(/farm[aá]cia|rem[eé]dio|sa[uú]de/)) category_id = "health";
+                else if (lower.match(/roupa|renner|c&a|shopping|loja/)) category_id = "shopping";
+
+                // Normalize title casing (simple)
+                title = title.charAt(0).toUpperCase() + title.slice(1);
+
+                const today = new Date().toISOString().slice(0, 10);
+
+                const row: any = {
+                    user_id: user_id!,
+                    owner_user_id: user_id!,
+                    household_id: targetHouseholdId,
+                    title,
+                    description: raw,
+                    amount,
+                    category_id,
+                    entry_type: "expense",
+                    status: "completed",
+                    purchase_date: today,
+                    auto_generated: true,
+                    is_recurring: false,
+                    confidence_score: 90,
+                };
+
+                console.log("[smart_chat_v1] [DB] inserting expense into tasks:", row);
+
+                const { data: task, error: insErr } = await supabaseAdmin
+                    .from("tasks")
+                    .insert(row)
+                    .select("id, title, amount, category_id, entry_type, status, purchase_date, household_id")
+                    .single();
+
+                if (insErr) {
+                    console.error("[smart_chat_v1] [DB] tasks insert failed:", insErr);
+                    return new Response(JSON.stringify({
+                        ok: false,
+                        intent_mode: "ACTION",
+                        error: "task_insert_failed",
+                        answer_text: "Não consegui salvar essa despesa no app. Pode tentar novamente?",
+                    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+                }
+
+                console.log("[smart_chat_v1] [DB] tasks insert OK. task_id:", task.id);
+
+                const brl = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+                const catLabels: Record<string, string> = {
+                    market: "Mercado",
+                    food: "Alimentação",
+                    transport: "Transporte",
+                    home: "Moradia",
+                    utilities: "Contas",
+                    health: "Saúde",
+                    shopping: "Compras",
+                    other: "Outros"
+                };
+                const displayCat = catLabels[task.category_id] || task.category_id || "Outros";
+
+                return new Response(JSON.stringify({
+                    ok: true,
+                    intent_mode: "ACTION",
+                    task_id: task.id,
+                    answer_text: `✅ *${task.title}* ${brl.format(Number(task.amount))}\n📂 ${displayCat} (hoje)`,
+                    is_cached: false,
+                }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+        }
+
 
         // 2. Decision Logic
         let cachedContext = "";
@@ -1466,6 +1725,16 @@ VOCÊ DEVE IMEDIATAMENTE:
             });
         }
 
+        const hasImage = !!body.image;
+        if (hasImage) {
+            userParts.push({
+                inlineData: {
+                    mimeType: body.image_mime_type || "image/jpeg",
+                    data: body.image
+                }
+            });
+        }
+
         // Build Contents with History
         let chatContents: any[] = [];
 
@@ -1485,7 +1754,10 @@ VOCÊ DEVE IMEDIATAMENTE:
             body: JSON.stringify({
                 contents: chatContents,
                 tools: [{ function_declarations: TOOLS_SCHEMA }],
-                tool_config: { function_calling_config: { mode: "AUTO" } }
+                tool_config: { function_calling_config: { mode: "AUTO" } },
+                generationConfig: {
+                    response_mime_type: "application/json"
+                }
             })
         });
 
@@ -1537,6 +1809,13 @@ VOCÊ DEVE IMEDIATAMENTE:
             // No tools used, standard text response
             const textPart = candidate?.content?.parts?.find((p: any) => p.text);
             finalContent = textPart ? textPart.text : (candidate?.finishReason ? `[Erro: ${candidate.finishReason}]` : "Não entendi sua mensagem ou o modelo não retornou texto.");
+
+            // SECURITY: If Gemini tries to confirm an action in text without tool call, flag it.
+            if (finalContent.includes("✅") && !functionCalls?.length) {
+                console.warn("[smart_chat_v1] VETO: Gemini tried to simulate a confirmation without a tool call. Refusing response.");
+                finalContent = "Desculpe, ouvi seu áudio mas não consegui registrar o gasto. Pode repetir o valor e o que foi comprado?";
+                intentMode = "CHAT";
+            }
         }
 
         // --- CLEAN UP RESPONSE ---

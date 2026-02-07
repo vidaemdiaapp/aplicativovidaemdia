@@ -1,10 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1?target=deno";
+import { encodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
-/* =========================================================
-   Utils
-========================================================= */
+/* -------------------- utils -------------------- */
 function normalizePhoneDigits(input: string) {
   let d = (input ?? "").replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
@@ -15,7 +14,6 @@ function normalizePhoneDigits(input: string) {
 function toE164(digits: string) {
   return digits ? `+${digits}` : null;
 }
-
 function json(obj: any, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
@@ -23,23 +21,41 @@ function json(obj: any, status = 200) {
   });
 }
 
-/* =========================================================
-   Main
-========================================================= */
+/* -------------------- helper: media -------------------- */
+async function downloadMediaAsBase64(mediaId: string, metaToken: string) {
+  try {
+    const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
+      headers: { Authorization: `Bearer ${metaToken}` },
+    });
+    const mediaData = await mediaRes.json();
+    if (!mediaData?.url) return null;
+
+    const fileRes = await fetch(mediaData.url, {
+      headers: { Authorization: `Bearer ${metaToken}` },
+    });
+    const arrayBuffer = await fileRes.arrayBuffer();
+    return encodeBase64(arrayBuffer);
+  } catch (err) {
+    console.error("Media download error:", err);
+    return null;
+  }
+}
+
+/* -------------------- main -------------------- */
 serve(async (req: Request) => {
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const META_TOKEN = Deno.env.get("META_WA_TOKEN")!;
-  const PHONE_NUMBER_ID = Deno.env.get("META_WA_PHONE_NUMBER_ID")!;
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+  const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+  const META_TOKEN = Deno.env.get("META_WA_TOKEN") ?? "";
+  const PHONE_NUMBER_ID = Deno.env.get("META_WA_PHONE_NUMBER_ID") ?? "";
   const VERIFY_TOKEN = Deno.env.get("META_WA_VERIFY_TOKEN") ?? "";
 
-  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
-    auth: { persistSession: false },
-  });
+  if (!SUPABASE_URL || !SERVICE_ROLE) return new Response("Missing Supabase env", { status: 500 });
+  if (!META_TOKEN || !PHONE_NUMBER_ID) return new Response("Missing Meta env", { status: 500 });
 
-  /* =====================================================
-     GET — Webhook Verify (Meta)
-  ===================================================== */
+  const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+
+  /* ----------- GET verify ----------- */
   if (req.method === "GET") {
     const url = new URL(req.url);
     const mode = url.searchParams.get("hub.mode");
@@ -52,57 +68,70 @@ serve(async (req: Request) => {
     return new Response("Forbidden", { status: 403 });
   }
 
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
+  if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
-  /* =====================================================
-     Parse payload
-  ===================================================== */
-  const raw = await req.text();
+  /* ----------- parse payload ----------- */
   let payload: any;
-
   try {
-    payload = JSON.parse(raw);
+    payload = await req.json();
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
-
-  console.log("WEBHOOK HIT", new Date().toISOString());
 
   const value = payload?.entry?.[0]?.changes?.[0]?.value;
   const hasMessages = Boolean(value?.messages?.length);
   const hasStatuses = Boolean(value?.statuses?.length);
 
+  console.log("WEBHOOK HIT", new Date().toISOString());
   console.log("HAS_MESSAGES?", hasMessages, "HAS_STATUSES?", hasStatuses);
 
+  // statuses (delivered/read) -> ignore
   if (!hasMessages) {
     console.log("Ignorado: evento sem messages[] (status)");
     return json({ ok: true });
   }
-
-  /* =====================================================
-     Extract message
-  ===================================================== */
   const msg = value.messages[0];
-  const wa_id = msg?.from ?? value?.contacts?.[0]?.wa_id;
+  const wa_id: string = msg?.from ?? value?.contacts?.[0]?.wa_id ?? "";
 
-  const inboundText =
+  /* ----------- media handling ----------- */
+  let audio_base64: string | null = null;
+  let audio_mime_type: string | null = null;
+  let image_base64: string | null = null;
+  let image_mime_type: string | null = null;
+
+  if (msg?.type === "audio" && msg?.audio?.id) {
+    console.log("AUDIO DETECTED:", msg.audio.id);
+    audio_base64 = await downloadMediaAsBase64(msg.audio.id, META_TOKEN);
+    audio_mime_type = msg.audio.mime_type || "audio/ogg";
+  } else if (msg?.type === "image" && msg?.image?.id) {
+    console.log("IMAGE DETECTED:", msg.image.id);
+    image_base64 = await downloadMediaAsBase64(msg.image.id, META_TOKEN);
+    image_mime_type = msg.image.mime_type || "image/jpeg";
+  } else if (msg?.type === "document" && msg?.document?.id) {
+    console.log("DOCUMENT DETECTED:", msg.document.id);
+    image_base64 = await downloadMediaAsBase64(msg.document.id, META_TOKEN);
+    image_mime_type = msg.document.mime_type || "application/pdf";
+  }
+
+
+  const inboundText: string =
     msg?.text?.body ??
     msg?.button?.text ??
     msg?.interactive?.button_reply?.title ??
     msg?.interactive?.list_reply?.title ??
     "";
 
-  "";
+  const hasMedia = !!audio_base64 || !!image_base64;
 
-  const isAudio = msg?.type === "audio";
-  const audioId = msg?.audio?.id;
-
-  if (!wa_id || (!inboundText && !isAudio)) {
-    console.log("Mensagem inválida ou vazia (e não é áudio)");
+  if (!wa_id || (!inboundText && !hasMedia)) {
+    console.log("Mensagem inválida ou vazia (sem texto, áudio ou imagem)");
     return json({ ok: true });
   }
+
+  const mediaHint = audio_base64
+    ? "[Áudio: Transcrever e processar ações financeiras]"
+    : (image_base64 ? "[Imagem: Extrair dados de Cupom/Nota Fiscal/Documento]" : "");
+
 
   const from_phone_digits = normalizePhoneDigits(wa_id);
   const from_phone_e164 = toE164(from_phone_digits);
@@ -110,26 +139,24 @@ serve(async (req: Request) => {
   const businessDisplay = value?.metadata?.display_phone_number ?? "";
   const to_phone_digits = normalizePhoneDigits(businessDisplay);
 
-  console.log("INBOUND:", { from_phone_digits, inboundText });
+  console.log("INBOUND:", { from_phone_digits, inboundText, hasAudio: !!audio_base64, hasImage: !!image_base64 });
 
-  /* =====================================================
-     Find profile
-  ===================================================== */
-  const { data: profile } = await supabase
+  /* ----------- find profile ----------- */
+  const { data: profile, error: profErr } = await supabase
     .from("profiles")
     .select("id, phone_digits")
     .eq("phone_digits", from_phone_digits)
     .maybeSingle();
 
-  /* =====================================================
-     Log inbound
-  ===================================================== */
+  if (profErr) console.error("Profile lookup error:", profErr);
+
+  /* ----------- log inbound ----------- */
   await supabase.from("whatsapp_messages").insert({
     profile_id: profile?.id ?? null,
     lead_id: null,
     wa_id,
     payload,
-    message_text: inboundText,
+    message_text: inboundText || (audio_base64 ? "[Áudio]" : ""),
     direction: "inbound",
     provider_message_id: msg?.id ?? null,
     from_phone: from_phone_digits,
@@ -138,9 +165,7 @@ serve(async (req: Request) => {
     created_at: new Date().toISOString(),
   });
 
-  /* =====================================================
-     If NO profile → lead flow
-  ===================================================== */
+  /* ----------- lead flow ----------- */
   if (!profile) {
     await supabase.from("whatsapp_leads").upsert(
       {
@@ -148,29 +173,26 @@ serve(async (req: Request) => {
         phone_e164: from_phone_e164,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "phone_digits" }
+      { onConflict: "phone_digits" },
     );
 
     const leadReply =
       "Oi! 👋 Ainda não encontrei seu cadastro no app.\n\n" +
       "👉 Baixe o *Vida em Dia* e finalize o cadastro com esse número 😊";
 
-    const sendRes = await fetch(
-      `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${META_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: from_phone_digits,
-          type: "text",
-          text: { body: leadReply },
-        }),
-      }
-    );
+    const sendRes = await fetch(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${META_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to: from_phone_digits,
+        type: "text",
+        text: { body: leadReply },
+      }),
+    });
 
     const sendBody = await sendRes.text();
     console.log("META SEND (lead):", sendRes.status, sendBody);
@@ -192,135 +214,78 @@ serve(async (req: Request) => {
     return json({ ok: true });
   }
 
-  /* =====================================================
-     Handle Audio (Download & Convert)
-  ===================================================== */
-  let audioBase64: string | null = null;
-  let audioMime: string | null = null;
+  /* ----------- call smart_chat_v1 ----------- */
+  const smartRes = await fetch(`${SUPABASE_URL}/functions/v1/smart_chat_v1`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SERVICE_ROLE}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      source: "whatsapp",
+      user_id: profile.id,     // 🔥 ESSENCIAL para gravar em tasks
+      profile_id: profile.id,  // ok manter
+      wa_id,
+      phone_digits: from_phone_digits,
+      audio_base64,
+      audio_mime_type,
 
-  if (isAudio && audioId) {
-    console.log(`[Webhook] Audio detected: ${audioId}. Fetching URL...`);
-    try {
-      // 1. Get Media URL
-      const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${audioId}`, {
-        headers: { Authorization: `Bearer ${META_TOKEN}` }
-      });
-      const mediaJson = await mediaRes.json();
-      const mediaUrl = mediaJson.url;
-      audioMime = mediaJson.mime_type || "audio/ogg"; // Default WhatsApp voice note
-
-      console.log(`[Webhook] Downloading binary from ${mediaUrl}...`);
-
-      // 2. Download Binary
-      const binaryRes = await fetch(mediaUrl, {
-        headers: { Authorization: `Bearer ${META_TOKEN}` }
-      });
-      const arrayBuffer = await binaryRes.arrayBuffer();
-
-      // 3. Convert to Base64
-      const uint8Array = new Uint8Array(arrayBuffer);
-      let binaryString = "";
-      for (let i = 0; i < uint8Array.length; i++) {
-        binaryString += String.fromCharCode(uint8Array[i]);
-      }
-      audioBase64 = btoa(binaryString);
-
-      console.log(`[Webhook] Audio processed. Size: ${audioBase64.length} chars.`);
-
-    } catch (err) {
-      console.error("[Webhook] Failed to process audio", err);
-      // Fallback: Continue without audio, maybe smart_chat will complain
-    }
-  }
-
-  /* =====================================================
-     Call smart_chat_v1 (INTERNAL)
-  ===================================================== */
-  console.log("CALLING smart_chat_v1");
-
-  const smartRes = await fetch(
-    `${SUPABASE_URL}/functions/v1/smart_chat_v1`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${SERVICE_ROLE}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        source: "whatsapp",
-        // Force user_id to be profile.id to resolve mismatch
-        user_id: profile.id,
-        profile_id: profile.id,
-        wa_id,
-        phone_digits: from_phone_digits,
-
-        // 🔥 aliases (ESSENCIAL)
-        message_text: inboundText,
-        message: inboundText,
-        text: inboundText,
-        input: inboundText,
-        prompt: inboundText,
-
-        // 🎵 Audio Payload
-        message_type: isAudio ? "audio" : "text",
-        audio_base64: audioBase64,
-        audio_mime_type: audioMime
-      }),
-    }
-  );
+      // aliases do texto
+      message_text: inboundText || mediaHint,
+      message: inboundText || mediaHint,
+      text: inboundText || mediaHint,
+      input: inboundText || mediaHint,
+      prompt: inboundText || mediaHint,
+      input_type: audio_base64 ? "audio" : (image_base64 ? "image" : "text"),
+      image: image_base64,
+      image_mime_type
+    }),
+  });
 
   const smartRaw = await smartRes.text();
   console.log("smart_chat_v1:", smartRes.status, smartRaw);
 
-  /* =====================================================
-     Parse smart response
-  ===================================================== */
   let reply = "Recebi sua mensagem ✅";
 
   if (smartRes.ok) {
     try {
       const j = JSON.parse(smartRaw);
-      reply =
-        j.answer_text ||
-        j.reply ||
-        j.message ||
-        j.text ||
-        reply;
-
-    } catch (e) {
-      console.error("JSON parse error/Action error:", e);
+      if (j.ok && j.answer_text) {
+        reply = j.answer_text;
+      } else {
+        reply =
+          j.answer_text ||
+          j.reply ||
+          j.message ||
+          j.text ||
+          reply;
+      }
+    } catch {
       reply = smartRaw.trim() || reply;
     }
   } else {
-    reply = "Tive um probleminha aqui 😅 Pode tentar de novo.";
+    reply = "Tive um probleminha aqui 😅 Pode tentar de novo em alguns segundos?";
   }
 
-  /* =====================================================
-     Send reply to WhatsApp
-  ===================================================== */
-  const sendRes = await fetch(
-    `https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${META_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: from_phone_digits,
-        type: "text",
-        text: { body: reply },
-      }),
-    }
-  );
+  /* ----------- send to WhatsApp ----------- */
+  const sendRes = await fetch(`https://graph.facebook.com/v20.0/${PHONE_NUMBER_ID}/messages`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${META_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to: from_phone_digits,
+      type: "text",
+      text: { body: reply },
+    }),
+  });
 
   const sendBody = await sendRes.text();
   console.log("META SEND:", sendRes.status, sendBody);
 
-  /* =====================================================
-     Log outbound
-  ===================================================== */
+  /* ----------- log outbound ----------- */
   await supabase.from("whatsapp_messages").insert({
     profile_id: profile.id,
     lead_id: null,
