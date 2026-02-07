@@ -364,185 +364,186 @@ export const ExpensesScreen: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface pb-24">
-            {/* Header */}
-            <header className="px-6 pt-14 pb-6 bg-surface-elevated shadow-sm lg:rounded-b-3xl sticky top-0 z-20">
-                <div className="flex items-center justify-between mb-6">
+        <div className="min-h-screen bg-surface pb-24 text-text-primary">
+            {/* ═══════════════════════════════════════════════════════════════
+                HEADER & SUMMARY
+            ═══════════════════════════════════════════════════════════════ */}
+            <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">Despesas</h1>
+                            <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest mt-1">Gestão de Gastos</p>
+                        </div>
+                    </div>
                     <button
-                        onClick={() => navigate(-1)}
-                        className="w-10 h-10 flex items-center justify-center text-text-primary"
+                        onClick={() => navigate('/new-task', { state: { type: 'immediate' } })}
+                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white hover:bg-primary-600 transition-all active:scale-90 shadow-lg shadow-primary-500/20 flex items-center justify-center"
                     >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <h1 className="text-text-primary text-lg font-bold">Linha do Tempo</h1>
-                    <button className="w-10 h-10 flex items-center justify-center text-text-primary">
-                        <Share2 className="w-5 h-5" />
+                        <Plus className="w-6 h-6" />
                     </button>
                 </div>
 
-                {/* Month Filters */}
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                    {[-2, -1, 0].map(offset => {
-                        const monthIndex = (new Date().getMonth() + offset + 12) % 12;
-                        const isSelected = selectedMonth === monthIndex;
-                        return (
-                            <button
-                                key={monthIndex}
-                                onClick={() => setSelectedMonth(monthIndex)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${isSelected
-                                    ? 'bg-primary-500 text-white shadow-md'
-                                    : 'bg-white text-text-secondary border border-border-color hover:bg-slate-50'
-                                    }`}
-                            >
-                                {months[monthIndex]} {offset === 0 ? currentYear : ''}
-                            </button>
-                        );
-                    })}
+                {/* Summary Cards */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="card p-5 border-l-4 border-l-danger-500">
+                        <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-1">A Pagar</p>
+                        <p className="text-2xl font-black text-danger-500 tracking-tight">{formatCurrency(totalPending)}</p>
+                    </div>
+                    <div className="card p-5 border-l-4 border-l-emerald-500">
+                        <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-1">Pago</p>
+                        <p className="text-2xl font-black text-emerald-500 tracking-tight">{formatCurrency(totalPaid)}</p>
+                    </div>
                 </div>
             </header>
 
-            {/* Search Bar */}
-            <div className="px-6 pb-4">
-                <div className="relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted" />
-                    <input
-                        type="text"
-                        placeholder="Buscar transações ou lojas"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-white text-text-primary placeholder-text-muted rounded-2xl border border-border-color pl-12 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all"
-                    />
-                </div>
-            </div>
-
-            {/* Add New Button */}
-            <div className="px-6 pb-4">
-                <button
-                    onClick={() => navigate('/new-task')}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-primary-500 hover:bg-primary-600 rounded-2xl text-white font-bold text-sm transition-all shadow-md active:scale-95"
-                >
-                    <Plus className="w-5 h-5" />
-                    Nova Despesa
-                </button>
-            </div>
-
-            {/* Expenses List */}
-            <div className="px-6 space-y-6">
-                {Object.keys(groupedExpenses).length === 0 ? (
-                    <div className="bg-slate-800 rounded-3xl p-10 text-center">
-                        <ShoppingBag className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-white mb-2">Nenhuma despesa encontrada</h3>
-                        <p className="text-slate-500 text-sm">
-                            Não há despesas para o período selecionado.
-                        </p>
-                    </div>
-                ) : (
-                    (Object.entries(groupedExpenses) as [string, Task[]][]).map(([dateLabel, items]) => (
-                        <div key={dateLabel}>
-                            {/* Date Group Header */}
-                            <h2 className="text-text-muted text-xs font-bold tracking-wider mb-3 px-1">
-                                {dateLabel}
-                            </h2>
-
-                            {/* Items */}
-                            <div className="space-y-3">
-                                {items.map((expense) => {
-                                    const amount = typeof expense.amount === 'number'
-                                        ? expense.amount
-                                        : parseFloat(expense.amount || '0');
-                                    const brandConfig = getBrandConfig(expense.title || '');
-                                    const catColors = getCategoryColors(expense.category_id || 'other');
-                                    const time = getTimeFromDate(expense.created_at || '');
-                                    const isPaid = expense.status === 'completed';
-                                    const isCompleting = completing === expense.id;
-
-                                    const isImmediate = expense.entry_type === 'immediate' ||
-                                        expense.entry_type === 'expense' ||
-                                        (expense.purchase_date && !expense.due_date);
-
-                                    return (
-                                        <div
-                                            key={expense.id}
-                                            onClick={() => navigate(isImmediate ? `/edit-task/${expense.id}` : `/detail/${expense.id}`)}
-                                            className={`flex items-center gap-3 p-4 rounded-3xl transition-all cursor-pointer border ${isPaid
-                                                ? 'bg-slate-50/50 opacity-60 border-transparent'
-                                                : 'bg-white border-border-color hover:border-primary-200 hover:shadow-md'
-                                                }`}
-                                        >
-                                            {/* Brand Logo or Emoji Icon */}
-                                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden ${brandConfig?.bg || 'bg-slate-700'}`}>
-                                                {brandConfig?.logo ? (
-                                                    <img
-                                                        src={brandConfig.logo}
-                                                        alt=""
-                                                        className="w-8 h-8 object-contain"
-                                                        onError={(e) => {
-                                                            // Fallback para emoji se logo falhar
-                                                            const parent = e.currentTarget.parentElement;
-                                                            if (parent) {
-                                                                e.currentTarget.style.display = 'none';
-                                                                parent.innerHTML = `<span class="text-2xl">${brandConfig?.emoji || getCategoryEmoji(expense.category_id || 'other')}</span>`;
-                                                            }
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <span className="text-2xl">{brandConfig?.emoji || getCategoryEmoji(expense.category_id || 'other')}</span>
-                                                )}
-                                            </div>
-
-                                            {/* Info */}
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className={`font-semibold truncate ${isPaid ? 'text-text-muted line-through' : 'text-text-primary'}`}>
-                                                    {expense.title}
-                                                </h3>
-                                                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                                    {time && (
-                                                        <>
-                                                            <span className="text-text-muted text-xs">{time}</span>
-                                                            <span className="text-slate-300">•</span>
-                                                        </>
-                                                    )}
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${catColors.bg} ${catColors.text}`}>
-                                                        {getCategoryLabel(expense.category_id || '')}
-                                                    </span>
-                                                    {isPaid && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-                                                            PAGO ✓
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Amount + Quick Action */}
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-right">
-                                                    <p className={`font-bold ${isPaid ? 'text-text-muted' : 'text-text-primary'}`}>
-                                                        -{formatCurrency(amount)}
-                                                    </p>
-                                                </div>
-
-                                                {/* Quick Pay Button */}
-                                                {!isPaid && (
-                                                    <button
-                                                        onClick={(e) => handleMarkAsPaid(e, expense.id)}
-                                                        disabled={isCompleting}
-                                                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-400 transition-all active:scale-95"
-                                                    >
-                                                        {isCompleting ? (
-                                                            <div className="w-4 h-4 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-                                                        ) : (
-                                                            <Check className="w-5 h-5" />
-                                                        )}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+            <div className="px-6 py-8 space-y-8">
+                {/* Search & Filters */}
+                <section className="space-y-6">
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                            <Search className="w-5 h-5 text-text-muted group-focus-within:text-primary-500 transition-colors" />
                         </div>
-                    ))
-                )}
+                        <input
+                            type="text"
+                            placeholder="Buscar por estabelecimento ou descrição..."
+                            className="input pl-14 h-16 rounded-3xl text-sm font-bold bg-white"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                        {(['month', 'week', 'overdue', 'all'] as ViewMode[]).map((mode) => (
+                            <button
+                                key={mode}
+                                onClick={() => setViewMode(mode)}
+                                className={`px-5 py-2.5 rounded-2xl text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${viewMode === mode
+                                    ? 'bg-primary-500 text-white border-primary-500 shadow-lg shadow-primary-500/20'
+                                    : 'bg-white text-text-muted border-white shadow-sm'
+                                    }`}
+                            >
+                                {mode === 'month' ? 'Este Mês' : mode === 'week' ? 'Esta Semana' : mode === 'overdue' ? 'Atrasadas' : 'Ver Tudo'}
+                            </button>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Expenses List */}
+                <section className="space-y-6">
+                    {Object.keys(groupedExpenses).length === 0 ? (
+                        <div className="card-premium p-12 text-center bg-white/50">
+                            <ShoppingBag className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+                            <h3 className="text-lg font-black text-text-primary mb-2">Nenhum registro</h3>
+                            <p className="text-text-muted text-sm font-bold uppercase tracking-widest">
+                                Tudo limpo por aqui
+                            </p>
+                        </div>
+                    ) : (
+                        (Object.entries(groupedExpenses) as [string, Task[]][]).map(([dateLabel, items]) => (
+                            <div key={dateLabel} className="space-y-4">
+                                <h2 className="text-text-muted text-[10px] font-black uppercase tracking-[0.2em] px-1">
+                                    {dateLabel}
+                                </h2>
+
+                                <div className="space-y-3">
+                                    {items.map((expense) => {
+                                        const amount = typeof expense.amount === 'number'
+                                            ? expense.amount
+                                            : parseFloat(expense.amount || '0');
+                                        const brandConfig = getBrandConfig(expense.title || '');
+                                        const catColors = getCategoryColors(expense.category_id || 'other');
+                                        const time = getTimeFromDate(expense.created_at || '');
+                                        const isPaid = expense.status === 'completed';
+                                        const isCompleting = completing === expense.id;
+
+                                        const isImmediate = expense.entry_type === 'immediate' ||
+                                            expense.entry_type === 'expense' ||
+                                            (expense.purchase_date && !expense.due_date);
+
+                                        return (
+                                            <div
+                                                key={expense.id}
+                                                onClick={() => navigate(isImmediate ? `/edit-task/${expense.id}` : `/detail/${expense.id}`)}
+                                                className={`card p-5 group ${isPaid ? 'opacity-60 bg-slate-50/50 grayscale-[0.5]' : ''}`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    {/* Brand Logo or Icon */}
+                                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 border-2 border-white shadow-sm ${brandConfig?.bg || 'bg-slate-700'}`}>
+                                                        {brandConfig?.logo ? (
+                                                            <img
+                                                                src={brandConfig.logo}
+                                                                alt=""
+                                                                className="w-10 h-10 object-contain"
+                                                                onError={(e) => {
+                                                                    const parent = e.currentTarget.parentElement;
+                                                                    if (parent) {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                        parent.innerHTML = `<span class="text-2xl">${brandConfig?.emoji || getCategoryEmoji(expense.category_id || 'other')}</span>`;
+                                                                    }
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <span className="text-2xl">{brandConfig?.emoji || getCategoryEmoji(expense.category_id || 'other')}</span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Info */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className={`font-black text-[16px] truncate tracking-tight transition-colors group-hover:text-primary-600 ${isPaid ? 'text-text-muted line-through' : 'text-text-primary'}`}>
+                                                            {expense.title}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${catColors.bg} ${catColors.text}`}>
+                                                                {getCategoryLabel(expense.category_id || '')}
+                                                            </span>
+                                                            <div className="w-1 h-1 rounded-full bg-slate-200"></div>
+                                                            <span className="text-[10px] font-bold text-text-muted uppercase">{time || 'Recente'}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Amount & Status */}
+                                                    <div className="text-right flex items-center gap-4">
+                                                        <div>
+                                                            <p className={`text-lg font-black tracking-tight ${isPaid ? 'text-text-muted' : 'text-text-primary'}`}>
+                                                                -{formatCurrency(amount)}
+                                                            </p>
+                                                        </div>
+
+                                                        {!isPaid && (
+                                                            <button
+                                                                onClick={(e) => handleMarkAsPaid(e, expense.id)}
+                                                                disabled={isCompleting}
+                                                                className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm flex items-center justify-center active:scale-95"
+                                                            >
+                                                                {isCompleting ? (
+                                                                    <div className="w-5 h-5 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                                                ) : (
+                                                                    <Check className="w-6 h-6 font-bold" />
+                                                                )}
+                                                            </button>
+                                                        )}
+                                                        {isPaid && (
+                                                            <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                                                <Check className="w-6 h-6 font-black" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </section>
             </div>
         </div>
     );

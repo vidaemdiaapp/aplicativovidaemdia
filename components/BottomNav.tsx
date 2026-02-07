@@ -25,7 +25,7 @@ export const BottomNav: React.FC = () => {
           ></div>
 
           {/* Menu Panel */}
-          <div className="relative z-10 bg-white rounded-t-[32px] p-8 shadow-2xl animate-slide-up safe-area-bottom border-t border-slate-100">
+          <div className="relative z-10 bg-card rounded-t-[32px] p-8 shadow-2xl animate-slide-up safe-area-bottom border-t border-border-color">
             {/* Handle Bar */}
             <div className="flex justify-center mb-6">
               <div className="w-12 h-1.5 bg-slate-100 rounded-full"></div>
@@ -39,10 +39,10 @@ export const BottomNav: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsAddMenuOpen(false)}
-                className="p-3 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
-                aria-label="Fechar"
+                className="p-3 bg-surface-soft rounded-full hover:bg-border-color transition-colors active:scale-90"
+                aria-label="Leia mais"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-5 h-5 text-text-muted" />
               </button>
             </div>
 
@@ -106,9 +106,9 @@ export const BottomNav: React.FC = () => {
           <div className="relative -top-6">
             <button
               onClick={() => setIsAddMenuOpen(true)}
-              className={`w-16 h-16 rounded-3xl flex items-center justify-center shadow-2xl transition-all duration-300 group ${isAddMenuOpen
-                ? 'bg-slate-900 border-slate-800 rotate-45 scale-90'
-                : 'bg-primary-500 border-primary-400 hover:shadow-primary-500/40 hover:-translate-y-1 active:scale-95'
+              className={`btn w-16 h-16 rounded-[24px] flex items-center justify-center shadow-2xl transition-all duration-300 group ${isAddMenuOpen
+                ? 'bg-text-primary border-text-secondary rotate-45 scale-90'
+                : 'bg-primary border-primary-light hover:shadow-primary/40 hover:-translate-y-1'
                 } border-2`}
               aria-label="Adicionar"
             >

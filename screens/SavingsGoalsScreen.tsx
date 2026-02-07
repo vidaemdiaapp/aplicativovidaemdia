@@ -89,75 +89,80 @@ export const SavingsGoalsScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-surface pb-24 text-text-primary">
-            {/* Header */}
-            <header className="px-6 pt-16 pb-6 bg-surface-elevated shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
-                <button
-                    onClick={() => navigate('/financial-dashboard')}
-                    className="flex items-center gap-2 text-text-muted hover:text-primary-600 transition-colors mb-4 group"
-                >
-                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Voltar</span>
-                </button>
-                <div className="flex justify-between items-start">
-                    <div>
-                        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Meus Cofrinhos</h1>
-                        <p className="text-sm text-text-secondary font-medium mt-1">{goals.length} meta(s) ativa(s)</p>
+            {/* ═══════════════════════════════════════════════════════════════
+                HEADER & SUMMARY
+            ═══════════════════════════════════════════════════════════════ */}
+            <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/financial-dashboard')}
+                            className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">Cofrinhos</h1>
+                            <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest mt-1">Meus Objetivos</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white flex items-center justify-center hover:bg-primary-600 shadow-lg shadow-primary-500/20 transition-all active:scale-95"
+                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white hover:bg-primary-600 transition-all active:scale-90 shadow-lg shadow-primary-500/20 flex items-center justify-center"
                     >
                         <Plus className="w-6 h-6" />
                     </button>
                 </div>
-            </header>
 
-            {/* Total Summary */}
-            <div className="px-6 -mt-4 relative z-10">
-                <div className="bg-white border border-border-color rounded-3xl p-6 shadow-sm">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
-                            <PiggyBank className="w-7 h-7 text-emerald-500" />
+                <div className="card p-6 border-l-4 border-l-emerald-500">
+                    <div className="flex items-center gap-5">
+                        <div className="w-16 h-16 rounded-[22px] bg-emerald-50 flex items-center justify-center border-2 border-white shadow-sm shrink-0">
+                            <PiggyBank className="w-8 h-8 text-emerald-500" />
                         </div>
-                        <div>
-                            <p className="text-[10px] text-text-muted font-bold uppercase tracking-widest">Total Poupado</p>
-                            <p className="text-3xl font-bold text-text-primary tracking-tight">{formatCurrency(getTotalSaved())}</p>
+                        <div className="flex-1">
+                            <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] mb-1">Poupado Hoje</p>
+                            <p className="text-4xl font-black text-emerald-500 tracking-tight leading-none">{formatCurrency(getTotalSaved())}</p>
+                            <p className="text-text-secondary text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
+                                <TrendingUp className="w-3.5 h-3.5" />
+                                {goals.length} meta{goals.length !== 1 ? 's' : ''} em andamento
+                            </p>
                         </div>
                     </div>
-                    <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-emerald-500 transition-all duration-700"
-                            style={{ width: `${getTotalTarget() > 0 ? (getTotalSaved() / getTotalTarget()) * 100 : 0}%` }}
-                        ></div>
-                    </div>
-                    <div className="flex justify-between mt-3 px-1">
-                        <span className="text-[11px] text-text-muted font-medium">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% do objetivo</span>
-                        <span className="text-[11px] text-text-muted font-medium">Meta: {formatCurrency(getTotalTarget())}</span>
+                    <div className="mt-6">
+                        <div className="h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
+                            <div
+                                className="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                                style={{ width: `${getTotalTarget() > 0 ? (getTotalSaved() / getTotalTarget()) * 100 : 0}%` }}
+                            ></div>
+                        </div>
+                        <div className="flex justify-between mt-3 px-1">
+                            <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% Alcançado</span>
+                            <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">Alvo: {formatCurrency(getTotalTarget())}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </header>
 
             {/* Goals List */}
             {goals.length === 0 ? (
-                <div className="px-6 mt-8">
-                    <div className="bg-white border border-dashed border-border-color rounded-3xl p-10 text-center">
-                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <PiggyBank className="w-8 h-8 text-slate-300" />
-                        </div>
-                        <p className="text-text-primary font-bold mb-2">Nenhum cofrinho criado</p>
-                        <p className="text-text-muted text-sm mb-6 max-w-[220px] mx-auto">Comece sua reserva financeira agora mesmo!</p>
+                <div className="px-6 py-12">
+                    <div className="card-premium p-12 text-center bg-white/50 border-dashed">
+                        <PiggyBank className="w-16 h-16 text-emerald-100 mx-auto mb-4" />
+                        <h3 className="text-lg font-black text-text-primary mb-2">Sem cofrinhos ainda</h3>
+                        <p className="text-text-muted text-sm font-bold uppercase tracking-widest mb-6">Comece a poupar hoje!</p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold transition-all shadow-md active:scale-[0.98]"
+                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
                         >
-                            Criar Cofrinho
+                            Criar Primeiro Cofrinho
                         </button>
                     </div>
                 </div>
             ) : (
-                <section className="px-6 mt-10 mb-6">
-                    <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-text-muted mb-4 px-1">
-                        Seus Cofrinhos
+                <section className="px-6 py-8">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-6 px-1 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        Seus Objetivos
                     </h3>
                     <div className="space-y-4">
                         {goals.map((goal) => {
@@ -169,41 +174,42 @@ export const SavingsGoalsScreen: React.FC = () => {
                                 <div
                                     key={goal.id}
                                     onClick={() => handleGoalSelect(goal)}
-                                    className={`p-5 bg-white border rounded-[28px] cursor-pointer transition-all shadow-sm ${selectedGoal?.id === goal.id
-                                        ? 'border-primary-500 ring-4 ring-primary-500/5'
-                                        : 'border-border-color hover:border-primary-200 hover:shadow-md'
-                                        }`}
+                                    className={`card p-5 group ${selectedGoal?.id === goal.id ? 'ring-4 ring-primary-500/5 border-primary-500' : ''}`}
                                 >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center gap-3">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="flex items-center gap-4">
                                             <div
-                                                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
+                                                className="w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm transition-transform group-hover:scale-110"
                                                 style={{ backgroundColor: `${goal.color}15` }}
                                             >
-                                                <Icon className="w-6 h-6" style={{ color: goal.color }} />
+                                                <Icon className="w-7 h-7" style={{ color: goal.color }} />
                                             </div>
                                             <div>
-                                                <p className="font-bold text-text-primary">{goal.name}</p>
-                                                <p className="text-[11px] text-text-muted font-medium">{config.label}</p>
+                                                <p className="text-lg font-black text-text-primary tracking-tight group-hover:text-primary-600 transition-colors">{goal.name}</p>
+                                                <p className="text-[9px] text-text-muted font-black uppercase tracking-widest">{config.label}</p>
                                             </div>
                                         </div>
-                                        {goal.is_locked && (
-                                            <Lock className="w-4 h-4 text-amber-500" />
+                                        {goal.is_locked ? (
+                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shadow-inner">
+                                                <Lock className="w-5 h-5 text-amber-500" />
+                                            </div>
+                                        ) : (
+                                            <ChevronRight className="w-6 h-6 text-slate-200 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
                                         )}
                                     </div>
 
-                                    <div className="mb-2">
+                                    <div className="mb-4">
                                         <div className="flex justify-between items-end mb-2">
-                                            <span className="text-2xl font-bold text-text-primary tracking-tight">
+                                            <span className="text-2xl font-black text-text-primary tracking-tight leading-none">
                                                 {formatCurrency(goal.current_amount)}
                                             </span>
-                                            <span className="text-xs font-bold text-text-secondary">
+                                            <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">
                                                 {progress.toFixed(0)}%
                                             </span>
                                         </div>
-                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
+                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
                                             <div
-                                                className="h-full transition-all duration-1000 ease-out"
+                                                className="h-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(0,0,0,0.1)]"
                                                 style={{
                                                     width: `${progress}%`,
                                                     backgroundColor: goal.color
@@ -212,15 +218,15 @@ export const SavingsGoalsScreen: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center mt-3">
-                                        <span className="text-[11px] text-text-muted font-medium">
-                                            Meta: {formatCurrency(goal.target_amount)}
+                                    <div className="flex justify-between items-center px-1">
+                                        <span className="text-[9px] text-text-muted font-black uppercase tracking-widest">
+                                            Alvo: {formatCurrency(goal.target_amount)}
                                         </span>
                                         {goal.deadline && (
-                                            <span className="text-[11px] text-text-muted font-bold flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
-                                                <Calendar className="w-3 h-3" />
-                                                {formatDate(goal.deadline)}
-                                            </span>
+                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-xl border border-slate-100">
+                                                <Calendar className="w-3.5 h-3.5 text-text-muted" />
+                                                <span className="text-[10px] font-black text-text-muted uppercase tracking-tighter">{formatDate(goal.deadline)}</span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

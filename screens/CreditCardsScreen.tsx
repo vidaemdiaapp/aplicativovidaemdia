@@ -108,112 +108,117 @@ export const CreditCardsScreen: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-surface pb-24 text-text-primary">
-            {/* Header */}
-            <header className="px-6 pt-16 pb-6 bg-surface-elevated border-b border-border-color shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
-                <button
-                    onClick={() => navigate('/financial-dashboard')}
-                    className="flex items-center gap-2 text-text-muted hover:text-primary-600 transition-colors mb-4 group"
-                >
-                    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Voltar</span>
-                </button>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-text-primary tracking-tight">Meus Cartões</h1>
-                        <p className="text-sm text-text-secondary font-medium">{cards.length} {cards.length === 1 ? 'cartão cadastrado' : 'cartões cadastrados'}</p>
+        <div className="min-h-screen bg-surface pb-24 text-text-primary overflow-x-hidden">
+            {/* ═══════════════════════════════════════════════════════════════
+                HEADER & NAVIGATION
+            ═══════════════════════════════════════════════════════════════ */}
+            <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/financial-dashboard')}
+                            className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">Cartões</h1>
+                            <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest mt-1">Crédito & Débito</p>
+                        </div>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white flex items-center justify-center hover:bg-primary-600 shadow-lg shadow-primary-500/20 transition-all active:scale-95"
+                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white hover:bg-primary-600 transition-all active:scale-90 shadow-lg shadow-primary-500/20 flex items-center justify-center"
                     >
                         <Plus className="w-6 h-6" />
                     </button>
                 </div>
-            </header>
 
-            {/* Total Summary */}
-            <div className="px-6 -mt-4 relative z-10">
-                <div className="bg-white border border-border-color rounded-3xl p-6 shadow-sm">
-                    <div className="flex justify-between items-center mb-4">
-                        <span className="text-[10px] text-text-muted font-bold uppercase tracking-widest px-1">Fatura Total</span>
-                        <div className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full">
-                            <span className="text-[9px] text-text-muted font-bold uppercase">
-                                Limite Disponível: {formatCurrency(getTotalLimit() - getTotalBalance())}
+                <div className="card p-6 border-l-4 border-l-primary-500">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em]">Fatura Total Acumulada</p>
+                        <div className="px-3 py-1 bg-primary-50 rounded-full border border-primary-100">
+                            <span className="text-[9px] text-primary-600 font-black uppercase tracking-widest leading-none">
+                                {cards.length} {cards.length === 1 ? 'Cartão' : 'Cartões'}
                             </span>
                         </div>
                     </div>
-                    <p className="text-3xl font-bold text-text-primary tracking-tight mb-4 px-1">{formatCurrency(getTotalBalance())}</p>
-                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <p className="text-4xl font-black text-text-primary tracking-tight mb-4">{formatCurrency(getTotalBalance())}</p>
+                    <div className="h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
                         <div
-                            className={`h-full ${getUsageColor(getTotalLimit() > 0 ? (getTotalBalance() / getTotalLimit()) * 100 : 0)} transition-all duration-1000 ease-out`}
+                            className={`h-full ${getUsageColor(getTotalLimit() > 0 ? (getTotalBalance() / getTotalLimit()) * 100 : 0)} transition-all duration-1000 ease-out shadow-sm`}
                             style={{ width: `${getTotalLimit() > 0 ? (getTotalBalance() / getTotalLimit()) * 100 : 0}%` }}
                         ></div>
                     </div>
+                    <div className="flex justify-between mt-3 px-1">
+                        <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">Limite Disponível</span>
+                        <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">{formatCurrency(getTotalLimit() - getTotalBalance())}</span>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             {/* Cards Carousel */}
             {cards.length === 0 ? (
-                <div className="px-6 mt-8">
-                    <div className="bg-white border border-dashed border-slate-200 rounded-3xl p-10 text-center">
-                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <CreditCardIcon className="w-8 h-8 text-slate-300" />
-                        </div>
-                        <p className="text-slate-600 font-bold mb-2">Nenhum cartão</p>
-                        <p className="text-slate-400 text-sm mb-6 max-w-[200px] mx-auto">Adicione seus cartões para gerenciar faturas em um só lugar.</p>
+                <div className="px-6 py-12">
+                    <div className="card-premium p-12 text-center bg-white/50 border-dashed">
+                        <CreditCardIcon className="w-16 h-16 text-primary-100 mx-auto mb-4" />
+                        <h3 className="text-lg font-black text-text-primary mb-2">Sem cartões</h3>
+                        <p className="text-text-muted text-sm font-bold uppercase tracking-widest mb-6">Centralize suas faturas aqui</p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold transition-all shadow-md shadow-primary-500/20 active:scale-[0.98]"
+                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
                         >
                             Adicionar Cartão
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="px-6 mt-8 mb-10">
-                    <div className="flex gap-4 overflow-x-auto pb-6 -mx-6 px-6 no-scrollbar min-w-max">
+                <div className="px-6 py-8">
+                    <div className="flex gap-6 overflow-x-auto pb-8 -mx-6 px-6 no-scrollbar">
                         {cards.map((card) => (
                             <div
                                 key={card.id}
                                 onClick={() => handleCardSelect(card)}
-                                className={`flex-shrink-0 w-72 h-44 rounded-3xl p-6 cursor-pointer transition-all duration-300 relative overflow-hidden group ${selectedCard?.id === card.id
-                                    ? 'ring-4 ring-primary-500/10 scale-105 shadow-xl'
-                                    : 'hover:scale-[1.02] shadow-md opacity-80 hover:opacity-100'
+                                className={`flex-shrink-0 w-80 h-48 rounded-[32px] p-6 cursor-pointer transition-all duration-500 relative overflow-hidden group ${selectedCard?.id === card.id
+                                    ? 'ring-8 ring-primary-500/5 scale-105 shadow-2xl'
+                                    : 'hover:scale-[1.02] shadow-lg opacity-80 hover:opacity-100'
                                     }`}
                                 style={{
-                                    background: `linear-gradient(135deg, ${card.color} 0%, ${card.color}DD 100%)`
+                                    background: `linear-gradient(135deg, ${card.color} 0%, ${card.color}AA 100%)`
                                 }}
                             >
-                                {/* Decorative elements */}
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-white/20 transition-colors"></div>
+                                {/* Glassmorphism decorative elements */}
+                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-[80px] group-hover:bg-white/20 transition-all duration-700"></div>
+                                <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 rounded-full blur-[60px]"></div>
 
-                                {/* Card Content */}
-                                <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <span className="text-white text-[13px] font-bold uppercase tracking-widest">
-                                        {card.name}
-                                    </span>
-                                    <div className="px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center border border-white/20">
-                                        <span className="text-white text-[9px] font-black italic tracking-tighter">
-                                            {BRAND_LOGOS[card.brand]}
+                                <div className="flex justify-between items-start mb-8 relative z-10">
+                                    <div>
+                                        <p className="text-white/60 text-[8px] font-black uppercase tracking-[0.2em] leading-none mb-1">Apelido do Cartão</p>
+                                        <span className="text-white text-sm font-black uppercase tracking-widest">
+                                            {card.name}
+                                        </span>
+                                    </div>
+                                    <div className="w-12 h-8 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 shadow-sm">
+                                        <span className="text-white text-[10px] font-black italic tracking-tighter">
+                                            {BRAND_LOGOS[card.brand] || 'CARD'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="mb-4 relative z-10">
-                                    <p className="text-white/60 text-[9px] font-bold uppercase tracking-widest leading-none mb-1">Fatura Atual</p>
-                                    <p className="text-white text-2xl font-bold tracking-tight">{formatCurrency(card.current_balance)}</p>
+                                <div className="mb-6 relative z-10">
+                                    <p className="text-white/50 text-[8px] font-black uppercase tracking-[0.2em] leading-none mb-1">Gasto Acumulado</p>
+                                    <p className="text-white text-3xl font-black tracking-tight drop-shadow-sm">{formatCurrency(card.current_balance)}</p>
                                 </div>
 
                                 <div className="flex justify-between items-end relative z-10">
                                     <div>
-                                        <p className="text-white/80 text-[10px] font-medium tracking-[0.2em]">
+                                        <p className="text-white/90 text-[11px] font-black tracking-[0.3em] font-mono">
                                             •••• {card.last_four_digits || '0000'}
                                         </p>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest leading-none mb-1">Vencimento</p>
-                                        <p className="text-white text-[11px] font-bold bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm border border-white/10">Dia {card.due_day}</p>
+                                    <div className="flex items-center gap-2 bg-black/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></div>
+                                        <p className="text-white text-[9px] font-black uppercase tracking-widest">Dia {card.due_day}</p>
                                     </div>
                                 </div>
                             </div>
@@ -222,13 +227,13 @@ export const CreditCardsScreen: React.FC = () => {
                         {/* Add Card Button */}
                         <div
                             onClick={() => setShowAddModal(true)}
-                            className="flex-shrink-0 w-72 h-44 rounded-3xl border-2 border-dashed border-slate-100 bg-white flex flex-col items-center justify-center cursor-pointer hover:border-primary-200 hover:bg-slate-50 transition-all active:scale-95 group shadow-sm"
+                            className="flex-shrink-0 w-80 h-48 rounded-[32px] border-3 border-dashed border-slate-100 bg-white/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary-200 hover:bg-white hover:shadow-xl transition-all active:scale-95 group"
                         >
-                            <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
-                                <Plus className="w-6 h-6 text-slate-300 group-hover:text-primary-500" />
+                            <div className="w-16 h-16 rounded-[22px] bg-slate-50 flex items-center justify-center group-hover:bg-primary-50 transition-all duration-300">
+                                <Plus className="w-8 h-8 text-slate-300 group-hover:text-primary-500" />
                             </div>
-                            <span className="text-slate-400 group-hover:text-primary-600 text-[11px] font-bold uppercase tracking-widest mt-4 transition-colors">
-                                Novo Cartão
+                            <span className="text-text-muted group-hover:text-primary-600 text-[10px] font-black uppercase tracking-[0.2em] mt-5 transition-colors">
+                                Adicionar Novo
                             </span>
                         </div>
                     </div>

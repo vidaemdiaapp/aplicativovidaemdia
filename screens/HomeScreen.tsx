@@ -146,39 +146,39 @@ export const HomeScreen: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════
           HEADER — Greeting & Quick Actions
       ═══════════════════════════════════════════════════════════════ */}
-      <header className="bg-white px-6 pt-14 pb-6 shadow-sm sticky top-0 z-20 lg:rounded-b-3xl">
-        <div className="flex justify-between items-start">
+      <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            {/* Mobile Logo */}
-            <img
-              src="/assets/logo.png"
-              className="w-12 h-12 lg:hidden object-contain rounded-2xl shadow-sm"
-              alt="Vida em Dia"
-            />
+            <div className="relative">
+              <img
+                src="/assets/logo.png"
+                className="w-14 h-14 object-contain rounded-[20px] shadow-md border-2 border-white"
+                alt="Vida em Dia"
+              />
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                <ShieldCheck className="w-3 h-3 text-white" />
+              </div>
+            </div>
             <div>
-              <p className="text-text-secondary text-sm font-medium">{greeting},</p>
-              <h1 className="text-2xl font-bold text-text-primary tracking-tight">{userName}</h1>
+              <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest leading-none mb-1">{greeting}</p>
+              <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">{userName.split(' ')[0]}</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Mobile Upload Button */}
+          <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/upload')}
-              className="lg:hidden p-3 rounded-2xl text-text-secondary hover:text-primary-600 hover:bg-primary-50 border border-border-color shadow-sm active:scale-95 transition-all"
-              aria-label="Upload documento"
+              className="lg:hidden w-11 h-11 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
             >
               <UploadCloud className="w-5 h-5" />
             </button>
-
             <button
               onClick={() => navigate('/notifications')}
-              className="relative p-3 rounded-2xl hover:bg-slate-50 transition-colors border border-transparent hover:border-border-color"
-              aria-label="Notificações"
+              className="relative w-11 h-11 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
             >
-              <Bell className="w-5 h-5 text-text-secondary" />
+              <Bell className="w-5 h-5" />
               {urgentTasks.length > 0 && (
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-danger-500 rounded-full border-2 border-white animate-pulse"></span>
+                <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-danger-500 rounded-full border-2 border-white"></span>
               )}
             </button>
           </div>
@@ -204,36 +204,35 @@ export const HomeScreen: React.FC = () => {
         </section>
 
         <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-125">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold text-text-primary text-lg">Seu Patrimônio</h2>
+          <div className="flex justify-between items-center mb-5 px-1">
+            <h2 className="font-black text-text-primary text-lg tracking-tight">Atalhos Premium</h2>
+            <button className="text-[10px] font-bold text-primary-600 uppercase tracking-widest">Ver Todos</button>
           </div>
-          <div className="bg-white rounded-[32px] py-7 shadow-sm border border-border-color overflow-hidden">
-            <div className="flex gap-6 px-6 overflow-x-auto no-scrollbar min-w-max pb-2">
-              <QuickAccessButton
-                icon={Car}
-                label="Veículos"
-                color="bg-primary-50 text-primary-600"
-                onClick={() => navigate('/vehicle-central')}
-              />
-              <QuickAccessButton
-                icon={ShieldCheck}
-                label="IR"
-                color="bg-emerald-50 text-emerald-600"
-                onClick={() => navigate('/tax-declaration')}
-              />
-              <QuickAccessButton
-                icon={Calendar}
-                label="Agenda"
-                color="bg-amber-50 text-amber-600"
-                onClick={() => navigate('/agenda')}
-              />
-              <QuickAccessButton
-                icon={FileText}
-                label="Contrato"
-                color="bg-indigo-50 text-indigo-600"
-                onClick={() => navigate('/fiscal-folder')}
-              />
-            </div>
+          <div className="card-premium py-8 flex items-center justify-around">
+            <QuickAccessButton
+              icon={Car}
+              label="Veículos"
+              color="bg-primary-50 text-primary-600"
+              onClick={() => navigate('/vehicle-central')}
+            />
+            <QuickAccessButton
+              icon={ShieldCheck}
+              label="Impostos"
+              color="bg-emerald-50 text-emerald-600"
+              onClick={() => navigate('/tax-declaration')}
+            />
+            <QuickAccessButton
+              icon={Calendar}
+              label="Agenda"
+              color="bg-amber-50 text-amber-600"
+              onClick={() => navigate('/agenda')}
+            />
+            <QuickAccessButton
+              icon={FileText}
+              label="Contratos"
+              color="bg-indigo-50 text-indigo-600"
+              onClick={() => navigate('/fiscal-folder')}
+            />
           </div>
         </section>
 
@@ -287,18 +286,18 @@ export const HomeScreen: React.FC = () => {
                   <div
                     key={task.id}
                     onClick={() => navigate(`/detail/${task.id}`)}
-                    className="group bg-white p-5 rounded-3xl shadow-sm border border-border-color active:scale-[0.98] transition-all cursor-pointer hover:border-primary-200 hover:shadow-md"
+                    className="group card p-5 flex flex-col gap-4"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`p-3 rounded-2xl shrink-0 transition-colors ${task.health_status === 'risk'
-                          ? 'bg-danger-50 text-danger-500 group-hover:bg-danger-100'
-                          : 'bg-warning-50 text-warning-500 group-hover:bg-warning-100'
+                        <div className={`w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center transition-all ${task.health_status === 'risk'
+                          ? 'bg-danger-50 text-danger-500 shadow-sm shadow-danger-500/10'
+                          : 'bg-warning-50 text-warning-500 shadow-sm shadow-warning-500/10'
                           }`}>
-                          <IconComponent className="w-5 h-5" />
+                          <IconComponent className="w-6 h-6" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="font-semibold text-text-primary text-[15px] truncate group-hover:text-primary-600 transition-colors">
+                          <h4 className="font-bold text-text-primary text-[16px] truncate group-hover:text-primary-600 transition-colors">
                             {task.title}
                           </h4>
                           <p className={`text-xs font-medium mt-0.5 ${task.health_status === 'risk' ? 'text-danger-500' : 'text-slate-400'
@@ -372,10 +371,10 @@ const QuickAccessButton: React.FC<{
     onClick={onClick}
     className="flex flex-col items-center gap-2 group transition-all"
   >
-    <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95 shadow-sm`}>
-      <Icon className="w-6 h-6" />
+    <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-90 shadow-md border border-white`}>
+      <Icon className="w-7 h-7" />
     </div>
-    <span className="text-[10px] font-bold text-slate-600 text-center leading-tight group-hover:text-primary-600">
+    <span className="text-[10px] font-black text-text-muted text-center uppercase tracking-widest group-hover:text-primary-600">
       {label}
     </span>
   </button>

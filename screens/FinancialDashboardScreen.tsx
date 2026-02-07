@@ -13,6 +13,8 @@ import { budgetLimitsService } from '../services/financial';
 import { IncomeRegistrationModal } from '../components/IncomeRegistrationModal';
 import { SpendingDonutChart, MonthlyBarChart } from '../components/charts/SpendingChart';
 import { BudgetAlertBanner, BudgetAlert } from '../components/BudgetAlertBanner';
+import { CountUp } from '../components/CountUp';
+import { Skeleton } from '../components/Skeleton';
 
 interface DashboardData {
     total_income: number;
@@ -185,10 +187,40 @@ export const FinancialDashboardScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
-                    <p className="text-slate-400 text-sm font-medium animate-pulse uppercase tracking-widest">Processando finanças...</p>
+            <div className="min-h-screen bg-surface pb-24 overflow-x-hidden">
+                <header className="px-6 pt-16 pb-10 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[48px]">
+                    <div className="flex justify-between items-start mb-8">
+                        <div>
+                            <Skeleton className="w-24 h-6 rounded-full mb-4" />
+                            <Skeleton className="w-32 h-4 mb-2" />
+                            <Skeleton className="w-56 h-14" />
+                        </div>
+                        <Skeleton className="w-12 h-12 rounded-2xl" />
+                    </div>
+                </header>
+
+                <div className="px-6 py-6 overflow-x-auto no-scrollbar">
+                    <div className="flex gap-4 min-w-max px-1">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="flex flex-col items-center gap-2 p-2 min-w-[90px]">
+                                <Skeleton className="w-16 h-16 rounded-[22px]" />
+                                <Skeleton className="w-12 h-2" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="px-6 space-y-6">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Skeleton className="h-28 rounded-3xl" />
+                        <Skeleton className="h-28 rounded-3xl" />
+                    </div>
+                    <Skeleton className="h-24 rounded-3xl" />
+                    <div className="grid grid-cols-3 gap-3">
+                        <Skeleton className="h-20 rounded-2xl" />
+                        <Skeleton className="h-20 rounded-2xl" />
+                        <Skeleton className="h-20 rounded-2xl" />
+                    </div>
                 </div>
             </div>
         );
@@ -201,79 +233,76 @@ export const FinancialDashboardScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* ═══════════════════════════════════════════════════════════════
-                HERO: Refined Balance Display
+                HERO: Pro Max Balance Display
             ═══════════════════════════════════════════════════════════════ */}
-            <header className="bg-surface-elevated px-6 pt-16 pb-8 shadow-sm lg:rounded-b-[32px] sticky top-0 z-20">
-                <div className="flex justify-between items-start mb-6">
+            <header className="px-6 pt-16 pb-10 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[48px]">
+                <div className="flex justify-between items-start mb-8">
                     <div>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${riskConfig.bg} mb-3`}>
-                            <RiskIcon className={`w-3.5 h-3.5 ${riskConfig.text}`} />
-                            <span className={`text-[10px] font-bold uppercase tracking-wider ${riskConfig.text}`}>
-                                {riskConfig.label}
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${riskConfig.bg} border border-white shadow-sm mb-4`}>
+                            <RiskIcon className={`w-4 h-4 ${riskConfig.text}`} />
+                            <span className={`text-[10px] font-black uppercase tracking-[0.1em] ${riskConfig.text}`}>
+                                Saúde {riskConfig.label}
                             </span>
                         </div>
-                        <p className="text-text-secondary text-xs font-semibold uppercase tracking-widest mb-1">
-                            Projeção do Mês
+                        <p className="text-text-muted text-[11px] font-bold uppercase tracking-[0.2em] mb-2 px-1">
+                            Saldo Projetado (Mês)
                         </p>
-                        <h1 className={`text-4xl font-bold tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-600' :
-                            dashboard?.status === 'warning' ? 'text-amber-600' : 'text-rose-600'
+                        <h1 className={`text-5xl font-black tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-500' :
+                            dashboard?.status === 'warning' ? 'text-amber-500' : 'text-rose-500'
                             }`}>
-                            {dashboard ? formatCurrency(dashboard.balance) : 'R$ 0,00'}
+                            {dashboard ? (
+                                <CountUp
+                                    value={dashboard.balance}
+                                    formatter={formatCurrency}
+                                />
+                            ) : 'R$ 0,00'}
                         </h1>
                     </div>
                     <button
                         onClick={() => loadData()}
-                        className="p-3 bg-slate-50 rounded-2xl text-text-muted hover:text-primary-500 hover:bg-primary-50 transition-all active:rotate-180 duration-500 shadow-sm border border-border-color"
+                        className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:rotate-180 duration-700 shadow-sm flex items-center justify-center"
                     >
                         <RefreshCw className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Main Stats Row - CLICKABLE */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* RENDAS - Clicável e com edição */}
+                {/* Main Stats Row - Premium Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div
                         onClick={() => navigate('/incomes')}
-                        className="bg-white p-4 rounded-3xl flex items-center gap-3 border border-border-color cursor-pointer hover:border-emerald-200 hover:shadow-md transition-all group active:scale-[0.98]"
+                        className="card p-5 flex items-center gap-4 group cursor-pointer"
                     >
-                        <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
-                            <ArrowUpCircle className="w-6 h-6 text-emerald-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
+                            <ArrowUpCircle className="w-8 h-8" />
                         </div>
                         <div className="flex-1">
-                            <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-text-secondary font-bold uppercase">Rendas</p>
-                                <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
-                            </div>
-                            <p className="text-sm font-bold text-text-primary group-hover:text-emerald-600 transition-colors">
+                            <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-0.5">Entradas</p>
+                            <p className="text-lg font-black text-text-primary">
                                 {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
                             </p>
                         </div>
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsIncomeModalOpen(true); }}
-                            className="w-8 h-8 rounded-xl bg-emerald-50 hover:bg-emerald-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                            title="Editar Renda"
+                            className="w-10 h-10 rounded-xl bg-slate-50 text-text-muted hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                         >
-                            <Plus className="w-4 h-4 text-emerald-500" />
+                            <Plus className="w-5 h-5" />
                         </button>
                     </div>
 
-                    {/* CONTAS/DESPESAS - Clicável */}
                     <div
                         onClick={() => navigate('/expenses')}
-                        className="bg-white p-4 rounded-3xl flex items-center gap-3 border border-border-color cursor-pointer hover:border-rose-200 hover:shadow-md transition-all group active:scale-[0.98]"
+                        className="card p-5 flex items-center gap-4 group cursor-pointer"
                     >
-                        <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
-                            <ArrowDownCircle className="w-6 h-6 text-rose-500" />
+                        <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all shadow-sm">
+                            <ArrowDownCircle className="w-8 h-8" />
                         </div>
                         <div className="flex-1">
-                            <div className="flex items-center gap-1">
-                                <p className="text-[10px] text-text-secondary font-bold uppercase">Despesas</p>
-                                <ChevronRight className="w-3 h-3 text-slate-300 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
-                            </div>
-                            <p className="text-sm font-bold text-text-primary group-hover:text-rose-600 transition-colors">
+                            <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-0.5">Saídas</p>
+                            <p className="text-lg font-black text-text-primary">
                                 {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
                             </p>
                         </div>
+                        <ChevronRight className="w-6 h-6 text-slate-200 group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
                     </div>
                 </div>
             </header>
@@ -355,17 +384,17 @@ export const FinancialDashboardScreen: React.FC = () => {
                 </button>
 
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
-                        <p className="text-2xl font-bold text-rose-500">{dashboard?.overdue_count || 0}</p>
-                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">Vencidas</p>
+                    <div className="card p-4 text-center group">
+                        <p className="text-2xl font-black text-rose-500 animate-pulse">{dashboard?.overdue_count || 0}</p>
+                        <p className="text-[9px] text-text-muted font-black uppercase tracking-widest mt-1">Vencidas</p>
                     </div>
-                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
-                        <p className="text-2xl font-bold text-amber-500">{dashboard?.today_count || 0}</p>
-                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">Hoje</p>
+                    <div className="card p-4 text-center group">
+                        <p className="text-2xl font-black text-amber-500">{dashboard?.today_count || 0}</p>
+                        <p className="text-[9px] text-text-muted font-black uppercase tracking-widest mt-1">Hoje</p>
                     </div>
-                    <div className="bg-white border border-border-color shadow-sm rounded-3xl p-4 text-center hover:shadow-md transition-shadow">
-                        <p className="text-2xl font-bold text-emerald-500">{dashboard?.week_count || 0}</p>
-                        <p className="text-[10px] text-text-muted font-bold uppercase mt-1">7 Dias</p>
+                    <div className="card p-4 text-center group">
+                        <p className="text-2xl font-black text-emerald-500">{dashboard?.week_count || 0}</p>
+                        <p className="text-[9px] text-text-muted font-black uppercase tracking-widest mt-1">7 Dias</p>
                     </div>
                 </div>
 
@@ -424,36 +453,42 @@ export const FinancialDashboardScreen: React.FC = () => {
                     UPCOMING BILLS
                 ═══════════════════════════════════════════════════════════════ */}
                 <section>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-bold text-slate-800">Próximos Vencimentos</h3>
-                        <button onClick={() => navigate('/agenda')} className="text-xs font-bold text-primary-500 hover:text-primary-600 transition-colors uppercase tracking-wider">Ver Agenda</button>
+                    <div className="flex justify-between items-center mb-5 px-1">
+                        <h3 className="text-lg font-black text-text-primary tracking-tight">Próximos Vencimentos</h3>
+                        <button onClick={() => navigate('/agenda')} className="text-[10px] font-black text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-[0.2em]">Agenda completa</button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         {upcomingBills.length === 0 ? (
-                            <div className="bg-white rounded-3xl p-10 text-center border border-slate-100 shadow-sm transition-all hover:shadow-md">
-                                <CheckCircle2 className="w-12 h-12 text-emerald-200 mx-auto mb-4" />
-                                <p className="text-slate-500 text-sm font-medium">Você está em dia!</p>
+                            <div className="card p-10 text-center">
+                                <CheckCircle2 className="w-14 h-14 text-emerald-200 mx-auto mb-4" />
+                                <p className="text-text-secondary text-sm font-bold">Você está em dia!</p>
                             </div>
                         ) : (
                             upcomingBills.map(bill => (
                                 <div
                                     key={bill.id}
                                     onClick={() => navigate(`/detail/${bill.id}`)}
-                                    className="bg-white p-5 rounded-3xl border border-border-color flex items-center justify-between hover:border-primary-200 hover:shadow-md transition-all cursor-pointer group"
+                                    className="card p-5 mt-1 flex items-center justify-between group"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-text-muted group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
-                                            <Clock className="w-6 h-6" />
+                                        <div className="w-14 h-14 rounded-2xl bg-primary-50 text-text-muted group-hover:bg-primary-500 group-hover:text-white transition-all flex items-center justify-center shadow-sm">
+                                            <Clock className="w-7 h-7" />
                                         </div>
                                         <div>
-                                            <p className="font-bold text-text-primary group-hover:text-primary-600 transition-colors">{bill.title}</p>
-                                            <p className="text-xs text-text-muted font-medium tracking-tight">Vence em {formatDate(bill.due_date)}</p>
+                                            <p className="font-black text-text-primary group-hover:text-primary-600 transition-colors">{bill.title}</p>
+                                            <div className="flex items-center gap-1.5 mt-1">
+                                                <Calendar className="w-3 h-3 text-text-muted" />
+                                                <p className="text-[11px] text-text-muted font-bold uppercase tracking-wider">{formatDate(bill.due_date)}</p>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-bold text-text-primary">{formatCurrency(parseFloat(bill.amount?.toString() || '0'))}</p>
-                                        <ChevronRight className="w-4 h-4 text-slate-300 ml-auto mt-1 group-hover:translate-x-1 transition-transform" />
+                                        <p className="text-lg font-black text-text-primary tracking-tight">{formatCurrency(parseFloat(bill.amount?.toString() || '0'))}</p>
+                                        <div className="flex items-center justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-[9px] font-black text-primary-600 uppercase">Pagar</span>
+                                            <ChevronRight className="w-3 h-3 text-primary-600" />
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -641,12 +676,12 @@ const QuickAccessButton: React.FC<{
 }> = ({ icon: Icon, label, color, onClick }) => (
     <button
         onClick={onClick}
-        className="flex flex-col items-center gap-2 group p-2 min-w-[80px]"
+        className="flex flex-col items-center gap-2 group p-2 min-w-[90px] active:scale-95 transition-all"
     >
-        <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center transition-all group-hover:scale-105 group-active:scale-95 shadow-sm group-hover:shadow-md border border-white/50`}>
-            <Icon className="w-7 h-7" />
+        <div className={`w-16 h-16 rounded-[22px] ${color} flex items-center justify-center transition-all group-hover:scale-110 shadow-sm group-hover:shadow-lg border-2 border-white`}>
+            <Icon className="w-8 h-8" />
         </div>
-        <span className="text-[11px] font-bold text-slate-600 text-center leading-tight group-hover:text-primary-600 transition-colors">
+        <span className="text-[10px] font-black text-text-muted text-center uppercase tracking-widest leading-none group-hover:text-primary-600">
             {label}
         </span>
     </button>

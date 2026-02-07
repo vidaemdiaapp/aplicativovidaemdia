@@ -107,19 +107,19 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white w-full max-w-lg rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-card w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-border-color">
                 <div className="p-8">
                     <div className="flex justify-between items-center mb-8">
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                            <h2 className="text-2xl font-black text-text-primary flex items-center gap-2 tracking-tight">
                                 <Wallet className="w-6 h-6 text-primary" />
                                 Gestão de Renda
                             </h2>
-                            <p className="text-slate-500 text-sm font-medium mt-1">Configure as entradas do mês</p>
+                            <p className="text-text-secondary text-sm font-medium mt-1">Configure as entradas do mês</p>
                         </div>
-                        <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <X className="w-6 h-6 text-slate-400 hover:text-slate-600" />
+                        <button onClick={onClose} className="p-2 hover:bg-surface-soft rounded-full transition-colors active:scale-90">
+                            <X className="w-6 h-6 text-text-muted hover:text-text-primary" />
                         </button>
                     </div>
 
@@ -142,13 +142,13 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                             value={myIncome.amount}
                                             onChange={e => setMyIncome({ ...myIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 font-bold text-xl text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-colors placeholder:text-slate-300"
+                                            className="input py-5 pl-12 pr-4 font-black text-2xl"
                                         />
                                     </div>
                                     <select
                                         value={myIncome.type}
                                         onChange={e => setMyIncome({ ...myIncome, type: e.target.value as IncomeType })}
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 px-4 font-bold text-slate-700 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none appearance-none transition-colors cursor-pointer"
+                                        className="input py-5 px-4 font-bold appearance-none cursor-pointer"
                                     >
                                         <option value="clt">CLT</option>
                                         <option value="pj">PJ</option>
@@ -183,7 +183,7 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                             value={partnerIncome.amount}
                                             onChange={e => setPartnerIncome({ ...partnerIncome, amount: e.target.value })}
                                             placeholder="0,00"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-4 pl-12 pr-4 font-bold text-xl text-slate-900 focus:border-primary focus:ring-2 focus:ring-primary/10 outline-none transition-colors placeholder:text-slate-300"
+                                            className="input py-5 pl-12 pr-4 font-black text-2xl"
                                         />
                                     </div>
                                     {(!partnerIncome.amount || partnerIncome.amount === '0') && (
@@ -201,13 +201,13 @@ export const IncomeRegistrationModal: React.FC<Props> = ({ isOpen, onClose, onSu
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="w-full bg-primary text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-blue-500/20 hover:bg-primary-hover hover:scale-[1.02] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
+                                    className="btn btn-primary w-full py-5 rounded-full text-lg group h-16"
                                 >
                                     {saving ? (
                                         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                                     ) : (
                                         <>
-                                            <CheckCircle2 className="w-6 h-6" />
+                                            <CheckCircle2 className="w-6 h-6 transition-transform group-hover:scale-110" />
                                             Salvar Alterações
                                         </>
                                     )}
