@@ -46,7 +46,7 @@ export const OnboardingScreen: React.FC = () => {
         ) : (
           <button
             onClick={() => setIsIncomeModalOpen(true)}
-            className="mt-10 px-8 py-5 bg-slate-900 text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95"
+            className="mt-10 px-8 py-5 bg-primary-600 text-white rounded-[24px] font-black text-sm uppercase tracking-widest shadow-xl shadow-primary-200 hover:bg-primary-700 transition-all active:scale-95"
           >
             Cadastrar Renda Agora
           </button>
@@ -89,11 +89,11 @@ export const OnboardingScreen: React.FC = () => {
           Convidar Parceiro(a)
         </button>
         <button
-          onClick={() => setStep(3)}
-          className="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95"
+          onClick={() => setStep(3)} // Retained original onClick logic
+          className="w-full h-16 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary-200 transition-all active:scale-95"
         >
-          Continuar Solo
-          <ArrowRight className="w-6 h-6 text-white/40" />
+          Continuar
+          <ArrowRight className="w-5 h-5" />
         </button>
       </div>
     </div>

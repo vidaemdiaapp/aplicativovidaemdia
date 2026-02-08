@@ -5,7 +5,8 @@ import {
   Bell, ChevronRight, Car, Home, FileText, Shield, Receipt, Plus,
   DollarSign, CheckCircle2, UploadCloud, Zap, ShoppingBag,
   Utensils, Heart, Plane, Landmark, MoreHorizontal, Calendar, ShieldCheck,
-  CreditCard, PiggyBank, TrendingUp
+  CreditCard, PiggyBank, TrendingUp, ArrowUpCircle, ArrowDownCircle, Eye, EyeOff,
+  Sparkles, AlertTriangle, Clock, Briefcase
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -13,6 +14,7 @@ import { tasksService, Task, Category, Household, HouseholdMember } from '../ser
 import { CouplePanel } from '../components/CouplePanel';
 import { ResponsibilityBadge } from '../components/ResponsibilityBadge';
 import { FinancialSummaryCard } from '../components/FinancialSummaryCard';
+import { Skeleton } from '../components/Skeleton';
 
 type ResponsibilityFilter = 'me' | 'partner' | 'unassigned' | 'joint';
 
@@ -55,6 +57,7 @@ export const HomeScreen: React.FC = () => {
   } | null>(null);
   const [activities, setActivities] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hideBalance, setHideBalance] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -63,12 +66,9 @@ export const HomeScreen: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load essential data first
-      // getHousehold already has a cache mechanism now to prevent infinite loop/redundancy
       const householdData = await tasksService.getHousehold();
       setHousehold(householdData);
 
-      // Load other data in parallel, but handle each one individually to avoid blocking
       const [
         tasksData,
         categoriesData,
@@ -97,12 +97,10 @@ export const HomeScreen: React.FC = () => {
     } catch (error) {
       console.error('[HomeScreen] Fatal loading error:', error);
     } finally {
-      // Small timeout to ensure state transitions are smooth and don't flicker
       setTimeout(() => setLoading(false), 100);
     }
   };
 
-  // derived from Status Engine
   const currentStatus = statusData?.household_status === 'risk' ? StatusLevel.RISK :
     statusData?.household_status === 'attention' ? StatusLevel.WARNING :
       StatusLevel.SAFE;
@@ -110,11 +108,8 @@ export const HomeScreen: React.FC = () => {
   const partner = household?.members?.find(m => m.user_id !== user?.id);
   const partnerName = partner?.profile?.full_name || 'Parceiro(a)';
 
-  // Filter all household tasks based on responsibility and pending status (Sprint 9)
   const urgentTasks = tasks.filter(task => {
-    // Only show open tasks in this dashboard section
     if (task.status === 'completed') return false;
-
     if (responsibilityFilter === 'me') return task.owner_user_id === user?.id;
     if (responsibilityFilter === 'partner') return task.owner_user_id === partner?.user_id;
     if (responsibilityFilter === 'unassigned') return !task.owner_user_id;
@@ -128,231 +123,388 @@ export const HomeScreen: React.FC = () => {
     return Math.round((statusData.counts.ok / total) * 100);
   };
 
+  const formatCurrency = (val: number | undefined | null) =>
+    (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.getTime() === today.getTime()) return 'Hoje';
+    if (date.getTime() === tomorrow.getTime()) return 'Amanhã';
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  };
+
   // Get user display name from profile
   const userName = user?.user_metadata?.full_name || 'Usuário';
   const greeting = new Date().getHours() < 12 ? 'Bom dia' : new Date().getHours() < 18 ? 'Boa tarde' : 'Boa noite';
 
+  const getUserInitials = () => {
+    const name = userName;
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-surface gap-4">
-        <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
-        <p className="text-slate-400 text-sm font-medium animate-pulse">Carregando...</p>
+      <div className="min-h-screen bg-surface pb-24 overflow-x-hidden">
+        <header className="bg-primary-500 pt-14 pb-32 px-6 relative overflow-hidden">
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex items-center gap-3">
+              <Skeleton className="w-12 h-12 rounded-full bg-white/20" />
+              <div>
+                <Skeleton className="w-20 h-3 mb-2 bg-white/20" />
+                <Skeleton className="w-28 h-5 bg-white/20" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="w-10 h-10 rounded-xl bg-white/20" />
+              <Skeleton className="w-10 h-10 rounded-xl bg-white/20" />
+            </div>
+          </div>
+        </header>
+        <div className="px-4 -mt-24 relative z-20">
+          <Skeleton className="h-56 rounded-3xl" />
+        </div>
+        <div className="px-4 mt-8 space-y-4">
+          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-40 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
+  const totalExpenses = financialReport?.total_commitments || 0;
+  const overdueCount = urgentTasks.filter(t => t.health_status === 'risk').length;
+
   return (
-    <div className="min-h-screen bg-surface pb-24 lg:pb-8">
+    <div className="min-h-screen bg-surface pb-24 text-text-primary">
       {/* ═══════════════════════════════════════════════════════════════
-          HEADER — Greeting & Quick Actions
+          HERO: Blue Header with User Greeting
       ═══════════════════════════════════════════════════════════════ */}
-      <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <img
-                src="/assets/logo.png"
-                className="w-14 h-14 object-contain rounded-[20px] shadow-md border-2 border-white"
-                alt="Vida em Dia"
-              />
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
-                <ShieldCheck className="w-3 h-3 text-white" />
-              </div>
+      <header className="bg-primary-500 pt-14 pb-32 px-6 relative overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+        {/* Top Row: Avatar + Icons */}
+        <div className="flex justify-between items-start relative z-10 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white font-bold text-lg border-2 border-white/30">
+              {getUserInitials()}
             </div>
             <div>
-              <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest leading-none mb-1">{greeting}</p>
-              <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">{userName.split(' ')[0]}</h1>
+              <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">{greeting}</p>
+              <p className="text-white text-lg font-bold">{userName.split(' ')[0]}</p>
             </div>
           </div>
-
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/upload')}
-              className="lg:hidden w-11 h-11 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+              onClick={() => setHideBalance(!hideBalance)}
+              className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all"
             >
-              <UploadCloud className="w-5 h-5" />
+              {hideBalance ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
             <button
               onClick={() => navigate('/notifications')}
-              className="relative w-11 h-11 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+              className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all relative"
             >
               <Bell className="w-5 h-5" />
-              {urgentTasks.length > 0 && (
-                <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-danger-500 rounded-full border-2 border-white"></span>
+              {overdueCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {overdueCount}
+                </span>
               )}
             </button>
           </div>
         </div>
       </header>
 
-      <div className="px-6 py-8 space-y-8">
-        {/* ═══════════════════════════════════════════════════════════════
-            STATUS CARD — Most Important Visual Element
-        ═══════════════════════════════════════════════════════════════ */}
-        <section className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <StatusCard status={currentStatus} percentage={getPercentage()} />
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            FINANCIAL SUMMARY — Secondary Hero Card
-        ═══════════════════════════════════════════════════════════════ */}
-        <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
-          <FinancialSummaryCard
-            report={financialReport}
-            onClick={() => navigate('/financial-dashboard')}
-          />
-        </section>
-
-        <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-125">
-          <div className="flex justify-between items-center mb-5 px-1">
-            <h2 className="font-black text-text-primary text-lg tracking-tight">Atalhos Premium</h2>
-            <button className="text-[10px] font-bold text-primary-600 uppercase tracking-widest">Ver Todos</button>
-          </div>
-          <div className="card-premium py-8 flex items-center justify-around">
-            <QuickAccessButton
-              icon={Car}
-              label="Veículos"
-              color="bg-primary-50 text-primary-600"
-              onClick={() => navigate('/vehicle-central')}
-            />
-            <QuickAccessButton
-              icon={ShieldCheck}
-              label="Impostos"
-              color="bg-emerald-50 text-emerald-600"
-              onClick={() => navigate('/tax-declaration')}
-            />
-            <QuickAccessButton
-              icon={Calendar}
-              label="Agenda"
-              color="bg-amber-50 text-amber-600"
-              onClick={() => navigate('/agenda')}
-            />
-            <QuickAccessButton
-              icon={FileText}
-              label="Contratos"
-              color="bg-indigo-50 text-indigo-600"
-              onClick={() => navigate('/fiscal-folder')}
-            />
-          </div>
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            COUPLE DASHBOARD — "Vida a Dois" Section
-        ═══════════════════════════════════════════════════════════════ */}
-        <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="font-bold text-text-primary text-lg flex items-center gap-2">
-              Vida a Dois
-              <span className="w-2.5 h-2.5 rounded-full bg-primary-500 animate-pulse"></span>
+      {/* ═══════════════════════════════════════════════════════════════
+          SUMMARY CARD: Floats over hero
+      ═══════════════════════════════════════════════════════════════ */}
+      <div className="px-4 -mt-24 relative z-20">
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+          {/* Balance Section */}
+          <div className="p-6 pb-4">
+            <div className="flex justify-between items-start mb-4">
+              <p className="text-slate-500 text-sm font-medium">Resumo do Mês</p>
+              {financialReport && financialReport.balance < 0 && (
+                <span className="px-2 py-0.5 bg-rose-100 text-rose-600 text-[10px] font-bold rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                  Vai faltar
+                </span>
+              )}
+            </div>
+            <h2 className={`text-4xl font-black tracking-tight ${financialReport?.balance && financialReport.balance >= 0 ? 'text-slate-900' : 'text-rose-600'
+              }`}>
+              {hideBalance ? '•••••' : formatCurrency(financialReport?.balance)}
             </h2>
           </div>
 
-          <CouplePanel
-            activeFilter={responsibilityFilter}
-            onFilterChange={setResponsibilityFilter}
-            partnerName={partnerName}
-          />
+          {/* Entries/Exits Row */}
+          <div className="grid grid-cols-2 gap-3 px-4 pb-4">
+            {/* ENTRADAS - VERDE */}
+            <button
+              onClick={() => navigate('/incomes')}
+              className="bg-green-50 hover:bg-green-100 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowUpCircle className="w-4 h-4 text-green-600" />
+                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Entradas</span>
+              </div>
+              <p className="text-lg font-black text-slate-800 group-hover:text-green-600 transition-colors">
+                {hideBalance ? '•••••' : formatCurrency(financialReport?.total_income)}
+              </p>
+            </button>
 
-          {/* Pending Items Header */}
-          <div className="flex justify-between items-center mt-6 mb-4">
-            <h3 className="font-semibold text-slate-500 text-xs uppercase tracking-wider">
-              {responsibilityFilter === 'me' ? 'Minhas Pendências' :
-                responsibilityFilter === 'partner' ? `Com ${partnerName.split(' ')[0]}` :
-                  responsibilityFilter === 'joint' ? 'Nossas Pendências' :
-                    'Itens Pendentes'}
-            </h3>
-            <span className="text-xs text-slate-400 font-medium">
-              {urgentTasks.length} {urgentTasks.length === 1 ? 'item' : 'itens'}
-            </span>
+            {/* SAÍDAS - VERMELHO */}
+            <button
+              onClick={() => navigate('/expenses')}
+              className="bg-red-50 hover:bg-red-100 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <ArrowDownCircle className="w-4 h-4 text-red-500" />
+                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Saídas</span>
+              </div>
+              <p className="text-lg font-black text-slate-800 group-hover:text-red-600 transition-colors">
+                {hideBalance ? '•••••' : formatCurrency(totalExpenses)}
+              </p>
+            </button>
           </div>
 
-          {/* Task List */}
-          {urgentTasks.length === 0 ? (
-            <div className="bg-white/60 backdrop-blur-sm p-10 rounded-3xl text-center border border-dashed border-slate-200">
-              <div className="w-12 h-12 bg-success-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CheckCircle2 className="w-6 h-6 text-success-500" />
-              </div>
-              <p className="text-slate-500 text-sm font-medium">Nada pendente nesta categoria!</p>
-              <p className="text-slate-400 text-xs mt-1">Você está em dia 🎉</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {urgentTasks.map(task => {
-                const category = categories.find(c => c.id === task.category_id);
-                const IconComponent = ICON_MAP[category?.icon || 'FileText'] || FileText;
-                const owner = household?.members?.find(m => m.user_id === task.owner_user_id);
-
-                return (
-                  <div
-                    key={task.id}
-                    onClick={() => navigate(`/detail/${task.id}`)}
-                    className="group card p-5 flex flex-col gap-4"
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center transition-all ${task.health_status === 'risk'
-                          ? 'bg-danger-50 text-danger-500 shadow-sm shadow-danger-500/10'
-                          : 'bg-warning-50 text-warning-500 shadow-sm shadow-warning-500/10'
-                          }`}>
-                          <IconComponent className="w-6 h-6" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-bold text-text-primary text-[16px] truncate group-hover:text-primary-600 transition-colors">
-                            {task.title}
-                          </h4>
-                          <p className={`text-xs font-medium mt-0.5 ${task.health_status === 'risk' ? 'text-danger-500' : 'text-slate-400'
-                            }`}>
-                            {task.health_status === 'risk'
-                              ? '⚠️ Risco Imediato'
-                              : task.due_date
-                                ? `Vence ${new Date(task.due_date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}`
-                                : 'Sem data'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="shrink-0">
-                        <ResponsibilityBadge
-                          isCurrentUser={task.owner_user_id === user?.id}
-                          ownerName={owner?.profile?.full_name}
-                          isUnassigned={!task.owner_user_id}
-                          isJoint={task.is_joint}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* ═══════════════════════════════════════════════════════════════
-            ACTIVITY TIMELINE — Recent Actions
-        ═══════════════════════════════════════════════════════════════ */}
-        {activities.length > 0 && (
-          <section className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200">
-            <h2 className="font-bold text-slate-800 text-lg mb-5">Atividade do Casal</h2>
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-              <div className="space-y-4 border-l-2 border-slate-100 pl-5 relative">
-                {activities.map((act, idx) => {
-                  const resolver = household?.members?.find(m => m.user_id === act.user_id);
-                  return (
-                    <div key={act.id} className="relative">
-                      <div className="absolute -left-[27px] top-0.5 w-3 h-3 rounded-full bg-success-500 border-2 border-white shadow-sm"></div>
-                      <p className="text-sm font-semibold text-slate-700">{act.title}</p>
-                      <p className="text-xs text-slate-400 font-medium mt-0.5">
-                        Concluído por {resolver?.user_id === user?.id ? 'você' : (resolver?.profile?.full_name?.split(' ')[0] || 'Parceiro')}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
+          {/* View Details Button */}
+          <button
+            onClick={() => navigate('/financial-dashboard')}
+            className="w-full py-4 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-bold flex items-center justify-center gap-2 transition-all border-t border-slate-100"
+          >
+            Ver detalhes do extrato
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════════
+          QUICK ACCESS SECTION — Mercado Pago Style
+      ═══════════════════════════════════════════════════════════════ */}
+      <section className="px-4 mt-6">
+        <div className="flex justify-between items-center mb-4 px-1">
+          <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
+        </div>
+        <div className="flex justify-between items-center px-2">
+          <QuickAccessButton
+            icon={Car}
+            label="Veículos"
+            onClick={() => navigate('/vehicle-central')}
+          />
+          <QuickAccessButton
+            icon={ShieldCheck}
+            label="Impostos"
+            onClick={() => navigate('/tax-declaration')}
+          />
+          <QuickAccessButton
+            icon={CreditCard}
+            label="Cartões"
+            onClick={() => navigate('/credit-cards')}
+          />
+          <QuickAccessButton
+            icon={Calendar}
+            label="Agenda"
+            onClick={() => navigate('/agenda')}
+          />
+          <QuickAccessButton
+            icon={FileText}
+            label="Contratos"
+            onClick={() => navigate('/contracts')}
+          />
+          <QuickAccessButton
+            icon={Briefcase}
+            label="Docs"
+            onClick={() => navigate('/fiscal-folder')}
+          />
+        </div>
+      </section>
 
+      {/* ═══════════════════════════════════════════════════════════════
+          VIDA A DOIS SECTION
+      ═══════════════════════════════════════════════════════════════ */}
+      <section className="px-4 mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Heart className="w-5 h-5 text-primary-500" />
+            <h3 className="text-lg font-bold text-slate-800">Vida a Dois</h3>
+          </div>
+          <button onClick={() => navigate('/agenda')} className="text-xs font-bold text-primary-500 hover:text-primary-600 transition-colors">
+            Ver tudo
+          </button>
+        </div>
+
+        {/* Tabs using CouplePanel */}
+        <CouplePanel
+          activeFilter={responsibilityFilter}
+          onFilterChange={setResponsibilityFilter}
+          partnerName={partnerName}
+        />
+
+        {/* Pending Section Label */}
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">
+          {responsibilityFilter === 'me' ? 'Minhas Pendências' :
+            responsibilityFilter === 'partner' ? `Com ${partnerName.split(' ')[0]}` :
+              responsibilityFilter === 'joint' ? 'Nossas Pendências' :
+                'Itens Pendentes'}
+        </p>
+
+        {/* Pending Bills List */}
+        <div className="space-y-3">
+          {urgentTasks.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm">
+              <CheckCircle2 className="w-12 h-12 text-emerald-300 mx-auto mb-3" />
+              <p className="text-slate-500 text-sm font-medium">Você está em dia!</p>
+              <p className="text-slate-400 text-xs mt-1">Nada pendente nesta categoria 🎉</p>
+            </div>
+          ) : (
+            urgentTasks.slice(0, 5).map(task => {
+              const category = categories.find(c => c.id === task.category_id);
+              const IconComponent = ICON_MAP[category?.icon || 'FileText'] || FileText;
+
+              return (
+                <button
+                  key={task.id}
+                  onClick={() => navigate(`/detail/${task.id}`)}
+                  className="w-full bg-white rounded-2xl p-4 flex items-center gap-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-primary-200 transition-all text-left"
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${task.health_status === 'risk' ? 'bg-rose-100' : 'bg-slate-100'
+                    }`}>
+                    {task.health_status === 'risk' ? (
+                      <AlertTriangle className="w-6 h-6 text-rose-500" />
+                    ) : (
+                      <IconComponent className="w-6 h-6 text-slate-500" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-800 truncate">{task.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${responsibilityFilter === 'me' ? 'bg-primary-100 text-primary-600' : 'bg-slate-100 text-slate-500'
+                        }`}>
+                        {responsibilityFilter === 'me' ? 'Comigo' : responsibilityFilter === 'partner' ? partnerName.split(' ')[0] : 'Conjunto'}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {task.health_status === 'risk'
+                          ? '⚠️ Vencido'
+                          : task.due_date ? `Vence ${formatDate(task.due_date.split('T')[0])}` : 'Sem data'
+                        }
+                      </span>
+                    </div>
+                  </div>
+                  <p className={`text-base font-black ${task.health_status === 'risk' ? 'text-rose-500' : 'text-slate-800'
+                    }`}>
+                    {hideBalance ? '•••' : formatCurrency(typeof task.amount === 'number' ? task.amount : parseFloat(task.amount || '0'))}
+                  </p>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          AI ANALYSIS CARD
+      ═══════════════════════════════════════════════════════════════ */}
+      <section className="px-4 mt-8">
+        <div className="bg-gradient-to-br from-primary-500/10 via-primary-400/5 to-primary-600/10 rounded-3xl p-5 border border-primary-200/50 relative overflow-hidden">
+          {/* Decorative Element */}
+          <div className="absolute top-4 right-4">
+            <div className="w-12 h-12 bg-primary-500/10 rounded-2xl flex items-center justify-center">
+              <Sparkles className="w-6 h-6 text-primary-500" />
+            </div>
+          </div>
+
+          <h4 className="text-lg font-bold text-slate-800 mb-2">Analise com IA</h4>
+          <p className="text-slate-600 text-sm leading-relaxed mb-4 max-w-[250px]">
+            {overdueCount > 0
+              ? `Identificamos ${overdueCount} pendência(s) em atraso. Regularize para manter sua projeção positiva.`
+              : financialReport?.status === 'surplus'
+                ? 'Seu orçamento está saudável. Excelente momento para investir!'
+                : 'Atenção aos gastos nos próximos dias para garantir suas contas.'}
+          </p>
+          <button
+            onClick={() => navigate('/assistant')}
+            className="px-4 py-2 bg-white/80 hover:bg-white text-primary-600 text-sm font-bold rounded-xl border border-primary-200 transition-all active:scale-95"
+          >
+            Ver Insights
+          </button>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          ÚLTIMAS ATIVIDADES — Mercado Pago Style
+      ═══════════════════════════════════════════════════════════════ */}
+      {activities.length > 0 && (
+        <section className="px-4 mt-8 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-slate-800 text-xl">Últimas atividades</h2>
+            <button
+              onClick={() => navigate('/agenda')}
+              className="text-primary-500 text-sm font-medium hover:text-primary-600 transition-colors flex items-center gap-1"
+            >
+              Conferir todas <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden divide-y divide-slate-100">
+            {activities.slice(0, 4).map((act, idx) => {
+              const resolver = household?.members?.find(m => m.user_id === act.user_id);
+              const isIncome = act.type === 'income' || (typeof act.amount === 'number' && act.amount > 0 && act.category_id === 'salary');
+              const category = categories.find(c => c.id === act.category_id);
+              const IconComponent = ICON_MAP[category?.icon || 'FileText'] || FileText;
+
+              return (
+                <div
+                  key={act.id}
+                  onClick={() => navigate(`/detail/${act.id}`)}
+                  className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  {/* Icon */}
+                  <div className="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    <IconComponent className="w-5 h-5 text-slate-600" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-800 text-[15px] truncate">{act.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-slate-500 text-xs">
+                        {act.status === 'completed' ? 'Concluído' : 'Pagamento'}
+                      </span>
+                      {act.payment_method && (
+                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                          <CreditCard className="w-3 h-3" />
+                          {act.payment_method}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Amount & Date */}
+                  <div className="text-right shrink-0">
+                    <p className={`font-bold text-[15px] ${isIncome ? 'text-emerald-500' : 'text-slate-800'}`}>
+                      {isIncome ? '+' : '-'} {formatCurrency(typeof act.amount === 'number' ? Math.abs(act.amount) : parseFloat(act.amount || '0'))}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {act.due_date ? formatDate(act.due_date.split('T')[0]) : 'Hoje'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
@@ -364,17 +516,16 @@ export const HomeScreen: React.FC = () => {
 const QuickAccessButton: React.FC<{
   icon: any;
   label: string;
-  color: string;
   onClick: () => void
-}> = ({ icon: Icon, label, color, onClick }) => (
+}> = ({ icon: Icon, label, onClick }) => (
   <button
     onClick={onClick}
-    className="flex flex-col items-center gap-2 group transition-all"
+    className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
   >
-    <div className={`w-14 h-14 rounded-2xl ${color} flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-90 shadow-md border border-white`}>
-      <Icon className="w-7 h-7" />
+    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center transition-all group-hover:bg-slate-200 group-hover:scale-105">
+      <Icon className="w-6 h-6 text-slate-600" />
     </div>
-    <span className="text-[10px] font-black text-text-muted text-center uppercase tracking-widest group-hover:text-primary-600">
+    <span className="text-[11px] font-medium text-slate-500 text-center group-hover:text-slate-700">
       {label}
     </span>
   </button>

@@ -3,7 +3,7 @@ import {
     ChevronLeft, MoreHorizontal, Car, Shield, AlertTriangle,
     CheckCircle2, Info, ArrowRight, Wallet, History, Search,
     Zap, Calendar, Clock, DollarSign, ChevronRight, FileText,
-    Sparkles, Download, Share2, Settings, Plus, Edit2
+    Sparkles, Download, Share2, Settings, Plus, Edit2, CreditCard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -199,33 +199,35 @@ export const VehicleCentralScreen: React.FC = () => {
                 {/* ═══════════════════════════════════════════════════════════════
             PROMO CARD
         ═══════════════════════════════════════════════════════════════ */}
-                <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden mb-10 group shadow-2xl">
-                    {/* Background elements */}
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-accent-orange/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-600/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary-200 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary-400/20 rounded-full -ml-16 -mb-16 blur-2xl"></div>
 
-                    <div className="relative z-10 flex flex-col items-start">
+                    <div className="relative z-10">
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center backdrop-blur-md">
-                                <Sparkles className="w-4 h-4 text-accent-orange" />
-                            </div>
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Exclusivo</span>
+                            <Zap className="w-5 h-5 text-primary-200 fill-primary-200" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-100">Parcelamento Inteligente</span>
                         </div>
-                        <h3 className="text-xl font-black leading-tight tracking-tight mb-2">Parcelamento Inteligente</h3>
-                        <p className="text-slate-400 text-xs font-medium leading-relaxed max-w-[200px] mb-8">
-                            Parcele seus débitos em até <span className="text-white font-bold">12x no cartão</span> com as menores taxas do mercado.
+
+                        <h3 className="text-2xl font-black leading-tight tracking-tighter mb-4">
+                            Em dia com o seu veículo,<br />sem pesar no bolso.
+                        </h3>
+
+                        <p className="text-primary-100 text-xs font-medium leading-relaxed mb-8 opacity-90 max-w-[240px]">
+                            Parcele IPVA, multas e licenciamento em até 12x no cartão com as melhores taxas.
                         </p>
+
                         <button
-                            onClick={() => navigate('/vehicle-simulation')}
-                            className="bg-accent-orange hover:bg-accent-orange-hover text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-accent-orange/20 active:scale-95 transition-all w-full md:w-auto"
+                            onClick={() => navigate('/vehicle-debt-simulation')}
+                            className="bg-white text-primary-600 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-primary-50 active:scale-95 transition-all shadow-lg"
                         >
-                            Simular Agora
+                            Ver Simulação
+                            <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
 
-                    {/* Abstract icon decor */}
-                    <div className="absolute bottom-6 right-6 opacity-10">
-                        <CreditCardIcon className="w-24 h-24" />
+                    <div className="absolute right-4 bottom-8 opacity-10 scale-150 rotate-12">
+                        <CreditCard className="w-24 h-24" />
                     </div>
                 </div>
             </div>

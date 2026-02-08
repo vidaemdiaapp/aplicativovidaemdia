@@ -77,15 +77,18 @@ export const DetailScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-primary-500 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <p className="text-white/80 text-sm font-medium">Carregando...</p>
+        </div>
       </div>
     );
   }
 
   if (!task) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
         <AlertCircle className="w-16 h-16 text-slate-300 mb-4" />
         <p className="text-slate-500 text-center">Item não encontrado</p>
         <Button onClick={() => navigate(-1)} className="mt-4">Voltar</Button>
@@ -97,23 +100,32 @@ export const DetailScreen: React.FC = () => {
   const isMyTurn = task.owner_user_id === user?.id;
 
   return (
-    <div className="bg-white min-h-screen pb-24">
-      <div className="h-48 bg-blue-600 relative">
-        <div className="absolute top-0 left-0 right-0 p-6 pt-12 flex items-center gap-4 text-white">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-full -ml-2">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-lg font-bold flex-1">Detalhes do Item</h1>
+    <div className="bg-slate-50 min-h-screen pb-24">
+      {/* Blue Hero Header */}
+      <header className="bg-primary-500 pt-14 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Detalhes</p>
+              <h1 className="text-white text-lg font-bold">{task.title}</h1>
+            </div>
+          </div>
           <button
             onClick={() => navigate(`/edit-task/${id}`)}
-            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold backdrop-blur-md border border-white/10 transition-colors"
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-bold text-white backdrop-blur-sm border border-white/10 transition-colors"
           >
             Editar
           </button>
         </div>
-      </div>
+      </header>
 
-      <div className="px-6 -mt-10 relative z-10 space-y-4">
+      <div className="px-4 -mt-10 relative z-10 space-y-4">
         {/* Action Card Implementation */}
         {actionPlan && task.status !== 'completed' && (
           <ActionCard plan={actionPlan} />

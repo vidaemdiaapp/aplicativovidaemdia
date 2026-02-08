@@ -76,71 +76,87 @@ export const FiscalFolderScreen: React.FC = () => {
     const totalSaving = totalAmount * 0.275; // Average tax saving
 
     return (
-        <div className="min-h-screen bg-slate-950 pb-24 text-white">
-            <header className="bg-slate-950/80 backdrop-blur-md p-6 pt-16 pb-6 sticky top-0 z-20 border-b border-slate-800/50">
-                <div className="flex items-center gap-4 mb-6">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full -ml-2 transition-colors">
-                        <ArrowLeft className="w-6 h-6 text-slate-400" />
-                    </button>
-                    <h1 className="text-xl font-black text-white">Pasta Fiscal</h1>
-                </div>
+        <div className="min-h-screen bg-slate-50 pb-24">
+            {/* Blue Hero Header */}
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all">
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Ano-Calendário {currentYear - 1}</p>
+                            <h1 className="text-white text-2xl font-bold">Pasta Fiscal</h1>
+                        </div>
+                    </div>
                     <button
                         onClick={() => setShowUpload(true)}
-                        className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-slate-400 hover:text-white transition-colors"
+                        className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-primary-500 hover:scale-105 transition-all"
                     >
-                        <Receipt className="w-6 h-6" />
-                    </button>
-                    <button className="p-3 bg-slate-900 rounded-2xl border border-slate-800 text-slate-400">
-                        <Filter className="w-6 h-6" />
-                    </button>
-                </div>
-
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 no-scrollbar">
-                    <button
-                        onClick={() => setFilter('all')}
-                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'all' ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-slate-900 border-slate-800 text-slate-500'
-                            }`}
-                    >
-                        Tudo
-                    </button>
-                    <button
-                        onClick={() => setFilter('medical')}
-                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'medical' || filter === 'health' || filter === 'health_plan' ? 'bg-rose-500 border-rose-500 text-slate-950' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
-                            }`}
-                    >
-                        Saúde
-                    </button>
-                    <button
-                        onClick={() => setFilter('education')}
-                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'education' ? 'bg-blue-500 border-blue-500 text-slate-950' : 'bg-blue-500/10 border-blue-500/20 text-blue-500'
-                            }`}
-                    >
-                        Educação
-                    </button>
-                    <button
-                        onClick={() => setFilter('pgbl')}
-                        className={`px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${filter === 'pgbl' ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                            }`}
-                    >
-                        PGBL
+                        <Receipt className="w-5 h-5" />
                     </button>
                 </div>
             </header>
 
-            <div className="p-6">
-                {/* Summary View - Reimagined */}
-                <div className="bg-slate-900 rounded-[32px] p-8 border border-slate-800 shadow-2xl mb-8 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl -mr-24 -mt-24 group-hover:bg-emerald-500/10 transition-colors"></div>
+            {/* Floating Filter Card */}
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-5">
+                    <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
+                        <button
+                            onClick={() => setFilter('all')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === 'all'
+                                ? 'bg-primary-500 text-white shadow-md shadow-primary-200'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                        >
+                            Tudo
+                        </button>
+                        <button
+                            onClick={() => setFilter('medical')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === 'medical' || filter === 'health' || filter === 'health_plan'
+                                ? 'bg-rose-500 text-white shadow-md shadow-rose-200'
+                                : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+                                }`}
+                        >
+                            Saúde
+                        </button>
+                        <button
+                            onClick={() => setFilter('education')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === 'education'
+                                ? 'bg-blue-500 text-white shadow-md shadow-blue-200'
+                                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                }`}
+                        >
+                            Educação
+                        </button>
+                        <button
+                            onClick={() => setFilter('pgbl')}
+                            className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filter === 'pgbl'
+                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+                                : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                }`}
+                        >
+                            PGBL
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2">Potencial de Dedução 2026</p>
-                    <h2 className="text-4xl font-black text-white tracking-tighter mb-4">
+            <div className="p-6 pt-4">
+                {/* Summary View - Light Theme */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl mb-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -mr-16 -mt-16"></div>
+
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-2">Potencial de Dedução {currentYear}</p>
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tighter mb-4">
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalAmount)}
                     </h2>
 
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-400 bg-emerald-400/10 px-4 py-2 rounded-xl border border-emerald-400/20 uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 uppercase tracking-widest">
                             <TrendingUp className="w-3 h-3" />
                             ~ {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalSaving)} OFF em IR
                         </div>
@@ -148,52 +164,52 @@ export const FiscalFolderScreen: React.FC = () => {
                 </div>
 
                 {/* Context Tip */}
-                <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-[32px] mb-10 flex gap-4 items-start">
+                <div className="bg-amber-50 border border-amber-100 p-5 rounded-2xl mb-6 flex gap-4 items-start">
                     <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-slate-400 font-medium leading-relaxed uppercase tracking-wider">
+                    <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
                         Nota: Valores baseados no limite máximo de alíquota (27,5%). O abatimento real depende da sua base de cálculo e modalidade de declaração.
                     </p>
                 </div>
 
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 ml-2">Comprovantes Detectados</h3>
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 ml-2">Comprovantes Detectados</h3>
 
                 {loading ? (
                     <div className="space-y-4">
-                        {[1, 2, 3].map(i => <div key={i} className="h-28 bg-slate-900 rounded-[32px] animate-pulse border border-slate-800" />)}
+                        {[1, 2, 3].map(i => <div key={i} className="h-28 bg-white rounded-2xl animate-pulse border border-slate-100" />)}
                     </div>
                 ) : filteredDeductions.length > 0 ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {filteredDeductions.map((item) => (
-                            <div key={item.id} className="bg-slate-900 p-5 rounded-[32px] border border-slate-800 shadow-sm flex items-center gap-5 hover:bg-slate-800/50 transition-all group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 py-1.5 px-4 bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-bl-2xl border-l border-b border-emerald-500/20">
+                            <div key={item.id} className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 py-1.5 px-3 bg-emerald-50 text-emerald-600 text-[8px] font-bold uppercase tracking-widest rounded-bl-xl border-l border-b border-emerald-100">
                                     Economiza ~ {(item.amount * 0.275).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                 </div>
 
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                     {getIcon(item.expense_type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-white truncate text-sm mb-1">{item.provider_name || 'Estabelecimento'}</h4>
+                                    <h4 className="font-bold text-slate-900 truncate text-sm mb-1">{item.provider_name || 'Estabelecimento'}</h4>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{getLabel(item.expense_type)}</span>
-                                        <span className="text-slate-700">•</span>
-                                        <span className="text-[10px] font-medium text-slate-500">{new Date(item.date).toLocaleDateString('pt-BR')}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{getLabel(item.expense_type)}</span>
+                                        <span className="text-slate-300">•</span>
+                                        <span className="text-[10px] font-medium text-slate-400">{new Date(item.date).toLocaleDateString('pt-BR')}</span>
                                     </div>
 
-                                    <div className="mt-3 flex items-center gap-2">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${item.confidence_score && item.confidence_score >= 0.8 ? 'bg-emerald-500' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`}></div>
-                                        <span className={`text-[9px] font-black uppercase tracking-widest ${item.confidence_score && item.confidence_score >= 0.8 ? 'text-emerald-500/60' : 'text-amber-500/60'}`}>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${item.confidence_score && item.confidence_score >= 0.8 ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                        <span className={`text-[9px] font-bold uppercase tracking-widest ${item.confidence_score && item.confidence_score >= 0.8 ? 'text-emerald-500' : 'text-amber-500'}`}>
                                             {item.confidence_score && item.confidence_score >= 0.8 ? 'Validado' : 'Ajustar Detalhes'}
                                         </span>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-black text-white text-base">
+                                    <p className="font-bold text-slate-900 text-base">
                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.amount)}
                                     </p>
                                     <button
                                         onClick={() => handleDelete(item.id)}
-                                        className="mt-2 p-2 text-slate-600 hover:text-rose-500 transition-colors"
+                                        className="mt-2 p-2 text-slate-300 hover:text-rose-500 transition-colors"
                                     >
                                         <Trash2 className="w-5 h-5" />
                                     </button>
@@ -202,17 +218,17 @@ export const FiscalFolderScreen: React.FC = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="py-24 text-center">
-                        <div className="bg-slate-900 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-800 shadow-xl">
-                            <Receipt className="w-8 h-8 text-slate-700" />
+                    <div className="py-20 text-center">
+                        <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-200">
+                            <Receipt className="w-8 h-8 text-slate-400" />
                         </div>
-                        <p className="text-slate-300 font-black text-lg">Pasta Fiscal Vazia</p>
-                        <p className="text-slate-500 text-xs mt-2 font-medium uppercase tracking-widest leading-relaxed">
+                        <p className="text-slate-700 font-bold text-lg">Pasta Fiscal Vazia</p>
+                        <p className="text-slate-400 text-sm mt-2 font-medium leading-relaxed">
                             Carregue recibos hoje e veja<br />seu imposto diminuir em tempo real!
                         </p>
                         <button
                             onClick={() => setShowUpload(true)}
-                            className="mt-8 px-8 py-4 bg-emerald-500 text-slate-950 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-emerald-500/10 active:scale-95 transition-all"
+                            className="mt-8 px-8 py-4 bg-primary-500 text-white rounded-2xl font-bold uppercase text-sm tracking-widest shadow-lg shadow-primary-200 active:scale-95 transition-all"
                         >
                             Fazer Primeiro Upload
                         </button>
@@ -223,7 +239,7 @@ export const FiscalFolderScreen: React.FC = () => {
             {/* Modal de Upload */}
             {showUpload && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-0">
-                    <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setShowUpload(false)}></div>
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setShowUpload(false)}></div>
                     <div className="relative w-full max-w-lg animate-in fade-in zoom-in duration-300">
                         <TaxDocumentUpload
                             year={currentYear}

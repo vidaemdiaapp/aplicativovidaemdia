@@ -181,10 +181,18 @@ export const InvestmentsScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
-                    <p className="text-slate-400 text-sm font-medium animate-pulse uppercase tracking-widest leading-none">Analisando carteira...</p>
+            <div className="min-h-screen bg-surface pb-24">
+                <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 animate-pulse" />
+                        <div className="w-32 h-8 rounded bg-white/20 animate-pulse" />
+                    </div>
+                </header>
+                <div className="px-4 -mt-16 relative z-20">
+                    <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+                        <div className="h-24 rounded-2xl bg-slate-100 animate-pulse" />
+                    </div>
                 </div>
             </div>
         );
@@ -192,85 +200,93 @@ export const InvestmentsScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-surface pb-24 text-slate-900 font-sans">
-            {/* Header */}
-            <header className="px-6 pt-16 pb-8 sticky top-0 bg-white/80 backdrop-blur-xl z-20 border-b border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-8">
-                    <button
-                        onClick={() => navigate('/financial-dashboard')}
-                        className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-primary-600 transition-all active:scale-95 border border-slate-100"
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <div className="flex gap-3">
+            {/* ═══════════════════════════════════════════════════════════════
+                HERO: Blue Gradient Header
+            ═══════════════════════════════════════════════════════════════ */}
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex items-center justify-between relative z-10 mb-4">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/financial-dashboard')}
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Patrimônio</p>
+                            <h1 className="text-white text-2xl font-bold">Investimentos</h1>
+                        </div>
+                    </div>
+                    <div className="flex gap-2">
                         <button
                             onClick={handleSync}
                             disabled={syncing}
-                            className={`w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center hover:bg-slate-50 transition-all active:scale-90 shadow-sm ${syncing ? 'text-primary-500' : 'text-slate-400'}`}
+                            className={`w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 transition-all ${syncing ? 'text-white' : 'text-white/80'}`}
                         >
                             <RefreshCw className={`w-5 h-5 ${syncing ? 'animate-spin' : ''}`} />
                         </button>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-12 h-12 rounded-2xl bg-primary-500 flex items-center justify-center hover:bg-primary-600 transition-all active:scale-90 shadow-lg shadow-primary-500/20"
+                            className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 flex items-center justify-center transition-all"
                         >
-                            <Plus className="w-6 h-6 text-white" />
+                            <Plus className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex items-end justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Investimentos</h1>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-0.5">Visão Consolidada de Ativos</p>
+                <p className="text-white/70 text-sm font-medium pl-14 relative z-10">
+                    {investments.length} ativo(s) em carteira
+                </p>
+            </header>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                FLOATING SUMMARY CARD
+            ═══════════════════════════════════════════════════════════════ */}
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6">
+                    <div className="flex justify-between items-start mb-6">
+                        <div>
+                            <p className="text-slate-500 text-sm font-medium mb-2">Consolidado Geral</p>
+                            <h2 className="text-3xl font-black text-slate-800 tracking-tight">{formatCurrency(summary.total_value)}</h2>
+                        </div>
+                        <div className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border shadow-sm ${summary.yield_percentage >= 0
+                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                            : 'bg-rose-50 border-rose-100 text-rose-600'
+                            }`}>
+                            {summary.yield_percentage >= 0 ? (
+                                <TrendingUp className="w-5 h-5" />
+                            ) : (
+                                <TrendingDown className="w-5 h-5" />
+                            )}
+                            <span className="text-sm font-bold">
+                                {summary.yield_percentage >= 0 ? '+' : ''}{summary.yield_percentage.toFixed(2)}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100">
+                        <div>
+                            <p className="text-xs text-slate-400 font-medium mb-1">Total Investido</p>
+                            <p className="text-lg font-bold text-slate-700">{formatCurrency(summary.total_invested)}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-400 font-medium mb-1">Rendimento</p>
+                            <p className={`text-lg font-bold ${summary.total_yield >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {summary.total_yield >= 0 ? '+' : ''}{formatCurrency(summary.total_yield)}
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </div>
 
             <div className="p-6 space-y-8">
 
-                <div className="bg-white border border-slate-100 rounded-[32px] p-8 relative overflow-hidden group shadow-sm">
-                    {/* Background Accents */}
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-primary-500/5 rounded-full blur-[80px] -mr-24 -mt-24"></div>
-
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-10">
-                            <div className="space-y-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-2 font-mono">Consolidado Geral</p>
-                                <h2 className="text-4xl font-bold text-slate-900 tracking-tight">{formatCurrency(summary.total_value)}</h2>
-                            </div>
-                            <div className={`flex items-center gap-1.5 px-4 py-2.5 rounded-2xl border shadow-sm transition-all ${summary.yield_percentage >= 0
-                                ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
-                                : 'bg-rose-50 border-rose-100 text-rose-600'
-                                }`}>
-                                {summary.yield_percentage >= 0 ? (
-                                    <TrendingUp className="w-5 h-5" />
-                                ) : (
-                                    <TrendingDown className="w-5 h-5" />
-                                )}
-                                <span className="text-[15px] font-bold tracking-tight">
-                                    {summary.yield_percentage >= 0 ? '+' : ''}{summary.yield_percentage.toFixed(2)}%
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-50">
-                            <div className="space-y-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 pl-0.5">Total Investido</p>
-                                <p className="text-xl font-bold text-slate-700 tracking-tight">{formatCurrency(summary.total_invested)}</p>
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1.5 pl-0.5">Rendimento</p>
-                                <p className={`text-xl font-bold tracking-tight ${summary.total_yield >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {summary.total_yield >= 0 ? '+' : ''}{formatCurrency(summary.total_yield)}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <button
                     onClick={() => setShowOpenFinance(true)}
-                    className="w-full bg-white border border-slate-100 rounded-[32px] p-6 flex items-center justify-between group hover:border-primary-100/50 hover:bg-slate-50/30 transition-all relative overflow-hidden shadow-sm"
+                    className="w-full bg-white border border-slate-100 rounded-3xl p-6 flex items-center justify-between group hover:border-primary-100/50 hover:bg-slate-50/30 transition-all relative overflow-hidden shadow-sm"
                 >
                     {/* Background Ray */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 rounded-full blur-[60px] -mr-32 -mt-32"></div>
@@ -471,21 +487,25 @@ export const InvestmentsScreen: React.FC = () => {
             </section>
 
             {/* Open Finance Modal */}
-            {showOpenFinance && (
-                <OpenFinanceModal onClose={() => setShowOpenFinance(false)} onSync={handleSync} />
-            )}
+            {
+                showOpenFinance && (
+                    <OpenFinanceModal onClose={() => setShowOpenFinance(false)} onSync={handleSync} />
+                )
+            }
 
             {/* Add Investment Modal */}
-            {showAddModal && (
-                <AddInvestmentModal
-                    onClose={() => setShowAddModal(false)}
-                    onSuccess={() => {
-                        setShowAddModal(false);
-                        loadData();
-                    }}
-                />
-            )}
-        </div>
+            {
+                showAddModal && (
+                    <AddInvestmentModal
+                        onClose={() => setShowAddModal(false)}
+                        onSuccess={() => {
+                            setShowAddModal(false);
+                            loadData();
+                        }}
+                    />
+                )
+            }
+        </div >
     );
 };
 

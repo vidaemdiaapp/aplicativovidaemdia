@@ -140,15 +140,21 @@ export const FinancialDashboardScreen: React.FC = () => {
     const formatCurrency = (val: number | undefined | null) =>
         (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr + 'T00:00:00');
+    const formatDate = (dateStr: string | undefined | null) => {
+        if (!dateStr) return 'Sem data';
+        // Handle ISO strings or simple date strings
+        const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        const date = new Date(cleanDate + 'T12:00:00'); // Use noon to avoid timezone shifts
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        if (date.getTime() === today.getTime()) return 'Hoje';
-        if (date.getTime() === tomorrow.getTime()) return 'Amanhã';
+        const dateAtMidnight = new Date(date);
+        dateAtMidnight.setHours(0, 0, 0, 0);
+
+        if (dateAtMidnight.getTime() === today.getTime()) return 'Hoje';
+        if (dateAtMidnight.getTime() === tomorrow.getTime()) return 'Amanhã';
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
     };
 
@@ -188,39 +194,28 @@ export const FinancialDashboardScreen: React.FC = () => {
     if (loading) {
         return (
             <div className="min-h-screen bg-surface pb-24 overflow-x-hidden">
-                <header className="px-6 pt-16 pb-10 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[48px]">
-                    <div className="flex justify-between items-start mb-8">
+                <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                    <div className="flex justify-between items-start mb-6">
                         <div>
-                            <Skeleton className="w-24 h-6 rounded-full mb-4" />
-                            <Skeleton className="w-32 h-4 mb-2" />
-                            <Skeleton className="w-56 h-14" />
+                            <Skeleton className="w-24 h-4 mb-2 bg-white/20" />
+                            <Skeleton className="w-48 h-10 bg-white/20" />
                         </div>
-                        <Skeleton className="w-12 h-12 rounded-2xl" />
+                        <Skeleton className="w-10 h-10 rounded-xl bg-white/20" />
                     </div>
                 </header>
-
-                <div className="px-6 py-6 overflow-x-auto no-scrollbar">
-                    <div className="flex gap-4 min-w-max px-1">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="flex flex-col items-center gap-2 p-2 min-w-[90px]">
-                                <Skeleton className="w-16 h-16 rounded-[22px]" />
-                                <Skeleton className="w-12 h-2" />
-                            </div>
-                        ))}
+                <div className="px-4 -mt-20 relative z-20">
+                    <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <Skeleton className="h-24 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
+                        </div>
+                        <Skeleton className="h-12 rounded-xl" />
                     </div>
                 </div>
-
-                <div className="px-6 space-y-6">
-                    <div className="grid grid-cols-2 gap-3">
-                        <Skeleton className="h-28 rounded-3xl" />
-                        <Skeleton className="h-28 rounded-3xl" />
-                    </div>
-                    <Skeleton className="h-24 rounded-3xl" />
-                    <div className="grid grid-cols-3 gap-3">
-                        <Skeleton className="h-20 rounded-2xl" />
-                        <Skeleton className="h-20 rounded-2xl" />
-                        <Skeleton className="h-20 rounded-2xl" />
-                    </div>
+                <div className="px-4 mt-6 space-y-4">
+                    <Skeleton className="h-32 rounded-2xl" />
+                    <Skeleton className="h-48 rounded-2xl" />
                 </div>
             </div>
         );
@@ -233,134 +228,116 @@ export const FinancialDashboardScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* ═══════════════════════════════════════════════════════════════
-                HERO: Pro Max Balance Display
+                HERO: Blue Gradient Header
             ═══════════════════════════════════════════════════════════════ */}
-            <header className="px-6 pt-16 pb-10 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[48px]">
-                <div className="flex justify-between items-start mb-8">
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex justify-between items-start relative z-10 mb-4">
                     <div>
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${riskConfig.bg} border border-white shadow-sm mb-4`}>
-                            <RiskIcon className={`w-4 h-4 ${riskConfig.text}`} />
-                            <span className={`text-[10px] font-black uppercase tracking-[0.1em] ${riskConfig.text}`}>
-                                Saúde {riskConfig.label}
-                            </span>
-                        </div>
-                        <p className="text-text-muted text-[11px] font-bold uppercase tracking-[0.2em] mb-2 px-1">
-                            Saldo Projetado (Mês)
-                        </p>
-                        <h1 className={`text-5xl font-black tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-500' :
-                            dashboard?.status === 'warning' ? 'text-amber-500' : 'text-rose-500'
-                            }`}>
-                            {dashboard ? (
-                                <CountUp
-                                    value={dashboard.balance}
-                                    formatter={formatCurrency}
-                                />
-                            ) : 'R$ 0,00'}
-                        </h1>
+                        <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest mb-1">Dashboard</p>
+                        <h1 className="text-white text-2xl font-bold">Visão Financeira</h1>
                     </div>
                     <button
                         onClick={() => loadData()}
-                        className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:rotate-180 duration-700 shadow-sm flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all active:rotate-180 duration-700"
                     >
                         <RefreshCw className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Main Stats Row - Premium Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div
-                        onClick={() => navigate('/incomes')}
-                        className="card p-5 flex items-center gap-4 group cursor-pointer"
-                    >
-                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm">
-                            <ArrowUpCircle className="w-8 h-8" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-0.5">Entradas</p>
-                            <p className="text-lg font-black text-text-primary">
-                                {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
-                            </p>
-                        </div>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setIsIncomeModalOpen(true); }}
-                            className="w-10 h-10 rounded-xl bg-slate-50 text-text-muted hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                        >
-                            <Plus className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div
-                        onClick={() => navigate('/expenses')}
-                        className="card p-5 flex items-center gap-4 group cursor-pointer"
-                    >
-                        <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all shadow-sm">
-                            <ArrowDownCircle className="w-8 h-8" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mb-0.5">Saídas</p>
-                            <p className="text-lg font-black text-text-primary">
-                                {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
-                            </p>
-                        </div>
-                        <ChevronRight className="w-6 h-6 text-slate-200 group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
-                    </div>
+                {/* Risk Badge */}
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${riskConfig.bg} border border-white/50 shadow-sm`}>
+                    <RiskIcon className={`w-4 h-4 ${riskConfig.text}`} />
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${riskConfig.text}`}>
+                        Saúde {riskConfig.label}
+                    </span>
                 </div>
             </header>
 
             {/* ═══════════════════════════════════════════════════════════════
-                QUICK ACCESS SECTION — Fast Navigation
+                FLOATING SUMMARY CARD
             ═══════════════════════════════════════════════════════════════ */}
-            <div className="px-6 py-6 overflow-x-auto no-scrollbar">
-                <div className="flex gap-4 min-w-max px-1">
-                    <QuickAccessButton
-                        icon={ShieldCheck}
-                        label="Imposto Renda"
-                        color="bg-emerald-50 text-emerald-600"
-                        onClick={() => navigate('/tax-declaration')}
-                    />
-                    <QuickAccessButton
-                        icon={CreditCard}
-                        label="Cartões"
-                        color="bg-blue-50 text-primary-600"
-                        onClick={() => navigate('/credit-cards')}
-                    />
-                    <QuickAccessButton
-                        icon={PiggyBank}
-                        label="Cofrinhos"
-                        color="bg-rose-50 text-rose-600"
-                        onClick={() => navigate('/savings')}
-                    />
-                    <QuickAccessButton
-                        icon={TrendingUp}
-                        label="Investir"
-                        color="bg-indigo-50 text-indigo-600"
-                        onClick={() => navigate('/investments')}
-                    />
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+                    {/* Balance Display */}
+                    <div className="p-6 pb-4">
+                        <p className="text-slate-500 text-sm font-medium mb-2">Saldo Projetado (Mês)</p>
+                        <h2 className={`text-4xl font-black tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-500' :
+                            dashboard?.status === 'warning' ? 'text-amber-500' : 'text-rose-500'
+                            }`}>
+                            {dashboard ? <CountUp value={dashboard.balance} formatter={formatCurrency} /> : 'R$ 0,00'}
+                        </h2>
+                    </div>
+
+                    {/* Income/Expense Cards */}
+                    <div className="grid grid-cols-2 gap-3 px-4 pb-4">
+                        {/* ENTRADAS - VERDE */}
+                        <button
+                            onClick={() => navigate('/incomes')}
+                            className="bg-green-50 hover:bg-green-100 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <ArrowUpCircle className="w-4 h-4 text-green-600" />
+                                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider">Entradas</span>
+                            </div>
+                            <p className="text-lg font-black text-slate-800">
+                                {dashboard ? formatCurrency(dashboard.total_income) : 'R$ 0'}
+                            </p>
+                        </button>
+
+                        {/* SAÍDAS - VERMELHO */}
+                        <button
+                            onClick={() => navigate('/expenses')}
+                            className="bg-red-50 hover:bg-red-100 rounded-2xl p-4 text-left transition-all active:scale-98 group"
+                        >
+                            <div className="flex items-center gap-2 mb-2">
+                                <ArrowDownCircle className="w-4 h-4 text-red-500" />
+                                <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Saídas</span>
+                            </div>
+                            <p className="text-lg font-black text-slate-800">
+                                {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
+                            </p>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <div className="px-6 space-y-6">
-                {/* ═══════════════════════════════════════════════════════════════
-                    ACTION BUTTONS
-                ═══════════════════════════════════════════════════════════════ */}
-                <div className="grid grid-cols-2 gap-3">
+            {/* ═══════════════════════════════════════════════════════════════
+                QUICK ACCESS SECTION — Circular Icons
+            ═══════════════════════════════════════════════════════════════ */}
+            <section className="px-6 mt-6">
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
+                </div>
+                <div className="flex justify-between items-start">
+                    <QuickAccessButton icon={ShieldCheck} label="Imposto" onClick={() => navigate('/tax-declaration')} />
+                    <QuickAccessButton icon={CreditCard} label="Cartões" onClick={() => navigate('/credit-cards')} />
+                    <QuickAccessButton icon={PiggyBank} label="Cofrinhos" onClick={() => navigate('/savings')} />
+                    <QuickAccessButton icon={TrendingUp} label="Investir" onClick={() => navigate('/investments')} />
+                </div>
+
+                {/* Action Buttons - Integrated */}
+                <div className="grid grid-cols-2 gap-3 mt-5">
                     <button
                         onClick={() => navigate('/new-task', { state: { type: 'immediate' } })}
-                        className="bg-primary-500 hover:bg-primary-600 p-5 rounded-3xl flex flex-col items-center gap-2 transition-all active:scale-95 group shadow-lg shadow-primary-500/20"
+                        className="bg-primary-500 hover:bg-primary-600 p-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 group shadow-lg shadow-primary-500/20"
                     >
-                        <Plus className="w-6 h-6 text-white group-hover:rotate-90 transition-transform" />
-                        <span className="text-xs font-bold uppercase text-white">Gasto do Dia</span>
+                        <Plus className="w-5 h-5 text-white" />
+                        <span className="text-xs font-bold uppercase text-white tracking-wide">Gasto do Dia</span>
                     </button>
                     <button
                         onClick={() => navigate('/new-task')}
-                        className="bg-white border border-border-color hover:border-primary-300 p-5 rounded-3xl flex flex-col items-center gap-2 transition-all active:scale-95 shadow-sm"
+                        className="bg-white border border-slate-200 hover:border-primary-300 p-4 rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 shadow-sm"
                     >
-                        <Calendar className="w-6 h-6 text-text-muted transition-colors group-hover:text-primary-500" />
-                        <span className="text-xs font-bold uppercase text-text-secondary">Nova Conta</span>
+                        <Calendar className="w-5 h-5 text-slate-500" />
+                        <span className="text-xs font-bold uppercase text-slate-600 tracking-wide">Nova Conta</span>
                     </button>
                 </div>
+            </section>
 
-
+            <div className="px-6 space-y-6 mt-6">
                 {/* ═══════════════════════════════════════════════════════════════
                     SIMULATOR & QUICK STATS
                 ═══════════════════════════════════════════════════════════════ */}
@@ -412,36 +389,49 @@ export const FinancialDashboardScreen: React.FC = () => {
             ═══════════════════════════════════════════════════════════════ */}
                 {overdueBills.length > 0 && (
                     <section className="px-6 mt-8">
-                        <div className="bg-rose-500/5 border border-rose-500/20 rounded p-4">
-                            <div className="flex items-center gap-2 mb-4">
-                                <AlertTriangle className="w-4 h-4 text-rose-500" />
-                                <h3 className="text-xs font-black uppercase tracking-wider text-rose-500">
-                                    Contas Vencidas ({overdueBills.length})
-                                </h3>
+                        <div className="bg-rose-50 border border-rose-100 rounded-[2.5rem] p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-5">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-200">
+                                        <AlertTriangle className="w-4 h-4 text-white" />
+                                    </div>
+                                    <h3 className="text-sm font-black uppercase tracking-[0.1em] text-rose-600">
+                                        Contas Vencidas ({overdueBills.length})
+                                    </h3>
+                                </div>
+                                <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest bg-rose-100/50 px-3 py-1 rounded-full">Atenção</span>
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {overdueBills.map(bill => (
                                     <div
                                         key={bill.id}
                                         onClick={() => navigate(`/detail/${bill.id}`)}
-                                        className="flex justify-between items-center p-3 bg-slate-900/50 rounded cursor-pointer hover:bg-slate-800/50 transition-colors group"
+                                        className="flex justify-between items-center p-4 bg-white rounded-3xl cursor-pointer hover:shadow-md hover:border-rose-200 border border-transparent transition-all group"
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded bg-rose-500/10 flex items-center justify-center">
-                                                <Clock className="w-4 h-4 text-rose-500" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner">
+                                                <Clock className="w-6 h-6 text-rose-500" />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-white group-hover:text-rose-400 transition-colors truncate max-w-[150px]">
+                                            <div className="min-w-0">
+                                                <p className="text-[15px] font-bold text-slate-900 group-hover:text-rose-600 transition-colors truncate max-w-[140px]">
                                                     {bill.title}
                                                 </p>
-                                                <p className="text-[10px] text-slate-500 font-bold">
-                                                    Venceu em {formatDate(bill.due_date)}
+                                                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                                                    Venceu em <span className="text-rose-500 font-bold">{formatDate(bill.due_date)}</span>
                                                 </p>
                                             </div>
                                         </div>
-                                        <p className="text-sm font-black text-rose-400">
-                                            {formatCurrency(typeof bill.amount === 'number' ? bill.amount : parseFloat(bill.amount || '0'))}
-                                        </p>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-lg font-black text-slate-800">
+                                                    {formatCurrency(typeof bill.amount === 'number' ? bill.amount : parseFloat(bill.amount || '0'))}
+                                                </p>
+                                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">A pagar</p>
+                                            </div>
+                                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-500 transition-all">
+                                                <ChevronRight className="w-5 h-5" />
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -671,17 +661,16 @@ export const FinancialDashboardScreen: React.FC = () => {
 const QuickAccessButton: React.FC<{
     icon: any;
     label: string;
-    color: string;
     onClick: () => void
-}> = ({ icon: Icon, label, color, onClick }) => (
+}> = ({ icon: Icon, label, onClick }) => (
     <button
         onClick={onClick}
-        className="flex flex-col items-center gap-2 group p-2 min-w-[90px] active:scale-95 transition-all"
+        className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
     >
-        <div className={`w-16 h-16 rounded-[22px] ${color} flex items-center justify-center transition-all group-hover:scale-110 shadow-sm group-hover:shadow-lg border-2 border-white`}>
-            <Icon className="w-8 h-8" />
+        <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center transition-all group-hover:bg-slate-200 group-hover:scale-105">
+            <Icon className="w-6 h-6 text-slate-600" />
         </div>
-        <span className="text-[10px] font-black text-text-muted text-center uppercase tracking-widest leading-none group-hover:text-primary-600">
+        <span className="text-[11px] font-medium text-slate-500 text-center group-hover:text-slate-700">
             {label}
         </span>
     </button>

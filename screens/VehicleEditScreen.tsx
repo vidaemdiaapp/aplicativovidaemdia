@@ -26,7 +26,7 @@ export const VehicleEditScreen: React.FC = () => {
                 icon: '🚗',
                 style: {
                     borderRadius: '1rem',
-                    background: '#334155',
+                    background: '#3b82f6',
                     color: '#fff',
                     fontSize: '14px',
                     fontWeight: 'bold'
@@ -59,8 +59,8 @@ export const VehicleEditScreen: React.FC = () => {
                     <button
                         onClick={() => setVehicleType('car')}
                         className={`flex-1 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-3 ${vehicleType === 'car'
-                                ? 'bg-primary-600 border-primary-600 text-white shadow-xl shadow-primary-200'
-                                : 'bg-white border-slate-100 text-slate-400'
+                            ? 'bg-primary-600 border-primary-600 text-white shadow-xl shadow-primary-200'
+                            : 'bg-white border-slate-100 text-slate-400'
                             }`}
                     >
                         <Car className={`w-8 h-8 ${vehicleType === 'car' ? 'animate-bounce' : ''}`} />
@@ -69,8 +69,8 @@ export const VehicleEditScreen: React.FC = () => {
                     <button
                         onClick={() => setVehicleType('motorcycle')}
                         className={`flex-1 p-6 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-3 ${vehicleType === 'motorcycle'
-                                ? 'bg-primary-600 border-primary-600 text-white shadow-xl shadow-primary-200'
-                                : 'bg-white border-slate-100 text-slate-400'
+                            ? 'bg-primary-600 border-primary-600 text-white shadow-xl shadow-primary-200'
+                            : 'bg-white border-slate-100 text-slate-400'
                             }`}
                     >
                         <div className="w-8 h-8 flex items-center justify-center">

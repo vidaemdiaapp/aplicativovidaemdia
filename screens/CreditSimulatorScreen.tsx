@@ -146,12 +146,12 @@ export const CreditSimulatorScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
                 <div className="relative mb-6">
-                    <div className="w-16 h-16 border-4 border-cyan-500/10 border-t-cyan-500 rounded-full animate-spin"></div>
-                    <Landmark className="absolute inset-0 m-auto w-6 h-6 text-cyan-500 animate-pulse" />
+                    <div className="w-16 h-16 border-4 border-primary-500/10 border-t-primary-500 rounded-full animate-spin"></div>
+                    <Landmark className="absolute inset-0 m-auto w-6 h-6 text-primary-500 animate-pulse" />
                 </div>
-                <p className="text-slate-400 text-xs font-black uppercase tracking-[0.3em]">Conectando Open Finance...</p>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em]">Conectando Open Finance...</p>
             </div>
         );
     }
@@ -159,76 +159,82 @@ export const CreditSimulatorScreen: React.FC = () => {
     const totalSpendingInView = filteredTransactions.reduce((acc, t) => acc + t.amount, 0);
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white pb-32">
-            <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-cyan-600/10 via-blue-600/5 to-transparent pointer-events-none" />
+        <div className="min-h-screen bg-slate-50 pb-32">
+            {/* Blue Hero Header */}
+            <header className="bg-primary-500 pt-14 pb-20 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
 
-            <header className="relative px-6 pt-12 pb-8 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-all"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-slate-300" />
-                    </button>
-                    <div>
-                        <h1 className="text-xl font-black tracking-tight">Open Finance</h1>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Simulador Consolidado</p>
+                <div className="flex items-center justify-between relative z-10">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <div>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Simulador Consolidado</p>
+                            <h1 className="text-white text-2xl font-bold">Open Finance</h1>
+                        </div>
                     </div>
-                </div>
-                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-[9px] font-black uppercase tracking-tighter text-emerald-500">Sync Ativo</span>
+                    <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                        <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                        <span className="text-[9px] font-bold uppercase tracking-tighter text-white">Sync Ativo</span>
+                    </div>
                 </div>
             </header>
 
-            {/* Month Switcher */}
-            <div className="px-6 mb-8 flex gap-2">
-                <button
-                    onClick={() => setSelectedMonth('current')}
-                    className={`flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedMonth === 'current'
-                            ? 'bg-cyan-600 border-cyan-500 text-white shadow-lg shadow-cyan-600/20'
-                            : 'bg-slate-900 border-slate-800 text-slate-500'
-                        }`}
-                >
-                    Mês Atual
-                </button>
-                <button
-                    onClick={() => setSelectedMonth('previous')}
-                    className={`flex-1 py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${selectedMonth === 'previous'
-                            ? 'bg-cyan-600 border-cyan-500 text-white shadow-lg shadow-cyan-600/20'
-                            : 'bg-slate-900 border-slate-800 text-slate-500'
-                        }`}
-                >
-                    Mês Anterior
-                </button>
+            {/* Floating Month Switcher */}
+            <div className="px-4 -mt-12 relative z-20 mb-6">
+                <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-2 flex gap-2">
+                    <button
+                        onClick={() => setSelectedMonth('current')}
+                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${selectedMonth === 'current'
+                            ? 'bg-primary-500 text-white shadow-md shadow-primary-200'
+                            : 'text-slate-500 hover:bg-slate-50'
+                            }`}
+                    >
+                        Mês Atual
+                    </button>
+                    <button
+                        onClick={() => setSelectedMonth('previous')}
+                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-medium transition-all ${selectedMonth === 'previous'
+                            ? 'bg-primary-500 text-white shadow-md shadow-primary-200'
+                            : 'text-slate-500 hover:bg-slate-50'
+                            }`}
+                    >
+                        Mês Anterior
+                    </button>
+                </div>
             </div>
 
-            <div className="px-6 space-y-8">
+            <div className="px-4 space-y-6">
                 {/* Summary Section */}
-                <section className="bg-slate-900/50 backdrop-blur-xl border border-slate-800 rounded-[32px] p-8 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Layers className="w-32 h-32" />
+                <section className="bg-white border border-slate-100 rounded-2xl p-6 overflow-hidden relative shadow-sm">
+                    <div className="absolute top-0 right-0 p-6 opacity-10">
+                        <Layers className="w-24 h-24 text-primary-500" />
                     </div>
 
-                    <div className="relative z-10 text-center md:text-left">
-                        <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-4">Total faturas {selectedMonth === 'current' ? 'em andamento' : 'fechadas'}</p>
-                        <div className="flex flex-col md:flex-row items-baseline gap-3 mb-8">
-                            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-cyan-400">
+                    <div className="relative z-10">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-3">Total faturas {selectedMonth === 'current' ? 'em andamento' : 'fechadas'}</p>
+                        <div className="flex flex-col md:flex-row items-baseline gap-3 mb-6">
+                            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-primary-600">
                                 {formatCurrency(totalSpendingInView)}
                             </h2>
-                            <span className="text-slate-500 text-sm font-bold">Ref. {selectedMonth === 'current' ? 'Janeiro' : 'Dezembro'}</span>
+                            <span className="text-slate-400 text-sm font-medium">Ref. {selectedMonth === 'current' ? 'Janeiro' : 'Dezembro'}</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
-                                <p className="text-[9px] text-slate-500 font-bold uppercase mb-1">Impacto na Renda</p>
-                                <p className="text-lg font-black text-rose-400">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Impacto na Renda</p>
+                                <p className="text-lg font-bold text-rose-500">
                                     {projection?.income ? ((totalSpendingInView / projection.income) * 100).toFixed(0) : 0}%
                                 </p>
                             </div>
-                            <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
-                                <p className="text-[9px] text-slate-500 font-bold uppercase mb-1">Status Projeção</p>
-                                <p className={`text-lg font-black ${projection?.status === 'surplus' ? 'text-emerald-400' : 'text-rose-400'
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase mb-1">Status Projeção</p>
+                                <p className={`text-lg font-bold ${projection?.status === 'surplus' ? 'text-emerald-500' : 'text-rose-500'
                                     }`}>
                                     {projection?.status === 'surplus' ? 'No Limite' : 'Crítico'}
                                 </p>
@@ -239,10 +245,10 @@ export const CreditSimulatorScreen: React.FC = () => {
 
                 {/* Categories Filter Bar */}
                 <section className="space-y-4">
-                    <div className="flex justify-between items-center px-2">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Filtrar por Categoria</h3>
+                    <div className="flex justify-between items-center px-1">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400">Filtrar por Categoria</h3>
                         {selectedCategory && (
-                            <button onClick={() => setSelectedCategory(null)} className="text-[9px] font-black uppercase text-rose-500">Limpar</button>
+                            <button onClick={() => setSelectedCategory(null)} className="text-[9px] font-bold uppercase text-rose-500">Limpar</button>
                         )}
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
@@ -250,9 +256,9 @@ export const CreditSimulatorScreen: React.FC = () => {
                             <button
                                 key={cat.id}
                                 onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
-                                className={`flex-shrink-0 px-5 py-3 rounded-2xl text-[11px] font-black uppercase tracking-wider transition-all border ${selectedCategory === cat.id
-                                        ? 'bg-white text-slate-950 border-white shadow-xl shadow-white/10'
-                                        : 'bg-slate-900 border-slate-800 text-slate-400'
+                                className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-medium transition-all border ${selectedCategory === cat.id
+                                    ? 'bg-primary-500 text-white border-primary-500 shadow-md shadow-primary-200'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-primary-200'
                                     }`}
                             >
                                 {cat.label}
@@ -263,9 +269,9 @@ export const CreditSimulatorScreen: React.FC = () => {
 
                 {/* Transactions List */}
                 <section className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                            <Filter className="w-3.5 h-3.5 text-cyan-500" />
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <Filter className="w-3.5 h-3.5 text-primary-500" />
                             Extrato Consolidado ({filteredTransactions.length})
                         </h3>
                     </div>
@@ -277,56 +283,56 @@ export const CreditSimulatorScreen: React.FC = () => {
                                 return (
                                     <div
                                         key={tx.id}
-                                        className="bg-slate-900/40 border border-slate-800/50 rounded-2xl p-4 flex items-center justify-between group hover:border-slate-700 transition-all"
+                                        className="bg-white border border-slate-100 rounded-xl p-4 flex items-center justify-between group hover:shadow-md transition-all"
                                     >
                                         <div className="flex items-center gap-4">
                                             <div
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-[10px] text-white shadow-lg"
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-[10px] text-white shadow-sm"
                                                 style={{ backgroundColor: card?.color || '#334155' }}
                                             >
                                                 {card?.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-white">{tx.title}</p>
-                                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                                <p className="text-sm font-bold text-slate-900">{tx.title}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">
                                                     {formatDate(tx.transaction_date)} • {card?.name}
-                                                    {tx.installment_total > 1 && <span className="ml-1 text-cyan-500">({tx.installment_current}/{tx.installment_total})</span>}
+                                                    {tx.installment_total > 1 && <span className="ml-1 text-primary-500">({tx.installment_current}/{tx.installment_total})</span>}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm font-black text-white">{formatCurrency(tx.amount)}</p>
+                                            <p className="text-sm font-bold text-slate-900">{formatCurrency(tx.amount)}</p>
                                             <div className="flex items-center justify-end gap-1">
                                                 <ArrowUpRight className="w-3 h-3 text-rose-500" />
-                                                <span className="text-[9px] font-black text-slate-500 uppercase">Débito</span>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Débito</span>
                                             </div>
                                         </div>
                                     </div>
                                 );
                             })
                         ) : (
-                            <div className="text-center py-20 bg-slate-900/20 border border-dashed border-slate-800 rounded-[32px]">
-                                <Search className="w-10 h-10 text-slate-800 mx-auto mb-4" />
-                                <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Nenhum gasto encontrado</p>
+                            <div className="text-center py-16 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
+                                <Search className="w-10 h-10 text-slate-300 mx-auto mb-4" />
+                                <p className="text-slate-400 font-medium text-sm">Nenhum gasto encontrado</p>
                             </div>
                         )}
                     </div>
                 </section>
 
                 {/* Visual Chart Section */}
-                <section className="bg-slate-900 border border-slate-800 rounded-[32px] p-8">
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-6 text-center">Consumo por Categoria</p>
+                <section className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mb-6 text-center">Consumo por Categoria</p>
                     <SpendingDonutChart data={getCategoryData()} size={180} />
                 </section>
             </div>
 
-            <div className="fixed bottom-0 inset-x-0 p-6 bg-gradient-to-t from-slate-950 via-slate-950 to-transparent">
+            <div className="fixed bottom-0 inset-x-0 p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent">
                 <button
                     onClick={() => navigate('/credit-cards')}
-                    className="w-full h-16 bg-cyan-600 hover:bg-cyan-500 shadow-xl shadow-cyan-600/20 active:scale-95 rounded-2xl flex items-center justify-center gap-3 transition-all group"
+                    className="w-full h-14 bg-primary-500 hover:bg-primary-600 shadow-lg shadow-primary-200 active:scale-95 rounded-xl flex items-center justify-center gap-3 transition-all group"
                 >
                     <RefreshCw className="w-5 h-5 text-white group-hover:rotate-180 transition-transform duration-500" />
-                    <span className="text-sm font-black uppercase tracking-[0.2em] text-white">Sincronizar Bancos</span>
+                    <span className="text-sm font-bold uppercase tracking-widest text-white">Sincronizar Bancos</span>
                 </button>
             </div>
         </div>

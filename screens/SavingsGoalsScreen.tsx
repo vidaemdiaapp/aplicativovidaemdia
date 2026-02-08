@@ -78,10 +78,18 @@ export const SavingsGoalsScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin"></div>
-                    <p className="text-text-secondary text-sm font-medium animate-pulse">Carregando cofrinhos...</p>
+            <div className="min-h-screen bg-surface pb-24">
+                <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 animate-pulse" />
+                        <div className="w-32 h-8 rounded bg-white/20 animate-pulse" />
+                    </div>
+                </header>
+                <div className="px-4 -mt-16 relative z-20">
+                    <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+                        <div className="h-24 rounded-2xl bg-slate-100 animate-pulse" />
+                    </div>
                 </div>
             </div>
         );
@@ -90,79 +98,86 @@ export const SavingsGoalsScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* ═══════════════════════════════════════════════════════════════
-                HEADER & SUMMARY
+                HERO: Blue Gradient Header
             ═══════════════════════════════════════════════════════════════ */}
-            <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
-                <div className="flex items-center justify-between mb-8">
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex items-center justify-between relative z-10 mb-4">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate('/financial-dashboard')}
-                            className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all"
                         >
-                            <ChevronLeft className="w-6 h-6" />
+                            <ChevronLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">Cofrinhos</h1>
-                            <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest mt-1">Meus Objetivos</p>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Poupança</p>
+                            <h1 className="text-white text-2xl font-bold">Meus Cofrinhos</h1>
                         </div>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="w-12 h-12 rounded-2xl bg-primary-500 text-white hover:bg-primary-600 transition-all active:scale-90 shadow-lg shadow-primary-500/20 flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 flex items-center justify-center transition-all"
                     >
-                        <Plus className="w-6 h-6" />
+                        <Plus className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="card p-6 border-l-4 border-l-emerald-500">
-                    <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 rounded-[22px] bg-emerald-50 flex items-center justify-center border-2 border-white shadow-sm shrink-0">
-                            <PiggyBank className="w-8 h-8 text-emerald-500" />
+                <p className="text-white/70 text-sm font-medium pl-14 relative z-10">
+                    {goals.length} meta(s) ativa(s)
+                </p>
+            </header>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                FLOATING TOTAL SUMMARY CARD
+            ═══════════════════════════════════════════════════════════════ */}
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                            <PiggyBank className="w-7 h-7 text-emerald-500" />
                         </div>
-                        <div className="flex-1">
-                            <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] mb-1">Poupado Hoje</p>
-                            <p className="text-4xl font-black text-emerald-500 tracking-tight leading-none">{formatCurrency(getTotalSaved())}</p>
-                            <p className="text-text-secondary text-[10px] font-bold uppercase tracking-widest mt-2 flex items-center gap-1.5">
-                                <TrendingUp className="w-3.5 h-3.5" />
-                                {goals.length} meta{goals.length !== 1 ? 's' : ''} em andamento
-                            </p>
+                        <div>
+                            <p className="text-slate-500 text-sm font-medium">Total Poupado</p>
+                            <p className="text-3xl font-black text-slate-800 tracking-tight">{formatCurrency(getTotalSaved())}</p>
                         </div>
                     </div>
-                    <div className="mt-6">
-                        <div className="h-3 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
-                            <div
-                                className="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                                style={{ width: `${getTotalTarget() > 0 ? (getTotalSaved() / getTotalTarget()) * 100 : 0}%` }}
-                            ></div>
-                        </div>
-                        <div className="flex justify-between mt-3 px-1">
-                            <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% Alcançado</span>
-                            <span className="text-[10px] text-text-muted font-black uppercase tracking-widest">Alvo: {formatCurrency(getTotalTarget())}</span>
-                        </div>
+                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-500 transition-all duration-700"
+                            style={{ width: `${getTotalTarget() > 0 ? (getTotalSaved() / getTotalTarget()) * 100 : 0}%` }}
+                        ></div>
+                    </div>
+                    <div className="flex justify-between mt-3 px-1">
+                        <span className="text-xs text-slate-400 font-medium">{((getTotalSaved() / getTotalTarget()) * 100 || 0).toFixed(0)}% do objetivo</span>
+                        <span className="text-xs text-slate-400 font-medium">Meta: {formatCurrency(getTotalTarget())}</span>
                     </div>
                 </div>
-            </header>
+            </div>
 
             {/* Goals List */}
             {goals.length === 0 ? (
-                <div className="px-6 py-12">
-                    <div className="card-premium p-12 text-center bg-white/50 border-dashed">
-                        <PiggyBank className="w-16 h-16 text-emerald-100 mx-auto mb-4" />
-                        <h3 className="text-lg font-black text-text-primary mb-2">Sem cofrinhos ainda</h3>
-                        <p className="text-text-muted text-sm font-bold uppercase tracking-widest mb-6">Comece a poupar hoje!</p>
+                <div className="px-6 mt-8">
+                    <div className="bg-white border border-dashed border-border-color rounded-3xl p-10 text-center">
+                        <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <PiggyBank className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p className="text-text-primary font-bold mb-2">Nenhum cofrinho criado</p>
+                        <p className="text-text-muted text-sm mb-6 max-w-[220px] mx-auto">Comece sua reserva financeira agora mesmo!</p>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
+                            className="w-full py-4 bg-primary-500 hover:bg-primary-600 text-white rounded-2xl font-bold transition-all shadow-md active:scale-[0.98]"
                         >
-                            Criar Primeiro Cofrinho
+                            Criar Cofrinho
                         </button>
                     </div>
                 </div>
             ) : (
-                <section className="px-6 py-8">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-muted mb-6 px-1 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-amber-500" />
-                        Seus Objetivos
+                <section className="px-6 mt-10 mb-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-text-muted mb-4 px-1">
+                        Seus Cofrinhos
                     </h3>
                     <div className="space-y-4">
                         {goals.map((goal) => {
@@ -174,42 +189,41 @@ export const SavingsGoalsScreen: React.FC = () => {
                                 <div
                                     key={goal.id}
                                     onClick={() => handleGoalSelect(goal)}
-                                    className={`card p-5 group ${selectedGoal?.id === goal.id ? 'ring-4 ring-primary-500/5 border-primary-500' : ''}`}
+                                    className={`p-5 bg-white border rounded-[28px] cursor-pointer transition-all shadow-sm ${selectedGoal?.id === goal.id
+                                        ? 'border-primary-500 ring-4 ring-primary-500/5'
+                                        : 'border-border-color hover:border-primary-200 hover:shadow-md'
+                                        }`}
                                 >
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-4">
+                                    <div className="flex justify-between items-start mb-3">
+                                        <div className="flex items-center gap-3">
                                             <div
-                                                className="w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm transition-transform group-hover:scale-110"
+                                                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
                                                 style={{ backgroundColor: `${goal.color}15` }}
                                             >
-                                                <Icon className="w-7 h-7" style={{ color: goal.color }} />
+                                                <Icon className="w-6 h-6" style={{ color: goal.color }} />
                                             </div>
                                             <div>
-                                                <p className="text-lg font-black text-text-primary tracking-tight group-hover:text-primary-600 transition-colors">{goal.name}</p>
-                                                <p className="text-[9px] text-text-muted font-black uppercase tracking-widest">{config.label}</p>
+                                                <p className="font-bold text-text-primary">{goal.name}</p>
+                                                <p className="text-[11px] text-text-muted font-medium">{config.label}</p>
                                             </div>
                                         </div>
-                                        {goal.is_locked ? (
-                                            <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center shadow-inner">
-                                                <Lock className="w-5 h-5 text-amber-500" />
-                                            </div>
-                                        ) : (
-                                            <ChevronRight className="w-6 h-6 text-slate-200 group-hover:text-primary-500 group-hover:translate-x-1 transition-all" />
+                                        {goal.is_locked && (
+                                            <Lock className="w-4 h-4 text-amber-500" />
                                         )}
                                     </div>
 
-                                    <div className="mb-4">
+                                    <div className="mb-2">
                                         <div className="flex justify-between items-end mb-2">
-                                            <span className="text-2xl font-black text-text-primary tracking-tight leading-none">
+                                            <span className="text-2xl font-bold text-text-primary tracking-tight">
                                                 {formatCurrency(goal.current_amount)}
                                             </span>
-                                            <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">
+                                            <span className="text-xs font-bold text-text-secondary">
                                                 {progress.toFixed(0)}%
                                             </span>
                                         </div>
-                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden border border-slate-100 shadow-inner">
+                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
                                             <div
-                                                className="h-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(0,0,0,0.1)]"
+                                                className="h-full transition-all duration-1000 ease-out"
                                                 style={{
                                                     width: `${progress}%`,
                                                     backgroundColor: goal.color
@@ -218,15 +232,15 @@ export const SavingsGoalsScreen: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center px-1">
-                                        <span className="text-[9px] text-text-muted font-black uppercase tracking-widest">
-                                            Alvo: {formatCurrency(goal.target_amount)}
+                                    <div className="flex justify-between items-center mt-3">
+                                        <span className="text-[11px] text-text-muted font-medium">
+                                            Meta: {formatCurrency(goal.target_amount)}
                                         </span>
                                         {goal.deadline && (
-                                            <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-xl border border-slate-100">
-                                                <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                                                <span className="text-[10px] font-black text-text-muted uppercase tracking-tighter">{formatDate(goal.deadline)}</span>
-                                            </div>
+                                            <span className="text-[11px] text-text-muted font-bold flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
+                                                <Calendar className="w-3 h-3" />
+                                                {formatDate(goal.deadline)}
+                                            </span>
                                         )}
                                     </div>
                                 </div>

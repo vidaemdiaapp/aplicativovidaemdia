@@ -80,15 +80,24 @@ export const UploadScreen: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-24 lg:pb-0">
-      <header className="bg-white/80 backdrop-blur-md p-6 pt-12 pb-4 flex items-center gap-4 sticky top-0 z-10 shadow-sm lg:rounded-b-2xl">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full -ml-2">
-          <ArrowLeft className="w-6 h-6 text-slate-700" />
-        </button>
-        <h1 className="text-xl font-bold text-slate-900">Analisar Documento</h1>
+    <div className="min-h-screen bg-slate-50 pb-24 lg:pb-0">
+      {/* Blue Hero Header */}
+      <header className="bg-primary-500 pt-14 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+        <div className="flex items-center gap-4 relative z-10">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Documentos</p>
+            <h1 className="text-white text-2xl font-bold">Analisar Documento</h1>
+          </div>
+        </div>
       </header>
 
-      <div className="px-6 py-4 max-w-2xl mx-auto">
+      <div className="px-4 -mt-12 relative z-20 max-w-2xl mx-auto">
         <input
           type="file"
           ref={fileInputRef}

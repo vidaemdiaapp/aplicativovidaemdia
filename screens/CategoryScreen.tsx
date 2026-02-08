@@ -62,56 +62,71 @@ export const CategoryScreen: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-primary-500 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <p className="text-white/80 text-sm font-medium">Carregando...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="pb-8 lg:pb-0">
-      <header className="bg-white/80 backdrop-blur-md p-6 pt-12 pb-4 sticky top-0 z-10 shadow-sm lg:rounded-b-2xl lg:px-8">
-        <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full -ml-2">
-            <ArrowLeft className="w-6 h-6 text-slate-700" />
+    <div className="pb-8 lg:pb-0 bg-slate-50 min-h-screen">
+      {/* Blue Hero Header */}
+      <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+        <div className="flex items-center gap-4 relative z-10">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all">
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-bold text-slate-900">{currentCategory?.label || 'Todas'}</h1>
-        </div>
-
-        {/* Category tabs */}
-        <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-2">
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id
-                ? 'bg-primary-600 text-white shadow-md shadow-primary-200'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4 flex gap-3">
-          <div className="flex-1 bg-slate-100 rounded-xl flex items-center px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
-            <Search className="w-5 h-5 text-slate-400 mr-2" />
-            <input
-              type="text"
-              placeholder="Buscar item..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-transparent w-full outline-none text-sm text-slate-700 placeholder:text-slate-400"
-            />
+          <div>
+            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Categorias</p>
+            <h1 className="text-white text-2xl font-bold">{currentCategory?.label || 'Todas'}</h1>
           </div>
-          <button className="bg-slate-100 p-2.5 rounded-xl text-slate-700 hover:bg-slate-200 transition-colors">
-            <Filter className="w-5 h-5" />
-          </button>
         </div>
       </header>
 
-      <div className="p-6">
+      {/* Floating Card with Category Tabs & Search */}
+      <div className="px-4 -mt-16 relative z-20">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-5">
+          {/* Category tabs */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 -mx-1 px-1">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id
+                  ? 'bg-primary-500 text-white shadow-md shadow-primary-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-3 pt-3 border-t border-slate-100">
+            <div className="flex-1 bg-slate-50 rounded-xl flex items-center px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary-500/20 transition-all">
+              <Search className="w-5 h-5 text-slate-400 mr-2" />
+              <input
+                type="text"
+                placeholder="Buscar item..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bg-transparent w-full outline-none text-sm text-slate-700 placeholder:text-slate-400"
+              />
+            </div>
+            <button className="bg-slate-100 p-2.5 rounded-xl text-slate-600 hover:bg-slate-200 transition-colors">
+              <Filter className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 pt-4">
         {filteredTasks.length === 0 ? (
           <div className="bg-white p-12 rounded-3xl text-center shadow-sm border border-slate-100">
             <p className="text-slate-500 font-medium">Nenhum item encontrado nesta categoria.</p>

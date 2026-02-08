@@ -78,10 +78,18 @@ export const IncomesScreen: React.FC = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-surface flex items-center justify-center p-6">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>
-                    <p className="text-slate-400 text-sm font-medium animate-pulse">Carregando rendas...</p>
+            <div className="min-h-screen bg-surface pb-24">
+                <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-white/20 animate-pulse" />
+                        <div className="w-32 h-8 rounded bg-white/20 animate-pulse" />
+                    </div>
+                </header>
+                <div className="px-4 -mt-16 relative z-20">
+                    <div className="bg-white rounded-3xl shadow-xl p-6 border border-slate-100">
+                        <div className="h-20 rounded-2xl bg-slate-100 animate-pulse" />
+                    </div>
                 </div>
             </div>
         );
@@ -90,98 +98,102 @@ export const IncomesScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-surface pb-24 text-text-primary">
             {/* ═══════════════════════════════════════════════════════════════
-                HEADER & SUMMARY
+                HERO: Blue Gradient Header
             ═══════════════════════════════════════════════════════════════ */}
-            <header className="px-6 pt-16 pb-8 bg-surface-elevated border-b border-border-color shadow-sm sticky top-0 z-30 lg:rounded-b-[40px]">
-                <div className="flex items-center justify-between mb-8">
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex items-center justify-between relative z-10 mb-4">
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-12 h-12 rounded-2xl bg-white border border-border-color text-text-muted hover:text-primary-600 transition-all active:scale-90 shadow-sm flex items-center justify-center"
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all"
                         >
-                            <ChevronLeft className="w-6 h-6" />
+                            <ChevronLeft className="w-5 h-5" />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-black text-text-primary tracking-tight leading-none">Rendas</h1>
-                            <p className="text-text-muted text-[11px] font-bold uppercase tracking-widest mt-1">Fontes de Receita</p>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Gestão</p>
+                            <h1 className="text-white text-2xl font-bold">Rendas</h1>
                         </div>
                     </div>
                     <button
                         onClick={() => setShowModal(true)}
-                        className="w-12 h-12 rounded-2xl bg-emerald-500 text-white hover:bg-emerald-600 transition-all active:scale-90 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 flex items-center justify-center transition-all"
                     >
-                        <Plus className="w-6 h-6" />
+                        <Plus className="w-5 h-5" />
                     </button>
-                </div>
-
-                <div className="card p-6 border-l-4 border-l-emerald-500 text-center">
-                    <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em] mb-2 px-1">
-                        Renda Mensal Total
-                    </p>
-                    <h1 className="text-5xl font-black text-emerald-500 tracking-tight">
-                        {formatCurrency(totalMonthly)}
-                    </h1>
-                    <p className="text-text-secondary text-[11px] font-bold uppercase tracking-widest mt-3 opacity-60">
-                        {incomes.length} fonte{incomes.length !== 1 ? 's' : ''} ativa{incomes.length !== 1 ? 's' : ''}
-                    </p>
                 </div>
             </header>
 
-            <div className="px-6 py-8 flex gap-3 overflow-x-auto no-scrollbar">
+            {/* ═══════════════════════════════════════════════════════════════
+                FLOATING SUMMARY CARD
+            ═══════════════════════════════════════════════════════════════ */}
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100 p-6 text-center">
+                    <p className="text-slate-500 text-sm font-medium mb-2">Renda Mensal Total</p>
+                    <h2 className="text-3xl font-black text-emerald-500">{formatCurrency(totalMonthly)}</h2>
+                    <p className="text-slate-400 text-xs font-medium mt-2">
+                        Gerenciando {incomes.length} fonte{incomes.length !== 1 ? 's' : ''} de rendimento
+                    </p>
+                </div>
+            </div>
+
+            {/* Filter Chips */}
+            <div className="px-6 py-6 flex gap-3 overflow-x-auto no-scrollbar">
                 {(['all', 'month', 'week'] as ViewMode[]).map((mode) => (
                     <button
                         key={mode}
                         onClick={() => setViewMode(mode)}
-                        className={`px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest whitespace-nowrap transition-all border-2 ${viewMode === mode
-                            ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20'
-                            : 'bg-white text-text-muted border-white shadow-sm'
+                        className={`px-5 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${viewMode === mode
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/10'
+                            : 'bg-white border border-border-color text-text-muted hover:border-emerald-200'
                             }`}
                     >
-                        {mode === 'all' ? 'Ver Todas' : mode === 'month' ? 'Este Mês' : 'Esta Semana'}
+                        {mode === 'all' ? 'Todas' : mode === 'month' ? 'Este Mês' : 'Esta Semana'}
                     </button>
                 ))}
             </div>
 
+            {/* Incomes List */}
             <div className="px-6 space-y-4 pb-12">
                 {incomes.length === 0 ? (
-                    <div className="card-premium p-12 text-center bg-white/50">
-                        <TrendingUp className="w-16 h-16 text-emerald-100 mx-auto mb-4" />
-                        <h3 className="text-lg font-black text-text-primary mb-2">Nenhuma renda</h3>
-                        <p className="text-text-muted text-sm font-bold uppercase tracking-widest mb-6">
-                            Registre seus ganhos aqui
+                    <div className="bg-white rounded-3xl p-10 text-center border border-slate-100 shadow-sm">
+                        <TrendingUp className="w-16 h-16 text-emerald-200 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Nenhuma renda cadastrada</h3>
+                        <p className="text-slate-500 text-sm mb-6">
+                            Adicione suas fontes de renda para ter uma visão completa das suas finanças.
                         </p>
                         <button
                             onClick={() => setShowModal(true)}
-                            className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                            className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold"
                         >
-                            Cadastrar Rendimento
+                            Cadastrar Primeira Renda
                         </button>
                     </div>
                 ) : (
                     incomes.map((income) => (
                         <div
                             key={income.id}
-                            className="card p-5 group lg:p-6"
+                            className="bg-white p-5 rounded-3xl border border-border-color shadow-sm hover:shadow-md transition-all group lg:p-6"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-white shadow-sm ${getSourceColor(income.source)}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getSourceColor(income.source)}`}>
                                         {income.is_partner ? (
-                                            <Users className="w-7 h-7" />
+                                            <Users className="w-6 h-6" />
                                         ) : (
-                                            <ArrowUpCircle className="w-7 h-7" />
+                                            <ArrowUpCircle className="w-6 h-6" />
                                         )}
                                     </div>
-                                    <div className="min-w-0">
-                                        <h3 className="font-black text-text-primary tracking-tight truncate group-hover:text-emerald-600 transition-colors">
-                                            {income.description || getSourceLabel(income.source)}
-                                        </h3>
+                                    <div>
+                                        <h3 className="font-bold text-slate-800">{income.description || getSourceLabel(income.source)}</h3>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${getSourceColor(income.source)}`}>
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getSourceColor(income.source)}`}>
                                                 {getSourceLabel(income.source)}
                                             </span>
                                             {income.is_partner && (
-                                                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 text-violet-600 border border-white">
+                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-600">
                                                     Parceiro(a)
                                                 </span>
                                             )}
@@ -189,25 +201,25 @@ export const IncomesScreen: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-xl font-black text-emerald-500 tracking-tight">
+                                    <p className="text-lg font-bold text-emerald-600">
                                         {formatCurrency(income.amount_monthly)}
                                     </p>
-                                    <p className="text-[9px] text-text-muted font-black uppercase tracking-widest">por mês</p>
+                                    <p className="text-[10px] text-slate-400 font-medium">por mês</p>
                                 </div>
                             </div>
 
                             {/* Actions */}
-                            <div className="flex justify-end gap-3 mt-5 pt-5 border-t border-border-color opacity-0 group-hover:opacity-100 transition-all">
+                            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-slate-50 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => setShowModal(true)}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-text-muted text-[10px] font-black uppercase tracking-widest transition-all"
+                                    className="flex items-center gap-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 rounded-lg text-slate-600 text-xs font-bold transition-colors"
                                 >
                                     <Edit2 className="w-3.5 h-3.5" />
                                     Editar
                                 </button>
                                 <button
                                     onClick={() => handleDelete(income.id)}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-danger-50 hover:bg-danger-500 hover:text-white rounded-xl text-danger-500 text-[10px] font-black uppercase tracking-widest transition-all"
+                                    className="flex items-center gap-1 px-3 py-2 bg-rose-50 hover:bg-rose-100 rounded-lg text-rose-600 text-xs font-bold transition-colors"
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Excluir

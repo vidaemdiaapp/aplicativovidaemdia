@@ -15,14 +15,13 @@ import {
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { agendaService } from '../services/agenda';
-import { CalendarEvent, CalendarTag } from '../types';
 
 export const AgendaScreen: React.FC = () => {
     const navigate = useNavigate();
     const [view, setView] = useState<'month' | 'week' | 'list'>('month');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [events, setEvents] = useState<any[]>([]);
-    const [tags, setTags] = useState<CalendarTag[]>([]);
+    const [tags, setTags] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -71,34 +70,38 @@ export const AgendaScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* ═══════════════════════════════════════════════════════════════
-                HEADER & NAVIGATION
+                HERO: Blue Gradient Header
             ═══════════════════════════════════════════════════════════════ */}
-            <header className="px-6 pt-12 pb-6 bg-white/80 backdrop-blur-xl sticky top-0 z-40 border-b border-slate-100">
-                <div className="flex items-center justify-between mb-6">
+            <header className="bg-primary-500 pt-14 pb-6 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex items-center justify-between relative z-10 mb-4">
                     <div>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Agenda</h1>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-0.5">
+                        <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest mb-1">Calendário</p>
+                        <h1 className="text-white text-2xl font-bold">Agenda</h1>
+                        <p className="text-white/70 text-xs font-medium mt-1">
                             {format(currentDate, "MMMM 'de' yyyy", { locale: ptBR })}
                         </p>
                     </div>
                     <div className="flex gap-2">
                         <button
                             onClick={() => setShowFilters(!showFilters)}
-                            className={`p-2.5 rounded-2xl border transition-all ${showFilters ? 'bg-primary-50 border-primary-200 text-primary-600' : 'bg-white border-slate-100 text-slate-400'}`}
+                            className={`p-2.5 rounded-xl transition-all ${showFilters ? 'bg-white/30 text-white' : 'bg-white/10 text-white/80'}`}
                         >
                             <Filter className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="p-2.5 bg-white rounded-2xl border border-slate-100 text-slate-400">
+                        <button onClick={() => setCurrentDate(subMonths(currentDate, 1))} className="p-2.5 bg-white/10 rounded-xl text-white/80 hover:bg-white/20 transition-all">
                             <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="p-2.5 bg-white rounded-2xl border border-slate-100 text-slate-400">
+                        <button onClick={() => setCurrentDate(addMonths(currentDate, 1))} className="p-2.5 bg-white/10 rounded-xl text-white/80 hover:bg-white/20 transition-all">
                             <ChevronRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
 
                 {/* VIEW SELECTOR TABS */}
-                <div className="flex bg-slate-100 p-1 rounded-[1.5rem]">
+                <div className="flex bg-white/10 p-1 rounded-2xl relative z-10">
                     <ViewTab active={view === 'month'} onClick={() => setView('month')} icon={<CalendarIcon className="w-4 h-4" />} label="Mês" />
                     <ViewTab active={view === 'week'} onClick={() => setView('week')} icon={<Clock className="w-4 h-4" />} label="Semana" />
                     <ViewTab active={view === 'list'} onClick={() => setView('list')} icon={<List className="w-4 h-4" />} label="Lista" />
@@ -345,7 +348,7 @@ const EventCard = ({ event, navigate, className = "" }: { event: any, navigate: 
 const ViewTab = ({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) => (
     <button
         onClick={onClick}
-        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[1.25rem] transition-all ${active ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${active ? 'bg-white text-slate-900 shadow-sm' : 'text-white/70 hover:text-white'
             }`}
     >
         {icon}

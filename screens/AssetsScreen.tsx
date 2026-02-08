@@ -56,37 +56,49 @@ export const AssetsScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-24">
-            <header className="bg-white p-6 pt-12 pb-4 sticky top-0 z-10 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
+            {/* Blue Hero Header */}
+            <header className="bg-primary-500 pt-14 pb-24 px-6 relative overflow-hidden">
+                <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary-400/30 rounded-full blur-3xl" />
+                <div className="absolute -bottom-32 -left-20 w-48 h-48 bg-primary-600/20 rounded-full blur-2xl" />
+
+                <div className="flex justify-between items-center relative z-10">
                     <div className="flex items-center gap-4">
-                        <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full -ml-2">
-                            <ArrowLeft className="w-6 h-6 text-slate-700" />
+                        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/80 hover:bg-white/20 transition-all">
+                            <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h1 className="text-xl font-bold text-slate-900">Meus Bens</h1>
+                        <div>
+                            <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest">Patrimônio</p>
+                            <h1 className="text-white text-2xl font-bold">Meus Bens</h1>
+                        </div>
                     </div>
                     <button
                         onClick={() => setIsRegModalOpen(true)}
-                        className="p-3 bg-slate-900 text-white rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+                        className="w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center text-primary-500 hover:scale-105 transition-all"
                     >
                         <Plus className="w-5 h-5" />
                     </button>
                 </div>
             </header>
 
-            <div className="p-6">
-                {/* Motivation Card */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[32px] p-6 text-white mb-8 relative overflow-hidden shadow-2xl">
-                    <div className="relative z-10">
-                        <h3 className="text-lg font-black mb-2 flex items-center gap-2">
-                            Proteção de Patrimônio 🛡️
-                        </h3>
-                        <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                            Cadastrar seus bens aqui ajuda a preencher sua declaração anual e evita surpresas com impostos de venda (Ganho de Capital).
-                        </p>
+            {/* Floating Content Card */}
+            <div className="px-4 -mt-16 relative z-20">
+                <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
+                    {/* Motivation Card */}
+                    <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl p-5 text-white mb-6 relative overflow-hidden shadow-lg shadow-primary-200">
+                        <div className="relative z-10">
+                            <h3 className="text-base font-black mb-2 flex items-center gap-2">
+                                Proteção de Patrimônio 🛡️
+                            </h3>
+                            <p className="text-[11px] text-primary-50 font-medium leading-relaxed opacity-90">
+                                Cadastrar seus bens aqui ajuda a preencher sua declaração anual e evita surpresas com impostos de venda.
+                            </p>
+                        </div>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-bl-full"></div>
                     </div>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full"></div>
                 </div>
+            </div>
 
+            <div className="p-6 pt-4">
                 {loading ? (
                     <div className="space-y-4">
                         {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
@@ -121,7 +133,7 @@ export const AssetsScreen: React.FC = () => {
                                                 setSelectedAssetForSale(asset);
                                                 setIsSaleModalOpen(true);
                                             }}
-                                            className="flex-1 py-3 px-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-tight flex items-center justify-center gap-2 hover:bg-slate-800 transition-all"
+                                            className="flex-1 py-3 px-4 bg-primary-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-tight flex items-center justify-center gap-2 hover:bg-primary-700 transition-all shadow-md shadow-primary-200"
                                         >
                                             <DollarSign className="w-3 h-3" /> Registrei Venda
                                         </button>
