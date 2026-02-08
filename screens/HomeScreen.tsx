@@ -291,6 +291,48 @@ export const HomeScreen: React.FC = () => {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
+          ATENÇÕES NECESSÁRIAS: Health & Overdue Alerts
+      ═══════════════════════════════════════════════════════════════ */}
+      <section className="px-4 mt-8 space-y-4">
+        <div className="flex items-center gap-2 px-1 mb-1">
+          <AlertTriangle className="w-5 h-5 text-amber-500" />
+          <h2 className="font-bold text-slate-800 text-lg">Atenções Necessárias</h2>
+        </div>
+
+        {/* Overall Status Card */}
+        <StatusCard
+          status={currentStatus}
+          percentage={getPercentage()}
+        />
+
+        {/* Urgent Overdue Alert - Premium Style matching Financial Dashboard */}
+        {overdueCount > 0 && (
+          <button
+            onClick={() => navigate('/financial-dashboard')}
+            className="w-full bg-rose-50 border border-rose-100 rounded-[2rem] p-5 flex items-center justify-between group hover:shadow-lg hover:border-rose-200 transition-all active:scale-[0.98] shadow-sm"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500 flex items-center justify-center shadow-lg shadow-rose-200 group-hover:scale-105 transition-transform">
+                <AlertTriangle className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-rose-500 mb-0.5">Ação Urgente</p>
+                <p className="text-[15px] font-bold text-slate-900 leading-tight">
+                  {overdueCount} {overdueCount === 1 ? 'pendência vencida' : 'pendências vencidas'}
+                </p>
+                <p className="text-[11px] text-rose-400 font-medium mt-0.5 group-hover:text-rose-600 transition-colors">
+                  Clique para regularizar agora
+                </p>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-white/50 flex items-center justify-center text-rose-300 group-hover:text-rose-500 group-hover:bg-white transition-all">
+              <ChevronRight className="w-5 h-5" />
+            </div>
+          </button>
+        )}
+      </section>
+
+      {/* ═══════════════════════════════════════════════════════════════
           QUICK ACCESS SECTION — Mercado Pago Style
       ═══════════════════════════════════════════════════════════════ */}
       <section className="px-4 mt-6">
