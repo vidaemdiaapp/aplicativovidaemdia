@@ -311,7 +311,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
                 </div>
-                <div className="flex justify-between items-start">
+                <div className="grid grid-cols-4 gap-2">
                     <QuickAccessButton icon={ShieldCheck} label="Imposto" onClick={() => navigate('/tax-declaration')} />
                     <QuickAccessButton icon={CreditCard} label="Cartões" onClick={() => navigate('/credit-cards')} />
                     <QuickAccessButton icon={PiggyBank} label="Cofrinhos" onClick={() => navigate('/savings')} />
@@ -413,7 +413,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                                                 <Clock className="w-6 h-6 text-rose-500" />
                                             </div>
                                             <div className="min-w-0">
-                                                <p className="text-[15px] font-bold text-slate-900 group-hover:text-rose-600 transition-colors truncate max-w-[140px]">
+                                                <p className="text-[15px] font-bold text-slate-900 group-hover:text-rose-600 transition-colors line-clamp-1">
                                                     {bill.title}
                                                 </p>
                                                 <p className="text-[11px] text-slate-500 font-medium mt-0.5">

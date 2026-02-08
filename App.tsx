@@ -133,12 +133,16 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+import { ThemeProvider } from './contexts/ThemeContext';
+
 const App: React.FC = () => {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppRoutes />
-        <Toaster position="top-center" />
+        <ThemeProvider>
+          <AppRoutes />
+          <Toaster position="top-center" />
+        </ThemeProvider>
       </AuthProvider>
     </HashRouter>
   );

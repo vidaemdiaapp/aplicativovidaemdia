@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Bell, Shield, LogOut, ChevronRight, Moon, Heart, Users, Plus, Loader2, Calculator } from 'lucide-react';
+import { ArrowLeft, User, Bell, Shield, LogOut, ChevronRight, Moon, Heart, Users, Plus, Loader2, Calculator, Sun } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../contexts/ThemeContext';
 import { tasksService, Household } from '../services/tasks';
 import { taxService } from '../services/tax';
 import { Profile } from '../types';
@@ -9,6 +10,7 @@ import { Profile } from '../types';
 export const SettingsScreen: React.FC = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [household, setHousehold] = useState<Household | null>(null);
   const [estimateIR, setEstimateIR] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -208,8 +210,32 @@ export const SettingsScreen: React.FC = () => {
         </section>
 
         <section>
-          <div className="rounded-2xl shadow-sm border border-slate-100">
-            <SettingItem icon={Moon} label="Aparência" />
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-2">Aparência</h3>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {theme === 'dark' ? (
+                  <Moon className="w-5 h-5 text-indigo-400" />
+                ) : (
+                  <Sun className="w-5 h-5 text-amber-500" />
+                )}
+                <div className="text-left">
+                  <span className="font-medium block text-slate-700">Modo Escuro</span>
+                  <span className="text-xs text-slate-400">Alternar entre tema claro e escuro</span>
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                className={`w-12 h-6 rounded-full transition-colors relative ${theme === 'dark' ? 'bg-primary-600' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${theme === 'dark' ? 'left-7' : 'left-1'}`}></div>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div className="rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <SettingItem
               icon={LogOut}
               label="Sair da conta"

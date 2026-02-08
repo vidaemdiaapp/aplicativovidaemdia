@@ -129,96 +129,199 @@
         letter-spacing: -0.02em;
     }
 
-    input, textarea, select {
+    input,
+    textarea,
+    select {
         color: inherit;
         font-family: inherit;
     }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   DARK MODE — Follows System Preference
+   DARK MODE — Suporte a preferência do sistema e toggle manual
 ═══════════════════════════════════════════════════════════════ */
+
+/* Bloco 1: Variáveis para Preferência do Sistema */
 @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light) {
         --bg-primary: #0a0f1e;
         --bg-card: #141a2e;
         --bg-elevated: #1c2541;
         --bg-muted: #1e2a47;
         --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
-        --text-muted: #64748b;
+        --text-secondary: #cbd5e1;
+        --text-muted: #94a3b8;
         --border-color: #2d3a5c;
-        --shadow-color: rgba(0, 0, 0, 0.3);
-        --shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.4);
-        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
+        --shadow-color: rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
+}
 
-    body {
+/* Bloco 2: Variáveis para Toggle Manual (.dark) */
+:root.dark {
+    --bg-primary: #0a0f1e;
+    --bg-card: #141a2e;
+    --bg-elevated: #1c2541;
+    --bg-muted: #1e2a47;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --border-color: #2d3a5c;
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Bloco 3: Aplicação de Estilos Base */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light) body {
         background-color: var(--bg-primary);
         color: var(--text-primary);
     }
+}
 
-    /* Dark Mode Overrides */
-    .bg-white {
+:root.dark body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Bloco 4: Overrides (Backgrounds) */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light) .bg-white {
         background-color: var(--bg-card) !important;
     }
 
-    .bg-surface,
-    .bg-slate-50,
-    .bg-slate-100,
-    .bg-gray-50,
-    .bg-gray-100 {
+    :root:not(.light) .bg-surface,
+    :root:not(.light) .bg-slate-50,
+    :root:not(.light) .bg-slate-100,
+    :root:not(.light) .bg-gray-50,
+    :root:not(.light) .bg-gray-100 {
         background-color: var(--bg-muted) !important;
     }
+}
 
-    .border-slate-100,
-    .border-slate-200,
-    .border-gray-100,
-    .border-gray-200 {
-        border-color: var(--border-color) !important;
+:root.dark .bg-white {
+    background-color: var(--bg-card) !important;
+}
+
+:root.dark .bg-surface,
+:root.dark .bg-slate-50,
+:root.dark .bg-slate-100,
+:root.dark .bg-gray-50,
+:root.dark .bg-gray-100 {
+    background-color: var(--bg-muted) !important;
+}
+
+/* Bloco 5: Variantes Suaves (Prevenção de Brilho) */
+@media (prefers-color-scheme: dark) {
+
+    :root:not(.light) .bg-rose-50,
+    :root:not(.light) .bg-red-50 {
+        background-color: rgba(244, 63, 94, 0.1) !important;
+        border-color: rgba(244, 63, 94, 0.2) !important;
     }
 
-    .text-slate-900,
-    .text-gray-900 {
+    :root:not(.light) .bg-emerald-50,
+    :root:not(.light) .bg-green-50 {
+        background-color: rgba(16, 185, 129, 0.1) !important;
+        border-color: rgba(16, 185, 129, 0.2) !important;
+    }
+
+    :root:not(.light) .bg-amber-50,
+    :root:not(.light) .bg-yellow-50 {
+        background-color: rgba(245, 158, 11, 0.1) !important;
+        border-color: rgba(245, 158, 11, 0.2) !important;
+    }
+
+    :root:not(.light) .bg-primary-50,
+    :root:not(.light) .bg-blue-50 {
+        background-color: rgba(0, 174, 239, 0.1) !important;
+        border-color: rgba(0, 174, 239, 0.2) !important;
+    }
+}
+
+:root.dark .bg-rose-50,
+:root.dark .bg-red-50 {
+    background-color: rgba(244, 63, 94, 0.1) !important;
+    border-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+:root.dark .bg-emerald-50,
+:root.dark .bg-green-50 {
+    background-color: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+:root.dark .bg-amber-50,
+:root.dark .bg-yellow-50 {
+    background-color: rgba(245, 158, 11, 0.1) !important;
+    border-color: rgba(245, 158, 11, 0.2) !important;
+}
+
+:root.dark .bg-primary-50,
+:root.dark .bg-blue-50 {
+    background-color: rgba(0, 174, 239, 0.1) !important;
+    border-color: rgba(0, 174, 239, 0.2) !important;
+}
+
+/* Bloco 6: Melhoria de Contraste de Texto */
+@media (prefers-color-scheme: dark) {
+    :root:not(.light) .text-slate-900 {
         color: var(--text-primary) !important;
     }
 
-    .text-slate-800,
-    .text-gray-800 {
+    :root:not(.light) .text-slate-800 {
+        color: #f1f5f9 !important;
+    }
+
+    :root:not(.light) .text-slate-700 {
         color: #e2e8f0 !important;
     }
 
-    .text-slate-700,
-    .text-gray-700 {
+    :root:not(.light) .text-slate-300 {
         color: #cbd5e1 !important;
     }
 
-    .text-slate-600,
-    .text-gray-600 {
+    :root:not(.light) .text-slate-400 {
         color: #94a3b8 !important;
     }
 
-    .text-slate-500,
-    .text-slate-400,
-    .text-gray-500,
-    .text-gray-400 {
-        color: var(--text-muted) !important;
+    :root:not(.light) .text-slate-500 {
+        color: #a0aec0 !important;
     }
 
-    .shadow-sm,
-    .shadow {
-        box-shadow: var(--shadow-card) !important;
+    :root:not(.light) .text-slate-600 {
+        color: #cbd5e0 !important;
     }
 
-    .shadow-lg,
-    .shadow-xl {
-        box-shadow: var(--shadow-lg) !important;
+    :root:not(.light) .text-slate-700 {
+        color: #e2e8f0 !important;
     }
 
-    /* Dark mode specific components */
-    .dark\:bg-dark {
-        background-color: var(--bg-card);
+    :root:not(.light) .text-slate-800 {
+        color: #f1f5f9 !important;
     }
+
+    :root:not(.light) .border-slate-100 {
+        border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    :root:not(.light) .bg-slate-50 {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+}
+
+:root.dark .text-slate-900 {
+    color: var(--text-primary) !important;
+}
+
+:root.dark .text-slate-500 {
+    color: #94a3b8 !important;
+}
+
+:root.dark .text-slate-400 {
+    color: #718096 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════

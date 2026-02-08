@@ -339,7 +339,7 @@ export const HomeScreen: React.FC = () => {
         <div className="flex justify-between items-center mb-4 px-1">
           <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
         </div>
-        <div className="flex justify-between items-center px-2">
+        <div className="grid grid-cols-3 gap-y-6 px-1">
           <QuickAccessButton
             icon={Car}
             label="Veículos"

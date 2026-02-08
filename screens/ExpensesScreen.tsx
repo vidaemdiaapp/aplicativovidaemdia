@@ -436,7 +436,7 @@ export const ExpensesScreen: React.FC = () => {
                         </div>
                         <input
                             type="text"
-                            placeholder="Buscar por estabelecimento ou descrição..."
+                            placeholder="Buscar estabelecimento..."
                             className="input pl-14 h-16 rounded-3xl text-sm font-bold bg-white"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -521,22 +521,22 @@ export const ExpensesScreen: React.FC = () => {
 
                                                     {/* Info */}
                                                     <div className="flex-1 min-w-0">
-                                                        <h3 className={`font-semibold truncate ${isPaid ? 'text-text-muted line-through' : 'text-text-primary'}`}>
+                                                        <h3 className={`font-bold text-[15px] line-clamp-1 ${isPaid ? 'text-text-muted line-through' : 'text-text-primary'}`}>
                                                             {expense.title}
                                                         </h3>
-                                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                        <div className="flex items-center gap-2 mt-1 flex-wrap overflow-hidden">
                                                             {time && (
                                                                 <>
-                                                                    <span className="text-text-muted text-xs">{time}</span>
+                                                                    <span className="text-text-muted text-[10px] font-medium">{time}</span>
                                                                     <span className="text-slate-300">•</span>
                                                                 </>
                                                             )}
-                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${catColors.bg} ${catColors.text}`}>
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${catColors.bg} ${catColors.text}`}>
                                                                 {getCategoryLabel(expense.category_id || '')}
                                                             </span>
                                                             {isPaid && (
-                                                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-                                                                    PAGO ✓
+                                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 whitespace-nowrap">
+                                                                    PAGO
                                                                 </span>
                                                             )}
                                                         </div>
