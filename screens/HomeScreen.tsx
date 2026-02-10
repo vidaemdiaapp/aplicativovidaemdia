@@ -339,35 +339,41 @@ export const HomeScreen: React.FC = () => {
         <div className="flex justify-between items-center mb-4 px-1">
           <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
         </div>
-        <div className="grid grid-cols-3 gap-y-6 px-1">
+        <div className="grid grid-cols-3 gap-3 px-1">
           <QuickAccessButton
             icon={Car}
             label="Veículos"
+            color="text-blue-500 bg-blue-50"
             onClick={() => navigate('/vehicle-central')}
           />
           <QuickAccessButton
             icon={ShieldCheck}
             label="Impostos"
+            color="text-emerald-500 bg-emerald-50"
             onClick={() => navigate('/tax-declaration')}
           />
           <QuickAccessButton
             icon={CreditCard}
             label="Cartões"
+            color="text-primary-500 bg-primary-50"
             onClick={() => navigate('/credit-cards')}
           />
           <QuickAccessButton
             icon={Calendar}
             label="Agenda"
+            color="text-amber-500 bg-amber-50"
             onClick={() => navigate('/agenda')}
           />
           <QuickAccessButton
             icon={FileText}
             label="Contratos"
+            color="text-purple-500 bg-purple-50"
             onClick={() => navigate('/contracts')}
           />
           <QuickAccessButton
             icon={Briefcase}
             label="Docs"
+            color="text-slate-500 bg-slate-100"
             onClick={() => navigate('/fiscal-folder')}
           />
         </div>
@@ -377,30 +383,44 @@ export const HomeScreen: React.FC = () => {
           VIDA A DOIS SECTION
       ═══════════════════════════════════════════════════════════════ */}
       <section className="px-4 mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <Heart className="w-5 h-5 text-primary-500" />
-            <h3 className="text-lg font-bold text-slate-800">Vida a Dois</h3>
-          </div>
-          <button onClick={() => navigate('/agenda')} className="text-xs font-bold text-primary-500 hover:text-primary-600 transition-colors">
-            Ver tudo
-          </button>
-        </div>
+        {(() => {
+          const hasPartner = (household?.members?.length || 0) > 1;
 
-        {/* Tabs using CouplePanel */}
-        <CouplePanel
-          activeFilter={responsibilityFilter}
-          onFilterChange={setResponsibilityFilter}
-          partnerName={partnerName}
-        />
+          return (
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2">
+                  {hasPartner && <Heart className="w-5 h-5 text-primary-500" />}
+                  <h3 className="text-lg font-bold text-slate-800">
+                    {hasPartner ? 'Vida a Dois' : 'Minhas Pendências'}
+                  </h3>
+                </div>
+                <button onClick={() => navigate('/agenda')} className="text-xs font-bold text-primary-500 hover:text-primary-600 transition-colors">
+                  Ver tudo
+                </button>
+              </div>
 
-        {/* Pending Section Label */}
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">
-          {responsibilityFilter === 'me' ? 'Minhas Pendências' :
-            responsibilityFilter === 'partner' ? `Com ${partnerName.split(' ')[0]}` :
-              responsibilityFilter === 'joint' ? 'Nossas Pendências' :
-                'Itens Pendentes'}
-        </p>
+              {/* Tabs using CouplePanel */}
+              {hasPartner && (
+                <CouplePanel
+                  activeFilter={responsibilityFilter}
+                  onFilterChange={setResponsibilityFilter}
+                  partnerName={partnerName}
+                />
+              )}
+
+              {/* Pending Section Label */}
+              {hasPartner && (
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 mt-6">
+                  {responsibilityFilter === 'me' ? 'Minhas Pendências' :
+                    responsibilityFilter === 'partner' ? `Com ${partnerName.split(' ')[0]}` :
+                      responsibilityFilter === 'joint' ? 'Nossas Pendências' :
+                        'Itens Pendentes'}
+                </p>
+              )}
+            </>
+          );
+        })()}
 
         {/* Pending Bills List */}
         <div className="space-y-3">
@@ -558,16 +578,17 @@ export const HomeScreen: React.FC = () => {
 const QuickAccessButton: React.FC<{
   icon: any;
   label: string;
+  color: string;
   onClick: () => void
-}> = ({ icon: Icon, label, onClick }) => (
+}> = ({ icon: Icon, label, color, onClick }) => (
   <button
     onClick={onClick}
-    className="flex flex-col items-center gap-2 group active:scale-95 transition-all"
+    className="flex flex-col items-center justify-center gap-3 p-4 rounded-3xl bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-primary-100 dark:hover:border-primary-900 transition-all group active:scale-95"
   >
-    <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center transition-all group-hover:bg-slate-200 group-hover:scale-105">
-      <Icon className="w-6 h-6 text-slate-600" />
+    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${color.split(' ')[1]} bg-opacity-10 dark:bg-opacity-20 group-hover:scale-110`}>
+      <Icon className={`w-6 h-6 ${color.split(' ')[0]}`} />
     </div>
-    <span className="text-[11px] font-medium text-slate-500 text-center group-hover:text-slate-700">
+    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 group-hover:text-primary-500 transition-colors">
       {label}
     </span>
   </button>

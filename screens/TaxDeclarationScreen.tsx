@@ -129,7 +129,14 @@ export const TaxDeclarationScreen: React.FC = () => {
 
             // Calculate consumption tax (try real data first, fallback to estimate)
             try {
-                const realConsumptionData = await calculateConsumptionTax(selectedYear - 1);
+                // Tenta buscar dados do ano selecionado (ex: 2026) primeiro para ser "atual"
+                let realConsumptionData = await calculateConsumptionTax(selectedYear);
+
+                // Se o ano selecionado estiver vazio e for 2026, tenta o ano anterior (2025)
+                if ((!realConsumptionData || realConsumptionData.categories.length === 0) && selectedYear === 2026) {
+                    realConsumptionData = await calculateConsumptionTax(2025);
+                }
+
                 if (realConsumptionData && realConsumptionData.categories && realConsumptionData.categories.length > 0) {
                     setConsumptionTaxData(realConsumptionData);
                 } else {
@@ -516,27 +523,73 @@ export const TaxDeclarationScreen: React.FC = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 mb-4">
-                                        Impostos embutidos (ICMS, IPI, PIS, COFINS, ISS). Fonte: IBPT
+                                    <p className="text-xs text-slate-500 mb-6">
+                                        Impostos embutidos (ICMS, IPI, PIS, COFINS, ISS). Fonte da metodologia: IBPT.
                                     </p>
+
+                                    {/* NOVO: Resumo por Tipo de Imposto */}
+                                    {consumptionTaxData && consumptionTaxData.totalsByTaxType && (
+                                        <div className="grid grid-cols-2 gap-3 mb-8">
+                                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ICMS (Estadual)</p>
+                                                <p className="text-base font-bold text-slate-900">{formatCurrency(consumptionTaxData.totalsByTaxType.icms)}</p>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">IPI (Industrial)</p>
+                                                <p className="text-base font-bold text-slate-900">{formatCurrency(consumptionTaxData.totalsByTaxType.ipi)}</p>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">PIS / COFINS</p>
+                                                <p className="text-base font-bold text-slate-900">{formatCurrency(consumptionTaxData.totalsByTaxType.pis_cofins)}</p>
+                                            </div>
+                                            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">ISS (Serviços)</p>
+                                                <p className="text-base font-bold text-slate-900">{formatCurrency(consumptionTaxData.totalsByTaxType.iss)}</p>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Categorias de Gastos */}
                                     {consumptionTaxData && (
-                                        <div className="space-y-2 mb-4 max-h-[200px] overflow-y-auto">
-                                            {consumptionTaxData.categories.slice(0, 8).map((cat, idx) => (
-                                                <div key={idx} className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-lg">{cat.icon}</span>
-                                                        <div>
-                                                            <span className="font-medium text-slate-700">{cat.categoryName}</span>
-                                                            <p className="text-[10px] text-slate-400">
-                                                                Gasto: {formatCurrency(cat.total)}
-                                                            </p>
+                                        <div className="space-y-2 mb-6 max-h-[240px] overflow-y-auto pr-1">
+                                            {consumptionTaxData.categories.slice(0, 10).map((cat, idx) => (
+                                                <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 text-sm shadow-sm">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-xl bg-slate-50 w-10 h-10 flex items-center justify-center rounded-xl">{cat.icon}</span>
+                                                            <div>
+                                                                <span className="font-bold text-slate-800">{cat.categoryName}</span>
+                                                                <p className="text-[10px] text-slate-400 font-medium">
+                                                                    Consumo: {formatCurrency(cat.total)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <span className="font-black text-amber-600 text-base">{formatCurrency(cat.taxAmount)}</span>
+                                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">~{(cat.taxRate * 100).toFixed(0)}% total</p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className="font-bold text-amber-600">{(cat.taxRate * 100).toFixed(0)}%</span>
-                                                        <p className="text-[10px] text-slate-500">{formatCurrency(cat.taxAmount)}</p>
+
+                                                    {/* Mini Breakdown por item */}
+                                                    <div className="flex gap-4 pt-3 border-t border-slate-50">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">ICMS</span>
+                                                            <span className="text-[10px] font-bold text-slate-600">{formatCurrency(cat.breakdown.icms)}</span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">IPI</span>
+                                                            <span className="text-[10px] font-bold text-slate-600">{formatCurrency(cat.breakdown.ipi)}</span>
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">Federais</span>
+                                                            <span className="text-[10px] font-bold text-slate-600">{formatCurrency(cat.breakdown.pis_cofins)}</span>
+                                                        </div>
+                                                        {cat.breakdown.iss > 0 && (
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[8px] font-black uppercase text-slate-400 tracking-tighter">ISS</span>
+                                                                <span className="text-[10px] font-bold text-slate-600">{formatCurrency(cat.breakdown.iss)}</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ))}
@@ -545,57 +598,68 @@ export const TaxDeclarationScreen: React.FC = () => {
 
                                     {/* IPVA e IPTU */}
                                     {consumptionTaxData && consumptionTaxData.propertyTaxes.length > 0 && (
-                                        <div className="space-y-2 mb-4">
-                                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-4">Impostos sobre Bens</p>
+                                        <div className="space-y-3 mb-6">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mt-6 ml-1">Impostos sobre Patrimônio</p>
                                             {consumptionTaxData.propertyTaxes.map((prop, idx) => (
-                                                <div key={idx} className="flex items-center justify-between bg-slate-50 rounded-xl p-3 text-sm">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-lg">{prop.icon}</span>
+                                                <div key={idx} className="flex items-center justify-between bg-primary-50/50 border border-primary-100 rounded-2xl p-4 text-sm relative overflow-hidden group">
+                                                    <div className="absolute top-0 right-0 w-20 h-20 bg-primary-100/20 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                                                    <div className="flex items-center gap-4 relative z-10">
+                                                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm border border-primary-100">
+                                                            {prop.icon}
+                                                        </div>
                                                         <div>
-                                                            <span className="font-medium text-slate-700">{prop.name}</span>
-                                                            <p className="text-[10px] text-slate-400">
-                                                                {prop.type === 'ipva' ? 'IPVA' : 'IPTU'} ({(prop.taxRate * 100).toFixed(1)}%)
+                                                            <span className="font-bold text-slate-800">{prop.name}</span>
+                                                            <p className="text-[10px] font-bold text-primary-600 uppercase tracking-widest mt-0.5">
+                                                                {prop.type === 'ipva' ? 'IPVA' : 'IPTU'} • {(prop.taxRate * 100).toFixed(1)}% do valor venal
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <span className="font-bold text-rose-600">{formatCurrency(prop.taxAmount)}</span>
+                                                    <span className="font-black text-rose-500 text-base relative z-10">{formatCurrency(prop.taxAmount)}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
 
-                                    {/* Resumo de Consumo */}
+                                    {/* Resumo Final de Carga Tributária */}
                                     {consumptionTaxData && (
-                                        <div className="bg-amber-50 rounded-2xl p-4 space-y-3 border border-amber-100">
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-amber-700">Total gasto em consumo:</span>
-                                                <span className="font-bold text-amber-700">
+                                        <div className="bg-slate-900 rounded-[32px] p-6 space-y-4 border border-slate-800 shadow-2xl relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+
+                                            <div className="flex justify-between items-center text-sm border-b border-white/5 pb-4">
+                                                <span className="text-white/60 font-medium">Consumo total anual:</span>
+                                                <span className="font-bold text-white text-base">
                                                     {formatCurrency(consumptionTaxData.totalSpending)}
                                                 </span>
                                             </div>
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-amber-700">Imposto sobre consumo:</span>
-                                                <span className="font-bold text-amber-700">
-                                                    {formatCurrency(consumptionTaxData.totalConsumptionTax)}
-                                                </span>
-                                            </div>
-                                            {consumptionTaxData.totalPropertyTax > 0 && (
-                                                <div className="flex justify-between text-sm">
-                                                    <span className="text-amber-700">IPVA + IPTU:</span>
-                                                    <span className="font-bold text-amber-700">
+
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-white/40">Total em Impostos Indiretos:</span>
+                                                    <span className="font-bold text-amber-400">
+                                                        {formatCurrency(consumptionTaxData.totalConsumptionTax)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between text-xs">
+                                                    <span className="text-white/40">Total em Patrimônio (IPVA/IPTU):</span>
+                                                    <span className="font-bold text-rose-400">
                                                         {formatCurrency(consumptionTaxData.totalPropertyTax)}
                                                     </span>
                                                 </div>
-                                            )}
-                                            <div className="border-t border-amber-200 pt-2 flex justify-between text-sm font-bold">
-                                                <span className="text-amber-800">Total (consumo + bens):</span>
-                                                <span className="text-amber-800">
-                                                    {formatCurrency(consumptionTaxData.totalTax)}
-                                                </span>
                                             </div>
-                                            <p className="text-[10px] text-amber-600/70">
-                                                Alíquota média: {(consumptionTaxData.averageTaxRate * 100).toFixed(1)}%
-                                            </p>
+
+                                            <div className="pt-4 border-t border-white/10 flex justify-between items-end">
+                                                <div>
+                                                    <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Carga Tributária Total</p>
+                                                    <p className="text-2xl font-black text-white tracking-tighter">
+                                                        {formatCurrency(consumptionTaxData.totalTax)}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="px-3 py-1 bg-white/10 rounded-full text-[10px] font-black text-white uppercase tracking-widest">
+                                                        {(consumptionTaxData.averageTaxRate * 100).toFixed(1)}% Média
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

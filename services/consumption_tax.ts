@@ -1,29 +1,93 @@
 import { supabase } from './supabase';
 import { assetsService, Asset } from './assets';
-import { creditCardsService, CreditCardTransaction } from './financial';
 import { tasksService } from './tasks';
 
 // =============================================================================
-// Alíquotas médias de impostos por categoria (IBPT 2024)
+// Alíquotas médias de impostos por categoria (IBPT 2024/2025)
 // =============================================================================
-export const TAX_RATES_BY_CATEGORY: Record<string, { rate: number; icon: string; name: string }> = {
-    // Categorias reais do banco
-    'food': { rate: 0.18, icon: '🍽️', name: 'Alimentação' },
-    'shopping': { rate: 0.35, icon: '🛍️', name: 'Compras' },
-    'health': { rate: 0.30, icon: '🏥', name: 'Saúde' },
-    'utilities': { rate: 0.45, icon: '⚡', name: 'Contas Fixas' },
-    'leisure': { rate: 0.35, icon: '🎮', name: 'Lazer' },
-    'transport': { rate: 0.35, icon: '🚗', name: 'Transporte' },
 
-    // Fallbacks para outras categorias que podem aparecer
-    'alimentacao': { rate: 0.18, icon: '🍽️', name: 'Alimentação' },
-    'restaurante': { rate: 0.32, icon: '🍔', name: 'Restaurantes' },
-    'supermercado': { rate: 0.18, icon: '🛒', name: 'Supermercado' },
-    'transporte': { rate: 0.35, icon: '🚌', name: 'Transporte' },
-    'combustivel': { rate: 0.42, icon: '⛽', name: 'Combustíveis' },
-    'energia': { rate: 0.45, icon: '⚡', name: 'Energia' },
-    'internet': { rate: 0.42, icon: '🌐', name: 'Internet' },
-    'outros': { rate: 0.32, icon: '📦', name: 'Outros' },
+export interface TaxBreakdown {
+    icms: number;
+    ipi: number;
+    pis_cofins: number; // Consolidado para simplicidade
+    iss: number;
+    total: number;
+}
+
+export const TAX_RATES_BY_CATEGORY: Record<string, { breakdown: TaxBreakdown; icon: string; name: string }> = {
+    // Categorias reais do banco e fallbacks
+    'food': {
+        breakdown: { icms: 0.12, ipi: 0.00, pis_cofins: 0.06, iss: 0.00, total: 0.18 },
+        icon: '🍽️', name: 'Alimentação'
+    },
+    'shopping': {
+        breakdown: { icms: 0.18, ipi: 0.08, pis_cofins: 0.09, iss: 0.00, total: 0.35 },
+        icon: '🛍️', name: 'Compras'
+    },
+    'health': {
+        breakdown: { icms: 0.07, ipi: 0.05, pis_cofins: 0.09, iss: 0.02, total: 0.23 },
+        icon: '🏥', name: 'Saúde'
+    },
+    'utilities': {
+        breakdown: { icms: 0.25, ipi: 0.00, pis_cofins: 0.09, iss: 0.05, total: 0.39 },
+        icon: '⚡', name: 'Contas Fixas'
+    },
+    'leisure': {
+        breakdown: { icms: 0.18, ipi: 0.10, pis_cofins: 0.09, iss: 0.03, total: 0.40 },
+        icon: '🎮', name: 'Lazer'
+    },
+    'transport': {
+        breakdown: { icms: 0.18, ipi: 0.07, pis_cofins: 0.09, iss: 0.01, total: 0.35 },
+        icon: '🚗', name: 'Transporte'
+    },
+    'alimentacao': {
+        breakdown: { icms: 0.12, ipi: 0.00, pis_cofins: 0.06, iss: 0.00, total: 0.18 },
+        icon: '🍽️', name: 'Alimentação'
+    },
+    'restaurante': {
+        breakdown: { icms: 0.12, ipi: 0.00, pis_cofins: 0.09, iss: 0.05, total: 0.26 },
+        icon: '🍔', name: 'Restaurantes'
+    },
+    'supermercado': {
+        breakdown: { icms: 0.12, ipi: 0.00, pis_cofins: 0.06, iss: 0.00, total: 0.18 },
+        icon: '🛒', name: 'Supermercado'
+    },
+    'transporte': {
+        breakdown: { icms: 0.18, ipi: 0.07, pis_cofins: 0.09, iss: 0.01, total: 0.35 },
+        icon: '🚌', name: 'Transporte'
+    },
+    'combustivel': {
+        breakdown: { icms: 0.25, ipi: 0.00, pis_cofins: 0.09, iss: 0.00, total: 0.34 },
+        icon: '⛽', name: 'Combustíveis'
+    },
+    'energia': {
+        breakdown: { icms: 0.25, ipi: 0.00, pis_cofins: 0.09, iss: 0.00, total: 0.34 },
+        icon: '⚡', name: 'Energia'
+    },
+    'internet': {
+        breakdown: { icms: 0.25, ipi: 0.00, pis_cofins: 0.09, iss: 0.02, total: 0.36 },
+        icon: '🌐', name: 'Internet'
+    },
+    'contracts': {
+        breakdown: { icms: 0.00, ipi: 0.00, pis_cofins: 0.09, iss: 0.05, total: 0.14 },
+        icon: '📜', name: 'Contratos/Serviços'
+    },
+    'market': {
+        breakdown: { icms: 0.12, ipi: 0.00, pis_cofins: 0.06, iss: 0.00, total: 0.18 },
+        icon: '🛒', name: 'Mercado/Supermercado'
+    },
+    'vehicle': {
+        breakdown: { icms: 0.18, ipi: 0.12, pis_cofins: 0.09, iss: 0.00, total: 0.39 },
+        icon: '🚗', name: 'Veículos'
+    },
+    'debts': {
+        breakdown: { icms: 0.00, ipi: 0.00, pis_cofins: 0.04, iss: 0.05, total: 0.09 },
+        icon: '💳', name: 'Dívidas/Encargos'
+    },
+    'outros': {
+        breakdown: { icms: 0.18, ipi: 0.05, pis_cofins: 0.09, iss: 0.03, total: 0.35 },
+        icon: '📦', name: 'Outros'
+    },
 };
 
 // =============================================================================
@@ -36,6 +100,7 @@ export interface CategorySpending {
     total: number;
     taxRate: number;
     taxAmount: number;
+    breakdown: TaxBreakdown;
 }
 
 export interface PropertyTax {
@@ -55,6 +120,12 @@ export interface ConsumptionTaxBreakdown {
     totalPropertyTax: number;
     totalTax: number;
     averageTaxRate: number;
+    totalsByTaxType: {
+        icms: number;
+        ipi: number;
+        pis_cofins: number;
+        iss: number;
+    };
 }
 
 // =============================================================================
@@ -72,7 +143,6 @@ async function getSpendingByCategory(year: number): Promise<Map<string, number>>
         const startDate = `${year}-01-01`;
         const endDate = `${year}-12-31`;
 
-        // Buscar transações com filtro de data
         const { data: transactions, error } = await supabase
             .from('credit_card_transactions')
             .select('amount, category_id')
@@ -85,7 +155,6 @@ async function getSpendingByCategory(year: number): Promise<Map<string, number>>
             return new Map();
         }
 
-        // Somar por categoria (usando a ID da categoria como slug)
         const categoryTotals = new Map<string, number>();
         for (const tx of transactions) {
             const categoryId = tx.category_id || 'outros';
@@ -102,7 +171,6 @@ async function getSpendingByCategory(year: number): Promise<Map<string, number>>
 
 /**
  * Calcula IPVA sobre veículos
- * IPVA médio = 4% do valor do veículo (varia por estado)
  */
 function calculateIPVA(vehicles: Asset[], stateRate: number = 0.04): PropertyTax[] {
     return vehicles
@@ -119,7 +187,6 @@ function calculateIPVA(vehicles: Asset[], stateRate: number = 0.04): PropertyTax
 
 /**
  * Calcula IPTU sobre imóveis
- * IPTU médio = 1% a 2% do valor venal (usando 1.5% como média)
  */
 function calculateIPTU(properties: Asset[], rate: number = 0.015): PropertyTax[] {
     return properties
@@ -138,44 +205,51 @@ function calculateIPTU(properties: Asset[], rate: number = 0.015): PropertyTax[]
  * Calcula impostos sobre consumo com base nos dados reais
  */
 export async function calculateConsumptionTax(year: number = new Date().getFullYear()): Promise<ConsumptionTaxBreakdown> {
-    // 1. Buscar gastos por categoria
     const categorySpending = await getSpendingByCategory(year);
-
-    // 2. Buscar ativos (veículos e imóveis)
     const assets = await assetsService.getAssets();
 
-    // 3. Calcular impostos por categoria de consumo
     const categories: CategorySpending[] = [];
     let totalSpending = 0;
     let totalConsumptionTax = 0;
 
+    const totalsByTaxType = { icms: 0, ipi: 0, pis_cofins: 0, iss: 0 };
+
     for (const [category, total] of categorySpending) {
         const taxInfo = TAX_RATES_BY_CATEGORY[category] || TAX_RATES_BY_CATEGORY['outros'];
-        const taxAmount = Math.round(total * taxInfo.rate * 100) / 100;
+        const taxAmount = Math.round(total * taxInfo.breakdown.total * 100) / 100;
 
         categories.push({
             category,
             categoryName: taxInfo.name,
             icon: taxInfo.icon,
             total,
-            taxRate: taxInfo.rate,
-            taxAmount
+            taxRate: taxInfo.breakdown.total,
+            taxAmount,
+            breakdown: {
+                icms: total * taxInfo.breakdown.icms,
+                ipi: total * taxInfo.breakdown.ipi,
+                pis_cofins: total * taxInfo.breakdown.pis_cofins,
+                iss: total * taxInfo.breakdown.iss,
+                total: taxInfo.breakdown.total
+            }
         });
+
+        totalsByTaxType.icms += total * taxInfo.breakdown.icms;
+        totalsByTaxType.ipi += total * taxInfo.breakdown.ipi;
+        totalsByTaxType.pis_cofins += total * taxInfo.breakdown.pis_cofins;
+        totalsByTaxType.iss += total * taxInfo.breakdown.iss;
 
         totalSpending += total;
         totalConsumptionTax += taxAmount;
     }
 
-    // Ordenar por valor de imposto (maior primeiro)
     categories.sort((a, b) => b.taxAmount - a.taxAmount);
 
-    // 4. Calcular IPVA e IPTU
     const ipvaList = calculateIPVA(assets);
     const iptuList = calculateIPTU(assets);
     const propertyTaxes = [...ipvaList, ...iptuList];
     const totalPropertyTax = propertyTaxes.reduce((sum, p) => sum + p.taxAmount, 0);
 
-    // 5. Calcular totais
     const totalTax = totalConsumptionTax + totalPropertyTax;
     const averageTaxRate = totalSpending > 0 ? totalConsumptionTax / totalSpending : 0;
 
@@ -186,7 +260,8 @@ export async function calculateConsumptionTax(year: number = new Date().getFullY
         totalConsumptionTax,
         totalPropertyTax,
         totalTax,
-        averageTaxRate
+        averageTaxRate,
+        totalsByTaxType
     };
 }
 
@@ -194,34 +269,44 @@ export async function calculateConsumptionTax(year: number = new Date().getFullY
  * Calcula impostos sobre consumo com valores estimados (fallback)
  */
 export function estimateConsumptionTax(monthlyIncome: number): ConsumptionTaxBreakdown {
-    // Estimativa: 60% da renda vai para consumo
     const annualConsumption = monthlyIncome * 12 * 0.6;
-
-    // Distribuição típica de gastos (aproximada)
     const distribution = [
         { category: 'alimentacao', pct: 0.25 },
         { category: 'transporte', pct: 0.15 },
         { category: 'energia', pct: 0.08 },
-        { category: 'telefone', pct: 0.05 },
+        { category: 'internet', pct: 0.05 },
         { category: 'saude', pct: 0.10 },
-        { category: 'vestuario', pct: 0.08 },
         { category: 'lazer', pct: 0.10 },
-        { category: 'casa', pct: 0.10 },
-        { category: 'outros', pct: 0.09 }
+        { category: 'shopping', pct: 0.17 },
+        { category: 'outros', pct: 0.10 }
     ];
 
+    const totalsByTaxType = { icms: 0, ipi: 0, pis_cofins: 0, iss: 0 };
+
     const categories: CategorySpending[] = distribution.map(d => {
-        const taxInfo = TAX_RATES_BY_CATEGORY[d.category];
+        const taxInfo = TAX_RATES_BY_CATEGORY[d.category] || TAX_RATES_BY_CATEGORY['outros'];
         const total = Math.round(annualConsumption * d.pct * 100) / 100;
-        const taxAmount = Math.round(total * taxInfo.rate * 100) / 100;
+        const taxAmount = Math.round(total * taxInfo.breakdown.total * 100) / 100;
+
+        totalsByTaxType.icms += total * taxInfo.breakdown.icms;
+        totalsByTaxType.ipi += total * taxInfo.breakdown.ipi;
+        totalsByTaxType.pis_cofins += total * taxInfo.breakdown.pis_cofins;
+        totalsByTaxType.iss += total * taxInfo.breakdown.iss;
 
         return {
             category: d.category,
             categoryName: taxInfo.name,
             icon: taxInfo.icon,
             total,
-            taxRate: taxInfo.rate,
-            taxAmount
+            taxRate: taxInfo.breakdown.total,
+            taxAmount,
+            breakdown: {
+                icms: total * taxInfo.breakdown.icms,
+                ipi: total * taxInfo.breakdown.ipi,
+                pis_cofins: total * taxInfo.breakdown.pis_cofins,
+                iss: total * taxInfo.breakdown.iss,
+                total: taxInfo.breakdown.total
+            }
         };
     });
 
@@ -236,7 +321,8 @@ export function estimateConsumptionTax(monthlyIncome: number): ConsumptionTaxBre
         totalConsumptionTax,
         totalPropertyTax: 0,
         totalTax: totalConsumptionTax,
-        averageTaxRate
+        averageTaxRate,
+        totalsByTaxType
     };
 }
 
