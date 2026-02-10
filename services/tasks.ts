@@ -459,6 +459,24 @@ export const tasksService = {
             return null;
         }
 
-        return data;
+        return Array.isArray(data) ? data[0] : data;
+    },
+
+    /**
+     * Get monthly evolution data (last 6 months)
+     */
+    getMonthlyEvolution: async (): Promise<{ month: string; income: number; expense: number }[]> => {
+        const household = await tasksService.getHousehold();
+        if (!household) return [];
+
+        const { data, error } = await supabase
+            .rpc('get_monthly_evolution', { target_household_id: household.id });
+
+        if (error) {
+            console.error('[Tasks] Evolution failed:', error);
+            return [];
+        }
+
+        return data || [];
     }
 };

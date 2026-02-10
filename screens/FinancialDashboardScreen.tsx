@@ -3,7 +3,7 @@ import {
     Wallet, ArrowUpCircle, ArrowDownCircle, Plus, Calendar, ChevronRight,
     TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Clock, CreditCard,
     PiggyBank, Target, BarChart3, Zap, ArrowRight, Bell, Sparkles, LineChart, Landmark, RefreshCw,
-    Car, FileText, ShieldCheck, Utensils, ShoppingBag, Home, Heart, Plane, DollarSign, MoreHorizontal
+    Car, FileText, ShieldCheck, Utensils, ShoppingBag, Home, Heart, Plane, DollarSign, MoreHorizontal, Receipt
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -60,14 +60,27 @@ export const FinancialDashboardScreen: React.FC = () => {
             const household = await tasksService.getHousehold();
             if (!household) return;
 
+            // Define dates for filtering used in parallel fetches
+            const todayStr = new Date().toISOString().split('T')[0];
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1);
+
             // Parallel data fetching
-            const [dashboardRes, tasksRes, catsRes] = await Promise.all([
+            const [dashboardRes, tasksRes, catsRes, spendingRes, evolutionData] = await Promise.all([
                 supabase.rpc('get_financial_dashboard', { target_household_id: household.id }),
                 tasksService.getUserTasks(),
-                tasksService.getCategories()
+                tasksService.getCategories(),
+                supabase.rpc('get_spending_by_category', {
+                    target_household_id: household.id,
+                    start_date: startDate.toISOString().split('T')[0],
+                    end_date: todayStr
+                }),
+                tasksService.getMonthlyEvolution()
             ]);
 
             if (catsRes) setCategories(catsRes);
+            if (spendingRes.data) setSpending(spendingRes.data || []);
+            setMonthlyData(evolutionData);
 
             let dashboardData: any = null;
             if (dashboardRes.data) {
@@ -75,12 +88,16 @@ export const FinancialDashboardScreen: React.FC = () => {
                 setDashboard(dashboardData);
             }
 
-            // Process tasks
-            const todayStr = new Date().toISOString().split('T')[0];
+            // Define week date for filtering
             const weekFromNow = new Date();
             weekFromNow.setDate(new Date().getDate() + 7);
             const weekStr = weekFromNow.toISOString().split('T')[0];
 
+            // Load budget alerts using RPC
+            const alerts = await budgetLimitsService.checkAlerts(household.id);
+            setBudgetAlerts(alerts || []);
+
+            // Process overdue and upcoming tasks from tasksRes
             const getAmount = (a: string | number | undefined): number =>
                 typeof a === 'number' ? a : parseFloat(a || '0');
 
@@ -105,31 +122,6 @@ export const FinancialDashboardScreen: React.FC = () => {
 
             setOverdueBills(overdue.slice(0, 3));
             setUpcomingBills(upcoming.slice(0, 5));
-
-            // Get spending by category
-            const startDate = new Date();
-            startDate.setMonth(startDate.getMonth() - 1);
-            const spendingRes = await supabase.rpc('get_spending_by_category', {
-                target_household_id: household.id,
-                start_date: startDate.toISOString().split('T')[0],
-                end_date: todayStr
-            });
-            if (spendingRes.data) setSpending(spendingRes.data || []);
-
-            // Load budget alerts using RPC
-            const alerts = await budgetLimitsService.checkAlerts(household.id);
-            setBudgetAlerts(alerts || []);
-
-            // Generate monthly comparison data (last 6 months)
-            const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-            const mockMonthlyData = months.map((month) => ({
-                month,
-                income: dashboardData?.total_income ? dashboardData.total_income * (0.8 + Math.random() * 0.4) : 5000 + Math.random() * 3000,
-                expense: dashboardData?.total_bills ? (dashboardData.total_bills + dashboardData.total_immediate) * (0.7 + Math.random() * 0.5) : 3000 + Math.random() * 2500
-            }));
-            setMonthlyData(mockMonthlyData);
-
-
         } catch (error) {
             console.error('[Financial] Error loading dashboard:', error);
         } finally {
@@ -297,7 +289,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                                 <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider">Saídas</span>
                             </div>
                             <p className="text-lg font-black text-slate-800">
-                                {dashboard ? formatCurrency(dashboard.total_bills + dashboard.total_immediate) : 'R$ 0'}
+                                {dashboard ? formatCurrency(dashboard.total_commitments) : 'R$ 0'}
                             </p>
                         </button>
                     </div>
@@ -373,6 +365,24 @@ export const FinancialDashboardScreen: React.FC = () => {
                         <p className="text-2xl font-black text-emerald-500">{dashboard?.week_count || 0}</p>
                         <p className="text-[9px] text-text-muted font-black uppercase tracking-widest mt-1">7 Dias</p>
                     </div>
+                </div>
+
+                <div className="px-6 mt-6">
+                    <button
+                        onClick={() => navigate('/financial-report')}
+                        className="w-full bg-slate-100 hover:bg-slate-200 p-4 rounded-2xl flex items-center justify-between transition-all group border border-slate-200/50 shadow-sm"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-slate-600 shadow-sm group-hover:scale-105 transition-transform">
+                                <Receipt className="w-6 h-6" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm font-bold text-slate-800">Relatório Consolidado</p>
+                                <p className="text-[10px] text-slate-500 font-medium uppercase tracking-widest">Breackdown completo do mês</p>
+                            </div>
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                    </button>
                 </div>
 
                 {/* ═══════════════════════════════════════════════════════════════

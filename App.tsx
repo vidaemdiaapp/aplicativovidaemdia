@@ -1,6 +1,11 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider, useAuth } from './hooks/useAuth';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { notificationsService } from './services/notifications';
+
+// Screens
 import { SplashScreen } from './screens/SplashScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { RegisterScreen } from './screens/RegisterScreen';
@@ -29,13 +34,12 @@ import { AgendaScreen } from './screens/AgendaScreen';
 import { AgendaEditScreen } from './screens/AgendaEditScreen';
 import { IncomesScreen } from './screens/IncomesScreen';
 import { ExpensesScreen } from './screens/ExpensesScreen';
+import { FinancialReportScreen } from './screens/FinancialReportScreen';
 import { OpenFinanceScreen } from './screens/OpenFinanceScreen';
 import { UpdatePhoneScreen } from './screens/UpdatePhoneScreen';
-import { BottomNav } from './components/BottomNav';
-import { Sidebar } from './components/Sidebar';
-import { AuthProvider, useAuth } from './hooks/useAuth';
 import { NotificationCenterScreen } from './screens/NotificationCenterScreen';
-import { notificationsService } from './services/notifications';
+
+// Components
 import { Layout } from './components/Layout';
 
 // Protected route wrapper
@@ -51,11 +55,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    console.log('[ProtectedRoute] No user found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  // Mandatory phone check
   const phone = user.user_metadata?.phone_digits;
   if (!phone && window.location.hash !== '#/update-phone') {
     return <Navigate to="/update-phone" replace />;
@@ -71,7 +73,6 @@ const NotificationManager: React.FC = () => {
   React.useEffect(() => {
     if (user) {
       notificationsService.registerDevice();
-
       const cleanup = notificationsService.listenForNotifications((data) => {
         if (data?.screen === 'NotificationCenter') {
           navigate('/notifications');
@@ -79,7 +80,6 @@ const NotificationManager: React.FC = () => {
           navigate(`/detail/${data.taskId}`);
         }
       });
-
       return cleanup;
     }
   }, [user, navigate]);
@@ -103,7 +103,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/upload" element={<ProtectedRoute><UploadScreen /></ProtectedRoute>} />
         <Route path="/assistant" element={<ProtectedRoute><AssistantScreen /></ProtectedRoute>} />
         <Route path="/financial-dashboard" element={<ProtectedRoute><FinancialDashboardScreen /></ProtectedRoute>} />
-        <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />
         <Route path="/settings" element={<ProtectedRoute><SettingsScreen /></ProtectedRoute>} />
         <Route path="/invite/:token" element={<InviteAcceptScreen />} />
         <Route path="/new-task" element={<ProtectedRoute><CreateTaskScreen /></ProtectedRoute>} />
@@ -113,7 +112,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/assets" element={<ProtectedRoute><AssetsScreen /></ProtectedRoute>} />
         <Route path="/credit-cards" element={<ProtectedRoute><CreditCardsScreen /></ProtectedRoute>} />
         <Route path="/savings" element={<ProtectedRoute><SavingsGoalsScreen /></ProtectedRoute>} />
-        <Route path="/financial" element={<Navigate to="/financial-dashboard" replace />} />
         <Route path="/investments" element={<ProtectedRoute><InvestmentsScreen /></ProtectedRoute>} />
         <Route path="/credit-simulator" element={<ProtectedRoute><CreditSimulatorScreen /></ProtectedRoute>} />
         <Route path="/vehicle-central" element={<ProtectedRoute><VehicleCentralScreen /></ProtectedRoute>} />
@@ -122,18 +120,22 @@ const AppRoutes: React.FC = () => {
         <Route path="/vehicle-edit" element={<ProtectedRoute><VehicleEditScreen /></ProtectedRoute>} />
         <Route path="/agenda" element={<ProtectedRoute><AgendaScreen /></ProtectedRoute>} />
         <Route path="/agenda/:id" element={<ProtectedRoute><AgendaEditScreen /></ProtectedRoute>} />
-        <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
         <Route path="/incomes" element={<ProtectedRoute><IncomesScreen /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><ExpensesScreen /></ProtectedRoute>} />
+        <Route path="/financial-report" element={<ProtectedRoute><FinancialReportScreen /></ProtectedRoute>} />
         <Route path="/open-finance" element={<ProtectedRoute><OpenFinanceScreen /></ProtectedRoute>} />
         <Route path="/update-phone" element={<ProtectedRoute><UpdatePhoneScreen /></ProtectedRoute>} />
+
+        {/* Aliases */}
+        <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />
+        <Route path="/financial" element={<Navigate to="/financial-dashboard" replace />} />
+        <Route path="/tax" element={<Navigate to="/tax-declaration" replace />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
   );
 };
-
-import { ThemeProvider } from './contexts/ThemeContext';
 
 const App: React.FC = () => {
   return (
