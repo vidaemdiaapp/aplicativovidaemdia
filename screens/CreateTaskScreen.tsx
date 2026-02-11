@@ -6,11 +6,14 @@ import {
     MoreHorizontal, Repeat, Info, AlertCircle, Landmark, CreditCard, Coins, Receipt
 } from 'lucide-react';
 import { tasksService, Category, Task } from '../services/tasks';
+import { subscriptionIntelligence } from '../services/subscriptionIntelligence';
+import { useCelebration } from '../contexts/CelebrationContext';
 import { Button } from '../components/Button';
 import { toast } from 'react-hot-toast';
 
 export const CreateTaskScreen: React.FC = () => {
     const navigate = useNavigate();
+    const { celebrate } = useCelebration();
     const { id } = useParams();
     const location = useLocation();
     const isEditMode = !!id;
@@ -31,6 +34,7 @@ export const CreateTaskScreen: React.FC = () => {
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'pix' | 'debit'>('pix');
     const [originalStatus, setOriginalStatus] = useState<string>('pending');
     const [isSubscription, setIsSubscription] = useState((location.state as any)?.is_subscription || false);
+    const [subscriptionDetected, setSubscriptionDetected] = useState(false);
 
     const CATEGORY_ICONS: Record<string, any> = {
         'vehicle': Car,
@@ -50,6 +54,21 @@ export const CreateTaskScreen: React.FC = () => {
     useEffect(() => {
         loadInitialData();
     }, [id]);
+
+    // Subscription Intelligence
+    useEffect(() => {
+        if (title.length > 3) {
+            const isSub = subscriptionIntelligence.checkIsSubscription(title);
+            if (isSub && !isSubscription && !subscriptionDetected) {
+                setIsSubscription(true);
+                setSubscriptionDetected(true);
+                // Auto-select recurring if it's a bill
+                if (entryType === 'bill') {
+                    setIsRecurring(true);
+                }
+            }
+        }
+    }, [title]);
 
     const loadInitialData = async () => {
         setLoading(true);
@@ -170,15 +189,32 @@ export const CreateTaskScreen: React.FC = () => {
             let result;
             if (isEditMode && id) {
                 result = await tasksService.updateTask(id, taskData);
+                if (result) {
+                    toast.success('Registro atualizado!');
+                    navigate(`/detail/${id}`);
+                }
             } else {
-                result = await tasksService.createTask(taskData as Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>);
-            }
-
-            if (result) {
-                toast.success(isEditMode ? 'Registro atualizado!' : 'Registro adicionado com sucesso!');
-                navigate(isEditMode ? `/detail/${id}` : '/financial-dashboard');
-            } else {
-                toast.error('Ocorreu um erro ao salvar.');
+                const { task, achievement } = await tasksService.createTask(taskData as Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>);
+                if (task) {
+                    toast.success('Registro adicionado!');
+                    if (achievement) {
+                        try {
+                            const { Zap, Trophy, Rocket, Star, Target, ShieldCheck, Heart } = await import('lucide-react');
+                            const ICON_MAP: any = { Zap, Trophy, Rocket, Star, Target, ShieldCheck, Heart };
+                            celebrate({
+                                title: achievement.title,
+                                description: achievement.description,
+                                points: achievement.points_reward,
+                                icon: ICON_MAP[achievement.icon] || Trophy
+                            });
+                        } catch (e) {
+                            console.error('Error triggering celebration:', e);
+                        }
+                    }
+                    navigate('/financial-dashboard');
+                } else {
+                    toast.error('Ocorreu um erro ao salvar.');
+                }
             }
         } catch (err) {
             console.error(err);
@@ -286,6 +322,28 @@ export const CreateTaskScreen: React.FC = () => {
                                 })}
                             </div>
                         </div>
+
+                        {/* Proactive Deduction Suggestion */}
+                        {(selectedCategory === 'health' || selectedCategory === 'taxes' || selectedCategory === 'education') && (
+                            <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 flex gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                                <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-amber-500/20">
+                                    <Shield className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-amber-900 leading-tight">Dica Fiscal de Elara</p>
+                                    <p className="text-[10px] text-amber-700 mt-1 leading-relaxed">
+                                        Este gasto tem potencial de **reduzir seu Imposto de Renda**. Lembre-se de anexar a nota fiscal na sua **Pasta Fiscal** para garantir sua restituição!
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/fiscal-folder')}
+                                        className="mt-2 text-[10px] font-black text-amber-600 uppercase tracking-widest hover:underline"
+                                    >
+                                        Ir para Pasta Fiscal
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Payment Method (Immediate Only) */}
                         {entryType === 'immediate' && (

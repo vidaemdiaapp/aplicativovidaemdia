@@ -98,15 +98,15 @@ export const tasksService = {
     },
 
     /**
-     * Create a new task
+     * Create a new task. Returns the task and any newly unlocked achievement.
      */
-    createTask: async (task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<Task | null> => {
+    createTask: async (task: Omit<Task, 'id' | 'user_id' | 'created_at' | 'updated_at'>): Promise<{ task: Task | null, achievement: any | null }> => {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return null;
+        if (!session) return { task: null, achievement: null };
         const user = session.user;
 
         const household = await tasksService.getHousehold();
-        if (!household) return null;
+        if (!household) return { task: null, achievement: null };
 
         const { data, error } = await supabase
             .from('tasks')
@@ -121,10 +121,17 @@ export const tasksService = {
 
         if (error) {
             console.error('[Tasks] Failed to create task:', error);
-            return null;
+            return { task: null, achievement: null };
         }
 
-        return data as Task;
+        let achievement = null;
+        if (data) {
+            // Gamification Trigger: First Expense
+            const { gamificationService } = await import('./gamification');
+            achievement = await gamificationService.unlockAchievement('first_expense');
+        }
+
+        return { task: data as Task, achievement };
     },
 
     /**
@@ -185,6 +192,34 @@ export const tasksService = {
         }
 
         return data as Category[];
+    },
+
+    /**
+     * Create a new category
+     */
+    createCategory: async (category: Pick<Category, 'label' | 'icon' | 'color' | 'status'>): Promise<Category | null> => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return null;
+        const user = session.user;
+
+        const household = await tasksService.getHousehold();
+
+        const { data, error } = await supabase
+            .from('categories')
+            .insert({
+                ...category,
+                user_id: user.id,
+                household_id: household?.id
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error('[Tasks] Failed to create category:', error);
+            return null;
+        }
+
+        return data as Category;
     },
 
     /**

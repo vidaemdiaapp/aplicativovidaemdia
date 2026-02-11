@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { CelebrationProvider } from './contexts/CelebrationContext';
 import { notificationsService } from './services/notifications';
 
 // Screens
@@ -39,6 +40,8 @@ import { OpenFinanceScreen } from './screens/OpenFinanceScreen';
 import { UpdatePhoneScreen } from './screens/UpdatePhoneScreen';
 import { NotificationCenterScreen } from './screens/NotificationCenterScreen';
 import { SubscriptionsScreen } from './screens/SubscriptionsScreen';
+import { AchievementsScreen } from './screens/AchievementsScreen';
+import { CoupleConnectScreen } from './screens/CoupleConnectScreen';
 
 // Components
 import { Layout } from './components/Layout';
@@ -127,6 +130,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/open-finance" element={<ProtectedRoute><OpenFinanceScreen /></ProtectedRoute>} />
         <Route path="/update-phone" element={<ProtectedRoute><UpdatePhoneScreen /></ProtectedRoute>} />
         <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionsScreen /></ProtectedRoute>} />
+        <Route path="/achievements" element={<ProtectedRoute><AchievementsScreen /></ProtectedRoute>} />
 
         {/* Aliases */}
         <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />
@@ -144,7 +148,9 @@ const App: React.FC = () => {
     <HashRouter>
       <AuthProvider>
         <ThemeProvider>
-          <AppRoutes />
+          <CelebrationProvider>
+            <AppRoutes />
+          </CelebrationProvider>
           <Toaster position="top-center" />
         </ThemeProvider>
       </AuthProvider>

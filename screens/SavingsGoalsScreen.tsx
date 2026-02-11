@@ -184,65 +184,120 @@ export const SavingsGoalsScreen: React.FC = () => {
                             const config = getGoalTypeConfig(goal.goal_type);
                             const Icon = config.icon;
                             const progress = getProgress(goal);
+                            const isDream = !!goal.image_url;
 
                             return (
                                 <div
                                     key={goal.id}
                                     onClick={() => handleGoalSelect(goal)}
-                                    className={`p-5 bg-white border rounded-[28px] cursor-pointer transition-all shadow-sm ${selectedGoal?.id === goal.id
-                                        ? 'border-primary-500 ring-4 ring-primary-500/5'
-                                        : 'border-border-color hover:border-primary-200 hover:shadow-md'
+                                    className={`relative rounded-[32px] cursor-pointer transition-all overflow-hidden group border-2 ${selectedGoal?.id === goal.id
+                                        ? 'border-primary-500 ring-4 ring-primary-500/10'
+                                        : 'border-white hover:border-primary-200'
                                         }`}
+                                    style={{ height: isDream ? '200px' : 'auto' }}
                                 >
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div className="flex items-center gap-3">
+                                    {isDream ? (
+                                        <>
+                                            {/* Background Image with Saturation Effect */}
                                             <div
-                                                className="w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110"
-                                                style={{ backgroundColor: `${goal.color}15` }}
-                                            >
-                                                <Icon className="w-6 h-6" style={{ color: goal.color }} />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-text-primary">{goal.name}</p>
-                                                <p className="text-[11px] text-text-muted font-medium">{config.label}</p>
-                                            </div>
-                                        </div>
-                                        {goal.is_locked && (
-                                            <Lock className="w-4 h-4 text-amber-500" />
-                                        )}
-                                    </div>
-
-                                    <div className="mb-2">
-                                        <div className="flex justify-between items-end mb-2">
-                                            <span className="text-2xl font-bold text-text-primary tracking-tight">
-                                                {formatCurrency(goal.current_amount)}
-                                            </span>
-                                            <span className="text-xs font-bold text-text-secondary">
-                                                {progress.toFixed(0)}%
-                                            </span>
-                                        </div>
-                                        <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full transition-all duration-1000 ease-out"
+                                                className="absolute inset-0 z-0 bg-cover bg-center transition-all duration-1000"
                                                 style={{
-                                                    width: `${progress}%`,
-                                                    backgroundColor: goal.color
+                                                    backgroundImage: `url(${goal.image_url})`,
+                                                    filter: `grayscale(${100 - progress}%) brightness(${0.5 + (progress / 200)})`,
+                                                    transform: selectedGoal?.id === goal.id ? 'scale(1.05)' : 'scale(1)'
                                                 }}
-                                            ></div>
-                                        </div>
-                                    </div>
+                                            />
+                                            {/* Glass Overlay */}
+                                            <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-10" />
 
-                                    <div className="flex justify-between items-center mt-3">
-                                        <span className="text-[11px] text-text-muted font-medium">
-                                            Meta: {formatCurrency(goal.target_amount)}
-                                        </span>
-                                        {goal.deadline && (
-                                            <span className="text-[11px] text-text-muted font-bold flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
-                                                <Calendar className="w-3 h-3" />
-                                                {formatDate(goal.deadline)}
-                                            </span>
-                                        )}
-                                    </div>
+                                            <div className="absolute inset-0 z-20 p-6 flex flex-col justify-between">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="bg-white/20 backdrop-blur-md p-2 rounded-xl border border-white/20">
+                                                        <Icon className="w-5 h-5 text-white" />
+                                                    </div>
+                                                    {goal.is_locked && (
+                                                        <div className="bg-amber-500/80 backdrop-blur-md p-1.5 rounded-lg">
+                                                            <Lock className="w-3 h-3 text-white" />
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div>
+                                                    <h4 className="text-white text-xl font-black mb-1 drop-shadow-md">{goal.name}</h4>
+                                                    <div className="flex justify-between items-end">
+                                                        <div>
+                                                            <p className="text-white/70 text-[10px] font-bold uppercase tracking-widest">{formatCurrency(goal.target_amount)}</p>
+                                                            <p className="text-white text-lg font-black">{formatCurrency(goal.current_amount)}</p>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <div className="bg-primary-500 px-2 py-1 rounded-lg mb-1 inline-block">
+                                                                <span className="text-white text-[10px] font-black">{progress.toFixed(0)}%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {/* Custom Progress Bar for Dream */}
+                                                    <div className="h-1.5 w-full bg-white/20 rounded-full mt-3 overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-primary-400 transition-all duration-1000"
+                                                            style={{ width: `${progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="p-5 bg-white space-y-3">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-3">
+                                                    <div
+                                                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                                                        style={{ backgroundColor: `${goal.color}15` }}
+                                                    >
+                                                        <Icon className="w-6 h-6" style={{ color: goal.color }} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-slate-800">{goal.name}</p>
+                                                        <p className="text-[11px] text-slate-400 font-medium">{config.label}</p>
+                                                    </div>
+                                                </div>
+                                                {goal.is_locked && (
+                                                    <Lock className="w-4 h-4 text-amber-500" />
+                                                )}
+                                            </div>
+
+                                            <div className="mb-2">
+                                                <div className="flex justify-between items-end mb-2">
+                                                    <span className="text-2xl font-bold text-slate-800 tracking-tight">
+                                                        {formatCurrency(goal.current_amount)}
+                                                    </span>
+                                                    <span className="text-xs font-bold text-slate-500">
+                                                        {progress.toFixed(0)}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-2.5 bg-slate-50 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full transition-all duration-1000 ease-out"
+                                                        style={{
+                                                            width: `${progress}%`,
+                                                            backgroundColor: goal.color
+                                                        }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[11px] text-slate-400 font-medium">
+                                                    Meta: {formatCurrency(goal.target_amount)}
+                                                </span>
+                                                {goal.deadline && (
+                                                    <span className="text-[11px] text-slate-400 font-bold flex items-center gap-1.5 px-2 py-1 bg-slate-50 rounded-lg">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {formatDate(goal.deadline)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -255,7 +310,7 @@ export const SavingsGoalsScreen: React.FC = () => {
                 <section className="px-6 mb-8">
                     <div className="grid grid-cols-2 gap-4">
                         <button
-                            onClick={() => setShowAddModal(true)}
+                            onClick={() => setShowDepositModal(true)}
                             className="bg-primary-500 hover:bg-primary-600 p-5 rounded-3xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-primary-500/20"
                         >
                             <ArrowUpCircle className="w-5 h-5 text-white" />
@@ -503,6 +558,30 @@ const AddGoalModal: React.FC<AddGoalModalProps> = ({ isOpen, onClose, onSuccess 
                                         }`}
                                     style={{ backgroundColor: color }}
                                 />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Image / Dream Mode Selector */}
+                    <div>
+                        <label className="text-[11px] text-text-muted font-bold uppercase tracking-widest px-1 block mb-3">
+                            Visual do Sonho (Modo Dreams)
+                        </label>
+                        <div className="grid grid-cols-4 gap-2">
+                            {[
+                                { label: 'Casa', url: 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?auto=format&fit=crop&q=80&w=200' },
+                                { label: 'Viagem', url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=200' },
+                                { label: 'Carro', url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=200' },
+                                { label: 'Tech', url: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=200' }
+                            ].map((img) => (
+                                <button
+                                    key={img.url}
+                                    onClick={() => setForm({ ...form, image_url: form.image_url === img.url ? undefined : img.url })}
+                                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${form.image_url === img.url ? 'border-primary-500 scale-105' : 'border-transparent opacity-60'
+                                        }`}
+                                >
+                                    <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                                </button>
                             ))}
                         </div>
                     </div>

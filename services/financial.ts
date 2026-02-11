@@ -36,6 +36,7 @@ export interface CreditCardTransaction {
     third_party_name: string | null;
     third_party_type: 'reembolso' | 'rateio' | null;
     reimbursement_status: 'pending' | 'requested' | 'received';
+    transaction_type: 'credit' | 'debit';
     created_at: string;
     updated_at: string;
 }
@@ -55,6 +56,7 @@ export interface SavingsGoal {
     is_locked: boolean;
     color: string;
     icon: string;
+    image_url?: string;
     created_at: string;
     updated_at: string;
 }
@@ -252,13 +254,8 @@ export const creditCardsService = {
             return null;
         }
 
-        // Update card balance
-        const card = await creditCardsService.getById(transaction.card_id);
-        if (card) {
-            await creditCardsService.update(transaction.card_id, {
-                current_balance: card.current_balance + transaction.amount
-            });
-        }
+        // Update card balance using total remaining commitment
+        await creditCardsService.recalculateBalance(transaction.card_id);
 
         return data;
     },
@@ -286,6 +283,42 @@ export const creditCardsService = {
             .eq('id', transactionId);
 
         return !error;
+    },
+
+    /**
+     * Recalcula o saldo devedor total do cartão baseado em todas as transações e parcelas pendentes
+     */
+    recalculateBalance: async (cardId: string): Promise<number> => {
+        const { data: transactions, error } = await supabase
+            .from('credit_card_transactions')
+            .select('*')
+            .eq('card_id', cardId);
+
+        if (error) return 0;
+
+        const now = new Date();
+        const totalOutstanding = (transactions || []).reduce((sum, t) => {
+            const transDate = new Date(t.transaction_date);
+            const monthsDiff = (now.getFullYear() - transDate.getFullYear()) * 12 + (now.getMonth() - transDate.getMonth());
+
+            if (t.installment_total > 1) {
+                // O offset de meses desde o início real da compra é (installment_current - 1)
+                const monthsSinceStart = monthsDiff + (t.installment_current - 1);
+                const remainingInstallments = t.installment_total - monthsSinceStart;
+
+                if (remainingInstallments > 0) {
+                    const installmentValue = t.amount / t.installment_total;
+                    return sum + (remainingInstallments * installmentValue);
+                }
+            } else if (monthsDiff <= 0) {
+                // Compra única ocupa o limite no mês em que foi feita
+                return sum + t.amount;
+            }
+            return sum;
+        }, 0);
+
+        await creditCardsService.update(cardId, { current_balance: totalOutstanding });
+        return totalOutstanding;
     }
 };
 

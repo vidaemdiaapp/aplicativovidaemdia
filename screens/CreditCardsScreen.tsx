@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
     CreditCard as CreditCardIcon, Plus, ChevronRight, ChevronLeft,
     AlertCircle, Check, X, Wallet, Users, ArrowRight, Clock,
-    Calendar, Trash2, Edit2, MoreVertical
+    Calendar, Trash2, Edit2, MoreVertical, Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { creditCardsService, CreditCard, CreditCardTransaction } from '../services/financial';
+import { creditRadarService, CreditLimitProjection } from '../services/creditRadar';
 import { tasksService } from '../services/tasks';
 
 interface CardFormData {
@@ -42,6 +43,9 @@ export const CreditCardsScreen: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showTransactionModal, setShowTransactionModal] = useState(false);
+    const [projections, setProjections] = useState<CreditLimitProjection[]>([]);
+    const [loadingRadar, setLoadingRadar] = useState(false);
+    const [categories, setCategories] = useState<any[]>([]);
 
     useEffect(() => {
         loadData();
@@ -49,12 +53,14 @@ export const CreditCardsScreen: React.FC = () => {
 
     const loadData = async () => {
         setLoading(true);
-        const [cardsData, thirdParty] = await Promise.all([
+        const [cardsData, thirdParty, cats] = await Promise.all([
             creditCardsService.getAll(),
-            creditCardsService.getThirdPartyExpenses()
+            creditCardsService.getThirdPartyExpenses(),
+            tasksService.getCategories()
         ]);
         setCards(cardsData);
         setThirdPartyExpenses(thirdParty);
+        setCategories(cats);
         if (cardsData.length > 0 && !selectedCard) {
             setSelectedCard(cardsData[0]);
             loadTransactions(cardsData[0].id);
@@ -67,9 +73,24 @@ export const CreditCardsScreen: React.FC = () => {
         setTransactions(txs);
     };
 
-    const handleCardSelect = (card: CreditCard) => {
+    const handleCardSelect = async (card: CreditCard) => {
         setSelectedCard(card);
         loadTransactions(card.id);
+        loadRadar(card.id);
+        // Sync balance in background to ensure truth
+        creditCardsService.recalculateBalance(card.id).then(newBase => {
+            if (newBase !== card.current_balance) {
+                setCards(prev => prev.map(c => c.id === card.id ? { ...c, current_balance: newBase } : c));
+                setSelectedCard(prev => prev?.id === card.id ? { ...prev, current_balance: newBase } : prev);
+            }
+        });
+    };
+
+    const loadRadar = async (cardId: string) => {
+        setLoadingRadar(true);
+        const data = await creditRadarService.getLimitProjection(cardId);
+        setProjections(data);
+        setLoadingRadar(false);
     };
 
     const formatCurrency = (val: number) =>
@@ -298,9 +319,75 @@ export const CreditCardsScreen: React.FC = () => {
                 </section>
             )}
 
-            {/* Selected Card Transactions */}
+            {/* Selected Card Radar & Transactions */}
             {selectedCard && (
                 <section className="px-6 mb-12">
+                    {/* ═══════════════════════════════════════════════════════════════
+                        CREDIT RADAR (PREDITIVO)
+                    ═══════════════════════════════════════════════════════════════ */}
+                    <div className="mb-10">
+                        <div className="flex justify-between items-end mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                                    Radar de Crédito <span className="px-2 py-0.5 bg-primary-100 text-primary-600 text-[8px] uppercase font-black rounded-md">Alpha IA</span>
+                                </h3>
+                                <p className="text-xs text-slate-400 font-medium">Projeção de uso do limite nos próximos meses</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-100 rounded-[32px] p-6 shadow-xl shadow-slate-200/50 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-110 transition-transform duration-700">
+                                <Clock className="w-16 h-16 text-primary-500" />
+                            </div>
+
+                            {loadingRadar ? (
+                                <div className="h-32 flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                            ) : (
+                                <div className="flex items-end justify-between gap-2 h-32 pt-4">
+                                    {projections.map((p, idx) => (
+                                        <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                                            <div className="w-full relative group/bar flex flex-col justify-end h-20">
+                                                {/* Usage Tooltip */}
+                                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-all bg-slate-900 text-white text-[8px] font-bold px-1.5 py-0.5 rounded pointer-events-none z-10">
+                                                    {p.usage_percentage.toFixed(0)}%
+                                                </div>
+
+                                                {/* Background Bar */}
+                                                <div className="w-full bg-slate-50 rounded-lg h-full absolute inset-0"></div>
+
+                                                {/* Progress Bar */}
+                                                <div
+                                                    className={`w-full rounded-lg transition-all duration-1000 ease-out relative z-0 ${p.usage_percentage > 70 ? 'bg-rose-400' :
+                                                        p.usage_percentage > 40 ? 'bg-amber-400' : 'bg-primary-400'
+                                                        }`}
+                                                    style={{ height: `${p.usage_percentage}%` }}
+                                                ></div>
+                                            </div>
+                                            <span className={`text-[9px] font-bold uppercase tracking-tighter ${idx === 0 ? 'text-primary-600' : 'text-slate-400'}`}>
+                                                {p.label}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div className="mt-6 pt-4 border-t border-slate-50 flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center">
+                                    <AlertCircle className="w-4 h-4 text-primary-500" />
+                                </div>
+                                <p className="text-[10px] text-slate-500 font-medium leading-tight">
+                                    {projections.length > 0 && projections.some(p => p.used_amount > 0) ? (
+                                        <>Baseado nas suas parcelas atuais, o mês de <span className="text-slate-900 font-bold">{projections.reduce((max, p) => p.used_amount > max.used_amount ? p : max, projections[0]).label}</span> terá o maior comprometimento.</>
+                                    ) : (
+                                        <>Registre suas compras parceladas para ver a inteligência do radar em ação.</>
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 tracking-tight">
@@ -377,6 +464,16 @@ export const CreditCardsScreen: React.FC = () => {
                                                 <p className="text-xs text-slate-400 font-medium lowercase">
                                                     {formatDate(tx.transaction_date)}
                                                 </p>
+                                                {tx.category_id && (
+                                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 rounded-full border border-slate-100">
+                                                        <span className="text-[10px] grayscale brightness-125">
+                                                            {categories.find(c => c.id === tx.category_id)?.icon || '📁'}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                            {categories.find(c => c.id === tx.category_id)?.label || 'Outros'}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 {tx.installment_total > 1 && (
                                                     <span className="text-[10px] font-black bg-primary-50 text-primary-600 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
                                                         {tx.installment_current}/{tx.installment_total}x
@@ -389,7 +486,9 @@ export const CreditCardsScreen: React.FC = () => {
                                         <p className="text-lg font-bold text-slate-900 tracking-tight">
                                             {formatCurrency(tx.amount)}
                                         </p>
-                                        <p className="text-[10px] text-slate-400 font-medium">Débito</p>
+                                        <p className={`text-[10px] font-bold uppercase ${tx.transaction_type === 'debit' ? 'text-amber-500' : 'text-slate-400'}`}>
+                                            {tx.transaction_type === 'debit' ? 'Débito' : 'Crédito'}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -414,6 +513,7 @@ export const CreditCardsScreen: React.FC = () => {
                     isOpen={showTransactionModal}
                     onClose={() => setShowTransactionModal(false)}
                     cardId={selectedCard.id}
+                    categories={categories}
                     onSuccess={() => {
                         setShowTransactionModal(false);
                         loadData();
@@ -631,36 +731,78 @@ interface AddTransactionModalProps {
     isOpen: boolean;
     onClose: () => void;
     cardId: string;
+    categories: any[];
     onSuccess: () => void;
 }
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClose, cardId, onSuccess }) => {
+const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClose, cardId, categories, onSuccess }) => {
     const [form, setForm] = useState({
         title: '',
         amount: 0,
+        amountType: 'total' as 'total' | 'installment',
+        transaction_type: 'credit' as 'credit' | 'debit',
         transaction_date: new Date().toISOString().split('T')[0],
         installment_total: 1,
         category_id: '' as string | null,
         is_third_party: false,
         third_party_name: '',
-        third_party_type: 'reembolso' as 'reembolso' | 'rateio'
+        third_party_type: 'reembolso' as 'reembolso' | 'rateio',
+        is_subscription: false
     });
-    const [categories, setCategories] = useState<any[]>([]);
     const [saving, setSaving] = useState(false);
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [localCategories, setLocalCategories] = useState<any[]>(categories);
+    const [subscriptionDetected, setSubscriptionDetected] = useState(false);
 
     useEffect(() => {
-        tasksService.getCategories().then(setCategories);
-    }, []);
+        setLocalCategories(categories);
+    }, [categories]);
+
+    // Detecção Inteligente de Assinatura
+    useEffect(() => {
+        if (form.title.length > 3) {
+            import('../services/subscriptionIntelligence').then(({ subscriptionIntelligence }) => {
+                const isSub = subscriptionIntelligence.checkIsSubscription(form.title);
+                if (isSub && !form.is_subscription && !subscriptionDetected) {
+                    setForm(f => ({ ...f, is_subscription: true }));
+                    setSubscriptionDetected(true); // Evita loop se usuário desligar
+                }
+            });
+        }
+    }, [form.title]);
+
+    const handleCreateCategory = async () => {
+        if (!newCategoryName.trim()) return;
+
+        const newCat = await tasksService.createCategory({
+            label: newCategoryName,
+            icon: '🆕',
+            color: 'bg-slate-100',
+            status: 'ok'
+        });
+
+        if (newCat) {
+            setLocalCategories([...localCategories, newCat]);
+            setForm({ ...form, category_id: newCat.id });
+            setIsCreatingCategory(false);
+            setNewCategoryName('');
+        }
+    };
 
     const handleSubmit = async () => {
         if (!form.title.trim() || form.amount <= 0) return;
 
         setSaving(true);
+        const finalAmount = form.amountType === 'installment'
+            ? form.amount * form.installment_total
+            : form.amount;
+
         const result = await creditCardsService.addTransaction({
             card_id: cardId,
             household_id: '',
             title: form.title,
-            amount: form.amount,
+            amount: finalAmount,
             transaction_date: form.transaction_date,
             installment_current: 1,
             installment_total: form.installment_total,
@@ -668,7 +810,9 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
             is_third_party: form.is_third_party,
             third_party_name: form.is_third_party ? form.third_party_name : null,
             third_party_type: form.is_third_party ? form.third_party_type : null,
-            reimbursement_status: 'pending'
+            reimbursement_status: 'pending',
+            transaction_type: form.transaction_type,
+            // is_subscription: form.is_subscription (future capability in DB)
         });
         setSaving(false);
 
@@ -707,6 +851,23 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                             placeholder="Ex: Mercado, Netflix, Uber..."
                             className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-slate-900 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
                         />
+                        {/* Smart Subscription Toggle */}
+                        {form.is_subscription && (
+                            <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-xl animate-in fade-in slide-in-from-top-2">
+                                <span className="bg-indigo-100 p-1 rounded-md text-indigo-600">
+                                    <Zap className="w-3 h-3" />
+                                </span>
+                                <p className="text-xs text-indigo-700 font-medium flex-1">
+                                    Detectamos uma possível assinatura!
+                                </p>
+                                <button
+                                    onClick={() => setForm({ ...form, is_subscription: false })}
+                                    className="text-[10px] font-bold text-indigo-400 uppercase hover:text-indigo-600"
+                                >
+                                    Ignorar
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -738,13 +899,68 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                         </div>
                     </div>
 
+                    {/* Transaction and Amount Type */}
+                    <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-3">
+                            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-widest px-1">
+                                Tipo de Lançamento
+                            </label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setForm({ ...form, transaction_type: 'credit' })}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${form.transaction_type === 'credit'
+                                        ? 'bg-primary-500 text-white shadow-md'
+                                        : 'bg-slate-50 text-slate-400'
+                                        }`}
+                                >
+                                    Crédito
+                                </button>
+                                <button
+                                    onClick={() => setForm({ ...form, transaction_type: 'debit' })}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${form.transaction_type === 'debit'
+                                        ? 'bg-amber-500 text-white shadow-md'
+                                        : 'bg-slate-50 text-slate-400'
+                                        }`}
+                                >
+                                    Débito
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="text-[11px] text-slate-400 font-bold uppercase tracking-widest px-1">
+                                O Valor informado é:
+                            </label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setForm({ ...form, amountType: 'total' })}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${form.amountType === 'total'
+                                        ? 'bg-slate-800 text-white shadow-md'
+                                        : 'bg-slate-50 text-slate-400'
+                                        }`}
+                                >
+                                    Valor Total
+                                </button>
+                                <button
+                                    onClick={() => setForm({ ...form, amountType: 'installment' })}
+                                    className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${form.amountType === 'installment'
+                                        ? 'bg-slate-800 text-white shadow-md'
+                                        : 'bg-slate-50 text-slate-400'
+                                        }`}
+                                >
+                                    Valor da Parcela
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Category Selection */}
                     <div className="space-y-3">
                         <label className="text-[11px] text-slate-400 font-bold uppercase tracking-widest px-1 block">
                             Categoria
                         </label>
-                        <div className="flex gap-2 overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar">
-                            {categories.map((cat) => (
+                        <div className="flex gap-2 overflow-x-auto pb-4 -mx-1 px-1 no-scrollbar items-center">
+                            {localCategories.map((cat) => (
                                 <button
                                     key={cat.id}
                                     onClick={() => setForm({ ...form, category_id: cat.id })}
@@ -753,9 +969,44 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                                         : 'bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700'
                                         }`}
                                 >
-                                    {cat.name}
+                                    <span className="mr-2">{cat.icon}</span>
+                                    {cat.label}
                                 </button>
                             ))}
+
+                            {/* Quick Add Category */}
+                            {isCreatingCategory ? (
+                                <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-2xl border border-primary-200 animate-in fade-in zoom-in-95">
+                                    <input
+                                        autoFocus
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        placeholder="Nova Categoria..."
+                                        className="bg-transparent text-xs font-bold text-slate-700 placeholder:text-slate-400 focus:outline-none px-3 w-32"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleCreateCategory()}
+                                    />
+                                    <button
+                                        onClick={handleCreateCategory}
+                                        className="w-8 h-8 bg-primary-500 rounded-xl flex items-center justify-center text-white hover:bg-primary-600 transition-colors"
+                                    >
+                                        <Check className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => setIsCreatingCategory(false)}
+                                        className="w-8 h-8 bg-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-300 transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => setIsCreatingCategory(true)}
+                                    className="flex-shrink-0 px-4 py-3 rounded-2xl text-[13px] font-bold bg-slate-50 text-slate-400 border border-dashed border-slate-300 hover:bg-slate-100 hover:text-primary-500 hover:border-primary-200 transition-all flex items-center gap-2"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Nova
+                                </button>
+                            )}
                         </div>
                     </div>
 

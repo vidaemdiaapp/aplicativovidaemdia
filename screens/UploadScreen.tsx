@@ -121,18 +121,35 @@ export const UploadScreen: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                className="bg-slate-50 p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-slate-100 transition-colors border border-slate-100 shadow-sm"
+                className="bg-slate-50 p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-slate-100 transition-colors border border-slate-100 shadow-sm col-span-2 group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Camera className="w-8 h-8 text-slate-700" />
-                <span className="font-bold text-xs text-slate-700 uppercase tracking-tight">Câmera</span>
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <File className="w-6 h-6 text-primary-600" />
+                </div>
+                <div className="text-center">
+                  <span className="font-black text-xs text-slate-700 uppercase tracking-widest block">Conta ou Boleto</span>
+                  <span className="text-[10px] text-slate-400 font-medium">Luz, Água, Condomínio...</span>
+                </div>
               </button>
+
               <button
-                className="bg-slate-50 p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-slate-100 transition-colors border border-slate-100 shadow-sm"
+                className="bg-primary-50 p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-primary-100 transition-colors border border-primary-100 shadow-sm group"
                 onClick={() => fileInputRef.current?.click()}
               >
-                <File className="w-8 h-8 text-slate-700" />
-                <span className="font-bold text-xs text-slate-700 uppercase tracking-tight">Arquivos</span>
+                <CreditCardIcon className="w-8 h-8 text-primary-600 group-hover:scale-110 transition-transform" />
+                <div className="text-center">
+                  <span className="font-black text-xs text-primary-700 uppercase tracking-tight block">Fatura Cartão</span>
+                  <span className="text-[10px] text-primary-500 font-medium">Caça taxas e juros</span>
+                </div>
+              </button>
+
+              <button
+                className="bg-slate-50 p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-slate-100 transition-colors border border-slate-100 shadow-sm group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Camera className="w-8 h-8 text-slate-700 group-hover:scale-110 transition-transform" />
+                <span className="font-black text-xs text-slate-700 uppercase tracking-tight">Câmera/Foto</span>
               </button>
             </div>
           </div>
