@@ -111,6 +111,27 @@ export interface BudgetLimit {
     updated_at: string;
 }
 
+export interface WealthSummary {
+    investments: number;
+    savings: number;
+    real_assets: number;
+    liquid_balance: number;
+    net_worth: number;
+}
+
+export interface CashFlowPoint {
+    date: string;
+    balance: number;
+}
+
+export interface FinancialScore {
+    score: number;
+    liquidity: number;
+    discipline: number;
+    safety: number;
+    label: string;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Credit Cards Service
 // ═══════════════════════════════════════════════════════════════
@@ -660,5 +681,35 @@ export const openFinanceService = {
         }
 
         return { success: true, message: 'Sincronização concluída com sucesso' };
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// Financial Intelligence Service
+// ═══════════════════════════════════════════════════════════════
+
+export const financialIntelligenceService = {
+    getScore: async (): Promise<FinancialScore | null> => {
+        const h = await tasksService.getHousehold();
+        if (!h) return null;
+        const { data, error } = await supabase.rpc('get_financial_health_score', { target_household_id: h.id });
+        if (error) return null;
+        return data as FinancialScore;
+    },
+
+    getWealthSummary: async (): Promise<WealthSummary | null> => {
+        const h = await tasksService.getHousehold();
+        if (!h) return null;
+        const { data, error } = await supabase.rpc('get_wealth_summary', { target_household_id: h.id });
+        if (error) return null;
+        return data as WealthSummary;
+    },
+
+    getCashFlowForecast: async (): Promise<CashFlowPoint[]> => {
+        const h = await tasksService.getHousehold();
+        if (!h) return [];
+        const { data, error } = await supabase.rpc('get_cash_flow_forecast', { target_household_id: h.id });
+        if (error) return [];
+        return (data || []) as CashFlowPoint[];
     }
 };

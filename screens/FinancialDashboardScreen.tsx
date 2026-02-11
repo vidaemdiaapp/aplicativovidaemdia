@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../services/supabase';
 import { tasksService, Category, Task } from '../services/tasks';
-import { budgetLimitsService } from '../services/financial';
+import { budgetLimitsService, financialIntelligenceService, WealthSummary, CashFlowPoint, FinancialScore } from '../services/financial';
 import { IncomeRegistrationModal } from '../components/IncomeRegistrationModal';
 import { SpendingDonutChart, MonthlyBarChart } from '../components/charts/SpendingChart';
 import { BudgetAlertBanner, BudgetAlert } from '../components/BudgetAlertBanner';
@@ -49,6 +49,9 @@ export const FinancialDashboardScreen: React.FC = () => {
     const [budgetAlerts, setBudgetAlerts] = useState<BudgetAlert[]>([]);
     const [monthlyData, setMonthlyData] = useState<{ month: string; income: number; expense: number }[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [score, setScore] = useState<FinancialScore | null>(null);
+    const [wealth, setWealth] = useState<WealthSummary | null>(null);
+    const [cashFlow, setCashFlow] = useState<CashFlowPoint[]>([]);
 
     useEffect(() => {
         loadData();
@@ -66,7 +69,7 @@ export const FinancialDashboardScreen: React.FC = () => {
             startDate.setMonth(startDate.getMonth() - 1);
 
             // Parallel data fetching
-            const [dashboardRes, tasksRes, catsRes, spendingRes, evolutionData] = await Promise.all([
+            const [dashboardRes, tasksRes, catsRes, spendingRes, evolutionData, scoreRes, wealthRes, cashFlowRes] = await Promise.all([
                 supabase.rpc('get_financial_dashboard', { target_household_id: household.id }),
                 tasksService.getUserTasks(),
                 tasksService.getCategories(),
@@ -75,12 +78,18 @@ export const FinancialDashboardScreen: React.FC = () => {
                     start_date: startDate.toISOString().split('T')[0],
                     end_date: todayStr
                 }),
-                tasksService.getMonthlyEvolution()
+                tasksService.getMonthlyEvolution(),
+                financialIntelligenceService.getScore(),
+                financialIntelligenceService.getWealthSummary(),
+                financialIntelligenceService.getCashFlowForecast()
             ]);
 
             if (catsRes) setCategories(catsRes);
             if (spendingRes.data) setSpending(spendingRes.data || []);
             setMonthlyData(evolutionData);
+            setScore(scoreRes);
+            setWealth(wealthRes);
+            setCashFlow(cashFlowRes);
 
             let dashboardData: any = null;
             if (dashboardRes.data) {
@@ -231,20 +240,36 @@ export const FinancialDashboardScreen: React.FC = () => {
                         <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest mb-1">Dashboard</p>
                         <h1 className="text-white text-2xl font-bold">Visão Financeira</h1>
                     </div>
-                    <button
-                        onClick={() => loadData()}
-                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all active:rotate-180 duration-700"
-                    >
-                        <RefreshCw className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-3">
+                        {score && (
+                            <div className="text-right mr-2 bg-white/10 backdrop-blur-md rounded-2xl px-3 py-1.5 border border-white/20">
+                                <p className="text-[8px] font-black text-white/60 uppercase tracking-widest">Score Vida</p>
+                                <p className="text-lg font-black text-white leading-none mt-0.5">{score.score}</p>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => loadData()}
+                            className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-sm text-white/80 hover:bg-white/20 flex items-center justify-center transition-all active:rotate-180 duration-700"
+                        >
+                            <RefreshCw className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Risk Badge */}
-                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${riskConfig.bg} border border-white/50 shadow-sm`}>
-                    <RiskIcon className={`w-4 h-4 ${riskConfig.text}`} />
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${riskConfig.text}`}>
-                        Saúde {riskConfig.label}
-                    </span>
+                {/* Risk & Score Info */}
+                <div className="flex items-center gap-2">
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${riskConfig.bg} border border-white/50 shadow-sm`}>
+                        <RiskIcon className={`w-4 h-4 ${riskConfig.text}`} />
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${riskConfig.text}`}>
+                            Saúde {riskConfig.label}
+                        </span>
+                    </div>
+                    {score && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white shadow-sm">
+                            <ShieldCheck className="w-4 h-4" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{score.label}</span>
+                        </div>
+                    )}
                 </div>
             </header>
 
@@ -255,13 +280,45 @@ export const FinancialDashboardScreen: React.FC = () => {
                 <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
                     {/* Balance Display */}
                     <div className="p-6 pb-4">
-                        <p className="text-slate-500 text-sm font-medium mb-2">Saldo Projetado (Mês)</p>
-                        <h2 className={`text-4xl font-black tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-500' :
-                            dashboard?.status === 'warning' ? 'text-amber-500' : 'text-rose-500'
-                            }`}>
-                            {dashboard ? <CountUp value={dashboard.balance} formatter={formatCurrency} /> : 'R$ 0,00'}
-                        </h2>
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <p className="text-slate-500 text-sm font-medium mb-2">Saldo Projetado (Mês)</p>
+                                <h2 className={`text-4xl font-black tracking-tight ${dashboard?.status === 'surplus' ? 'text-emerald-500' :
+                                    dashboard?.status === 'warning' ? 'text-amber-500' : 'text-rose-500'
+                                    }`}>
+                                    {dashboard ? <CountUp value={dashboard.balance} formatter={formatCurrency} /> : 'R$ 0,00'}
+                                </h2>
+                            </div>
+                            {wealth && (
+                                <div className="text-right">
+                                    <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">Patrimônio</p>
+                                    <p className="text-base font-black text-slate-900">{formatCurrency(wealth.net_worth)}</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
+
+                    {/* Wealth Detail (Collapsible logic could go here, for now integrated) */}
+                    {wealth && (
+                        <div className="px-6 pb-6 pt-2 border-t border-slate-50 grid grid-cols-2 gap-y-3 gap-x-6">
+                            <div>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Investimentos</p>
+                                <p className="text-xs font-bold text-slate-700">{formatCurrency(wealth.investments)}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Reservas</p>
+                                <p className="text-xs font-bold text-slate-700">{formatCurrency(wealth.savings)}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Bens (Veículos)</p>
+                                <p className="text-xs font-bold text-slate-700">{formatCurrency(wealth.real_assets)}</p>
+                            </div>
+                            <div>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Saldo Líquido</p>
+                                <p className="text-xs font-bold text-slate-700">{formatCurrency(wealth.liquid_balance)}</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Income/Expense Cards */}
                     <div className="grid grid-cols-2 gap-3 px-4 pb-4">
@@ -304,7 +361,7 @@ export const FinancialDashboardScreen: React.FC = () => {
                     <h2 className="font-bold text-slate-800 text-lg">Atalhos</h2>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
-                    <QuickAccessButton icon={ShieldCheck} label="Imposto" onClick={() => navigate('/tax-declaration')} />
+                    <QuickAccessButton icon={Receipt} label="Assinaturas" onClick={() => navigate('/subscriptions')} />
                     <QuickAccessButton icon={CreditCard} label="Cartões" onClick={() => navigate('/credit-cards')} />
                     <QuickAccessButton icon={PiggyBank} label="Cofrinhos" onClick={() => navigate('/savings')} />
                     <QuickAccessButton icon={TrendingUp} label="Investir" onClick={() => navigate('/investments')} />
@@ -598,6 +655,36 @@ export const FinancialDashboardScreen: React.FC = () => {
                         </>
                     )}
                 </section>
+
+                {/* ═══════════════════════════════════════════════════════════════
+                    CASH FLOW FORECAST (RADAR 30 DIAS)
+                ═══════════════════════════════════════════════════════════════ */}
+                {cashFlow.length > 0 && (
+                    <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-lg font-bold text-slate-800">Radar 30 Dias</h3>
+                                <p className="text-xs text-slate-400 font-medium">Projeção de saldo futuro</p>
+                            </div>
+                            <div className="p-2 bg-primary-50 rounded-lg">
+                                <LineChart className="w-5 h-5 text-primary-500" />
+                            </div>
+                        </div>
+                        <div className="h-48 mt-4">
+                            <MonthlyBarChart
+                                data={cashFlow.map(p => ({
+                                    month: formatDate(p.date),
+                                    income: p.balance > 0 ? p.balance : 0,
+                                    expense: p.balance < 0 ? Math.abs(p.balance) : 0
+                                }))}
+                                height={180}
+                            />
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium text-center mt-4">
+                            * Baseado na sua média de gastos diários e contas a vencer.
+                        </p>
+                    </section>
+                )}
 
                 {/* ═══════════════════════════════════════════════════════════════
                     MONTHLY EVOLUTION

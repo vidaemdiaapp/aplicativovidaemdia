@@ -38,6 +38,7 @@ import { FinancialReportScreen } from './screens/FinancialReportScreen';
 import { OpenFinanceScreen } from './screens/OpenFinanceScreen';
 import { UpdatePhoneScreen } from './screens/UpdatePhoneScreen';
 import { NotificationCenterScreen } from './screens/NotificationCenterScreen';
+import { SubscriptionsScreen } from './screens/SubscriptionsScreen';
 
 // Components
 import { Layout } from './components/Layout';
@@ -125,6 +126,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/financial-report" element={<ProtectedRoute><FinancialReportScreen /></ProtectedRoute>} />
         <Route path="/open-finance" element={<ProtectedRoute><OpenFinanceScreen /></ProtectedRoute>} />
         <Route path="/update-phone" element={<ProtectedRoute><UpdatePhoneScreen /></ProtectedRoute>} />
+        <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionsScreen /></ProtectedRoute>} />
 
         {/* Aliases */}
         <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />

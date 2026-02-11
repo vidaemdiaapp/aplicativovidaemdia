@@ -32,6 +32,8 @@ export interface Task {
   entry_type?: 'bill' | 'immediate' | 'expense' | 'income';
   payment_method?: 'cash' | 'pix' | 'debit' | 'credit';
   purchase_date?: string;
+  is_subscription?: boolean;
+  subscription_periodicity?: string;
   created_at: string;
 }
 

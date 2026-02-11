@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
     ArrowLeft, Calendar, FileText, Check, DollarSign, Tag, Loader2,
     Zap, ShoppingBag, Utensils, Shield, Heart, Plane, Car, Home,
-    MoreHorizontal, Repeat, Info, AlertCircle, Landmark, CreditCard, Coins
+    MoreHorizontal, Repeat, Info, AlertCircle, Landmark, CreditCard, Coins, Receipt
 } from 'lucide-react';
 import { tasksService, Category, Task } from '../services/tasks';
 import { Button } from '../components/Button';
@@ -30,6 +30,7 @@ export const CreateTaskScreen: React.FC = () => {
     const [description, setDescription] = useState('');
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'pix' | 'debit'>('pix');
     const [originalStatus, setOriginalStatus] = useState<string>('pending');
+    const [isSubscription, setIsSubscription] = useState((location.state as any)?.is_subscription || false);
 
     const CATEGORY_ICONS: Record<string, any> = {
         'vehicle': Car,
@@ -92,6 +93,7 @@ export const CreateTaskScreen: React.FC = () => {
                     setIsRecurring(task.is_recurring || false);
                     setDescription(task.description || '');
                     setOriginalStatus(task.status || 'pending');
+                    setIsSubscription(task.is_subscription || false);
                     if (task.payment_method) setPaymentMethod(task.payment_method as any);
                 }
             } else if (combinedCats.length > 0) {
@@ -152,6 +154,7 @@ export const CreateTaskScreen: React.FC = () => {
             amount: amount ? parseFloat(cleanAmount) : undefined,
             status: finalStatus as any,
             is_recurring: entryType === 'immediate' ? false : isRecurring,
+            is_subscription: isSubscription,
             description: description || undefined,
             entry_type: entryType,
         };
@@ -330,20 +333,36 @@ export const CreateTaskScreen: React.FC = () => {
                                 </div>
                             </div>
                             {entryType === 'bill' && (
-                                <div className="space-y-2">
-                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Repetir Mensal</label>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsRecurring(!isRecurring)}
-                                        className={`w-full h-[58px] rounded-2xl border flex items-center justify-center gap-3 transition-all shadow-sm ${isRecurring
-                                            ? 'bg-primary-50 border-primary-100 text-primary-600 shadow-inner'
-                                            : 'bg-white border-slate-100 text-slate-400'
-                                            }`}
-                                    >
-                                        <Repeat className={`w-5 h-5 ${isRecurring ? 'animate-spin-slow text-primary-500' : ''}`} />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">{isRecurring ? 'ATIVO' : 'OFF'}</span>
-                                    </button>
-                                </div>
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Repetir Mensal</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsRecurring(!isRecurring)}
+                                            className={`w-full h-[58px] rounded-2xl border flex items-center justify-center gap-3 transition-all shadow-sm ${isRecurring
+                                                ? 'bg-primary-50 border-primary-100 text-primary-600 shadow-inner'
+                                                : 'bg-white border-slate-100 text-slate-400'
+                                                }`}
+                                        >
+                                            <Repeat className={`w-5 h-5 ${isRecurring ? 'animate-spin-slow text-primary-500' : ''}`} />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{isRecurring ? 'ATIVO' : 'OFF'}</span>
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Assinatura</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsSubscription(!isSubscription)}
+                                            className={`w-full h-[58px] rounded-2xl border flex items-center justify-center gap-3 transition-all shadow-sm ${isSubscription
+                                                ? 'bg-indigo-50 border-indigo-100 text-indigo-600 shadow-inner'
+                                                : 'bg-white border-slate-100 text-slate-400'
+                                                }`}
+                                        >
+                                            <Receipt className={`w-5 h-5 ${isSubscription ? 'text-indigo-500' : ''}`} />
+                                            <span className="text-[10px] font-bold uppercase tracking-widest">{isSubscription ? 'SIM' : 'NÃO'}</span>
+                                        </button>
+                                    </div>
+                                </>
                             )}
                         </div>
 

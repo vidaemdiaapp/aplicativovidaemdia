@@ -3,11 +3,12 @@ import {
     ChevronLeft, CreditCard, ArrowUpCircle, ArrowDownCircle,
     Calendar, Zap, Home, Car, Utensils, ShoppingBag,
     Heart, Plane, Landmark, MoreHorizontal, FileText,
-    Download, Share2, Receipt, Clock
+    Download, Share2, Receipt, Clock, Sparkles, TrendingUp
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { tasksService, Task, Category, Household } from '../services/tasks';
+import { budgetLimitsService, BudgetLimit } from '../services/financial';
 import { Skeleton } from '../components/Skeleton';
 
 // Icon Map for grouping
@@ -36,6 +37,8 @@ export const FinancialReportScreen: React.FC = () => {
     const [incomes, setIncomes] = useState<any[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+    const [budgets, setBudgets] = useState<BudgetLimit[]>([]);
+    const [comparison, setComparison] = useState<any>(null);
 
     useEffect(() => {
         loadData();
@@ -48,12 +51,14 @@ export const FinancialReportScreen: React.FC = () => {
             setHousehold(h);
             if (!h) return;
 
-            const [dashRes, tasksRes, cardsRes, incomesRes, catsRes] = await Promise.all([
+            const [dashRes, tasksRes, cardsRes, incomesRes, catsRes, budgetsRes, compRes] = await Promise.all([
                 supabase.rpc('get_financial_dashboard', { target_household_id: h.id }),
                 tasksService.getUserTasks(),
                 supabase.from('credit_cards').select('*').eq('household_id', h.id),
                 supabase.from('incomes').select('*').eq('household_id', h.id),
-                tasksService.getCategories()
+                tasksService.getCategories(),
+                budgetLimitsService.getAll(),
+                supabase.rpc('get_financial_comparison', { target_household_id: h.id })
             ]);
 
             setDashboard(Array.isArray(dashRes.data) ? dashRes.data[0] : dashRes.data);
@@ -61,6 +66,8 @@ export const FinancialReportScreen: React.FC = () => {
             setCards(cardsRes.data || []);
             setIncomes(incomesRes.data || []);
             setCategories(catsRes);
+            setBudgets(budgetsRes);
+            setComparison(compRes.data);
         } catch (error) {
             console.error('[Report] Load fail:', error);
         } finally {
@@ -102,10 +109,20 @@ export const FinancialReportScreen: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all">
+                    <button
+                        onClick={() => {
+                            import('react-hot-toast').then(t => t.default.success('Gerando PDF detalhado...'));
+                        }}
+                        className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all"
+                    >
                         <Download className="w-5 h-5" />
                     </button>
-                    <button className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all">
+                    <button
+                        onClick={() => {
+                            import('react-hot-toast').then(t => t.default.success('Preparando planilha Excel...'));
+                        }}
+                        className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-all"
+                    >
                         <Share2 className="w-5 h-5" />
                     </button>
                 </div>
@@ -136,9 +153,26 @@ export const FinancialReportScreen: React.FC = () => {
 
                 {/* 2. Incomes Breakdown */}
                 <section>
-                    <div className="flex items-center gap-2 mb-4 px-2">
-                        <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
-                        <h3 className="font-bold text-slate-800">Entradas</h3>
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <div className="flex items-center gap-2">
+                            <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
+                            <h3 className="font-bold text-slate-800">Entradas</h3>
+                            {(() => {
+                                const curr = comparison?.current?.total_income || 0;
+                                const prev = comparison?.previous?.total_income || 0;
+                                if (prev === 0) return null;
+                                const diff = ((curr - prev) / prev) * 100;
+                                const isUp = diff >= 0;
+                                return (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isUp ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                        {isUp ? '▲' : '▼'} {Math.abs(Math.round(diff))}%
+                                    </span>
+                                );
+                            })()}
+                        </div>
+                        <p className="text-sm font-black text-emerald-600">
+                            {formatCurrency(incomes.reduce((acc, curr) => acc + parseFloat(curr.amount_monthly?.toString() || '0'), 0))}
+                        </p>
                     </div>
                     <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden divide-y divide-slate-50">
                         {incomes.map(income => (
@@ -161,6 +195,18 @@ export const FinancialReportScreen: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <Home className="w-5 h-5 text-primary-500" />
                             <h3 className="font-bold text-slate-800">Contas Fixas & Parcelas</h3>
+                            {(() => {
+                                const curr = comparison?.current?.total_fixed || 0;
+                                const prev = comparison?.previous?.total_fixed || 0;
+                                if (prev === 0) return null;
+                                const diff = ((curr - prev) / prev) * 100;
+                                const isDown = diff <= 0;
+                                return (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isDown ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                        {isDown ? '▼' : '▲'} {Math.abs(Math.round(diff))}%
+                                    </span>
+                                );
+                            })()}
                         </div>
                         <p className="text-sm font-black text-slate-900">
                             {formatCurrency(fixedExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount?.toString() || '0'), 0))}
@@ -229,6 +275,18 @@ export const FinancialReportScreen: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <Zap className="w-5 h-5 text-amber-500" />
                             <h3 className="font-bold text-slate-800">Gastos Variáveis / Dia</h3>
+                            {(() => {
+                                const curr = comparison?.current?.total_variable || 0;
+                                const prev = comparison?.previous?.total_variable || 0;
+                                if (prev === 0) return null;
+                                const diff = ((curr - prev) / prev) * 100;
+                                const isDown = diff <= 0;
+                                return (
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isDown ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                                        {isDown ? '▼' : '▲'} {Math.abs(Math.round(diff))}%
+                                    </span>
+                                );
+                            })()}
                         </div>
                         <p className="text-sm font-black text-amber-600">
                             {formatCurrency(variableExpenses.reduce((acc, curr) => acc + parseFloat(curr.amount?.toString() || '0'), 0))}
@@ -284,11 +342,43 @@ export const FinancialReportScreen: React.FC = () => {
                                                 </div>
                                                 <div className="text-left">
                                                     <p className="font-bold text-slate-800 text-[15px]">{getCategoryLabel(catId)}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{data.items.length} itens</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{data.items.length} itens</p>
+                                                        {(() => {
+                                                            const limit = budgets.find(b => b.category_id === catId || (catId === 'outros' && !b.category_id));
+                                                            if (!limit) return null;
+                                                            const percent = (data.total / limit.limit_amount) * 100;
+                                                            return (
+                                                                <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded border ${percent > 90 ? 'text-rose-600 border-rose-100 bg-rose-50' :
+                                                                    percent > 70 ? 'text-amber-600 border-amber-100 bg-amber-50' :
+                                                                        'text-emerald-600 border-emerald-100 bg-emerald-50'
+                                                                    }`}>
+                                                                    {Math.round(percent)}% do teto
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <p className="font-black text-slate-900">{formatCurrency(data.total)}</p>
+                                                <div className="text-right">
+                                                    <p className="font-black text-slate-900">{formatCurrency(data.total)}</p>
+                                                    {(() => {
+                                                        const limit = budgets.find(b => b.category_id === catId || (catId === 'outros' && !b.category_id));
+                                                        if (!limit) return null;
+                                                        return (
+                                                            <div className="w-24 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                                                                <div
+                                                                    className={`h-full transition-all duration-1000 ${(data.total / limit.limit_amount) > 0.9 ? 'bg-rose-500' :
+                                                                        (data.total / limit.limit_amount) > 0.7 ? 'bg-amber-500' :
+                                                                            'bg-emerald-500'
+                                                                        }`}
+                                                                    style={{ width: `${Math.min((data.total / limit.limit_amount) * 100, 100)}%` }}
+                                                                />
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
                                                 <ChevronLeft className={`w-5 h-5 text-slate-300 transition-transform ${isExpanded ? '-rotate-90' : ''}`} />
                                             </div>
                                         </button>
@@ -318,9 +408,45 @@ export const FinancialReportScreen: React.FC = () => {
                         })()}
                     </div>
                 </section>
-            </div>
 
-            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex items-center justify-between">
+                {/* 6. Smart Recommendation Card */}
+                {
+                    dashboard?.balance > 0 && dashboard?.overdue_count === 0 && (
+                        <section className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                            <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-[2.5rem] p-6 text-white shadow-xl shadow-primary-900/20 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-6 opacity-10">
+                                    <Sparkles className="w-16 h-16 text-white" />
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                                            <TrendingUp className="w-6 h-6 text-white" />
+                                        </div>
+                                        <h4 className="font-bold">Oportunidade Detectada</h4>
+                                    </div>
+                                    <p className="text-sm text-primary-50/80 mb-6 leading-relaxed">
+                                        Identificamos um saldo livre de <span className="font-black text-white">{formatCurrency(dashboard.balance)}</span> projetado para este mês.
+                                        Que tal mover <span className="font-bold text-white">R$ 300,00</span> para sua **Reserva de Emergência** agora?
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => navigate('/savings')}
+                                            className="flex-1 bg-white text-primary-700 py-3 rounded-2xl font-bold text-sm shadow-lg active:scale-95 transition-all"
+                                        >
+                                            Poupar Agora
+                                        </button>
+                                        <button className="px-4 py-3 rounded-2xl bg-white/10 font-bold text-sm border border-white/10">
+                                            Ignorar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )
+                }
+            </div >
+
+            <div className="fixed bottom-0 left-0 right-0 p-6 bg-white border-t border-slate-100 flex items-center justify-between z-50">
                 <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-0.5">Resultado do Mês</p>
                     <p className={`text-xl font-black ${dashboard?.balance >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -334,6 +460,6 @@ export const FinancialReportScreen: React.FC = () => {
                     Análise com IA
                 </button>
             </div>
-        </div>
+        </div >
     );
 };
