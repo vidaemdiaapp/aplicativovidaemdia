@@ -68,12 +68,12 @@ const MEI_EXEMPT_RATES = {
 };
 
 const SYSTEM_PROMPT_LOCKED = `
-Você é o Assistente Financeiro do Vida em Dia (Modo ZapGastos).
+Você é o Assistente Financeiro do Vida em Dia.
 
 PERSONALIDADE:
 - **Conciso & Visual**: Use emojis, negrito e listas. Nada de textão.
 - **Executor**: Você registra, calcula e mostra. Não explica "como fazer".
-- **Estilo ZapGastos**:
+- **Estilo Vida em Dia**:
    ✅ *Almoço* R$ 50,00
    📂 Alimentação (hoje)
    📊 Dia: -R$ 120,00 | Mês: -R$ 3.400
@@ -97,6 +97,20 @@ FORMATO DE RESPOSTA (JSON):
   "answer_text": "Texto formatado com emojis e quebras de linha para WhatsApp",
   "intent_mode": "ACTION | CHAT"
 }
+
+[MODO ANÁLISE DE MULTA]:
+Se o usuário enviou uma multa (via vision_extract_fine):
+1. **Analise os Risco**:
+   - Pontos: Alerte se for grave/gravíssima (5 ou 7 pontos). "⚠️ Cuidado! Essa multa gera 7 pontos."
+   - Suspensão: Se a natureza for gravíssima ou acumular muitos pontos.
+2. **Verifique Inconsistências (Checklist)**:
+   - Olhe o campo formal_checklist retornado pela vision. Se houver falhas (ex: prazo > 30 dias), sugira defesa.
+3. **Oferta de Agendamento/Desconto**:
+   - Calcule o valor com desconto de 20% e 40% (SNE).
+   - Verifique a data de vencimento. Se futura, pergunte:
+     "Deseja agendar o pagamento para [VENCIMENTO] com desconto de 20% (R$ [VALOR_20])?"
+4. **Oferta de Defesa**:
+   - Se houver inconsistências ou o usuário reclamar, ofereça: "Posso gerar um modelo de defesa para você. Quer tentar?"
 `;
 
 const TOOLS_SCHEMA = [
@@ -273,6 +287,26 @@ const TOOLS_SCHEMA = [
                 year: { type: "number", description: "Tax year" }
             },
             required: ["year"]
+        }
+    },
+    {
+        name: "generate_defense_model",
+        description: "Generates a formal defense text for a traffic fine based on provided details and defense strategy.",
+        parameters: {
+            type: "object",
+            properties: {
+                plate: { type: "string", description: "Vehicle plate" },
+                auto_number: { type: "string", description: "Infraction Notice Number (Auto de Infração)" },
+                organ_issuer: { type: "string", description: "Issuing Authority (e.g., DETRAN-SP, PRF)" },
+                infraction_description: { type: "string", description: "Description of the infraction" },
+                defense_strategy: {
+                    type: "string",
+                    enum: ["notificacao_atrasada", "local_inexistente", "sinalizacao_inadequada", "veiculo_clonado", "erro_material", "outros"],
+                    description: "Strategy for defense"
+                },
+                user_name: { type: "string", description: "Name of the driver/owner" }
+            },
+            required: ["plate", "auto_number", "organ_issuer", "infraction_description", "defense_strategy"]
         }
     }
 ];
@@ -941,6 +975,64 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             console.error("Invoke error:", err);
             return "Erro interno ao processar imagem.";
         }
+    }
+
+    // --- NEW TOOL: generate_defense_model ---
+    if (toolName === "generate_defense_model") {
+        const { plate, auto_number, organ_issuer, infraction_description, defense_strategy, user_name } = args;
+
+        const now = new Date().toLocaleDateString('pt-BR');
+        let argumentText = "";
+
+        switch (defense_strategy) {
+            case "notificacao_atrasada":
+                argumentText = "A Notificação de Autuação foi expedida após o prazo legal de 30 dias previsto no Art. 281, Parágrafo Único, II do CTB, o que enseja o arquivamento do auto.";
+                break;
+            case "local_inexistente":
+                argumentText = "O local indicado na notificação (endereço/km) não corresponde à realidade da via ou é impreciso, impossibilitando a ampla defesa.";
+                break;
+            case "sinalizacao_inadequada":
+                argumentText = "A sinalização no local da suposta infração é insuficiente, ilegível ou inexistente, violando o Art. 90 do CTB.";
+                break;
+            case "veiculo_clonado":
+                argumentText = "O veículo autuado não corresponde ao meu veículo, havendo divergências visuais claras (marca/modelo/cor), sugerindo possibilidade de clonagem.";
+                break;
+            case "erro_material":
+                argumentText = "O Auto de Infração contém erros materiais no preenchimento (ex: modelo do veículo, cor) que comprometem sua validade.";
+                break;
+            default:
+                argumentText = "A infração apontada não condiz com a realidade fática, carecendo de provas materiais robustas por parte da autoridade de trânsito.";
+        }
+
+        const defenseModel = `
+AO ILMO. SR. DIRETOR DO ${organ_issuer.toUpperCase()}
+
+REFERÊNCIA: AUTO DE INFRAÇÃO Nº ${auto_number}
+VEÍCULO: ${plate.toUpperCase()}
+
+Eu, ${user_name || "[SEU NOME COMPLETO]"}, venho respeitosamente apresentar DEFESA PRÉVIA contra a autuação em epígrafe.
+
+DOS FATOS E FUNDAMENTOS:
+Fui notificado da infração "${infraction_description}", porém a mesma não deve prosperar.
+
+ARGUMENTAÇÃO:
+${argumentText}
+
+DO PEDIDO:
+Diante do exposto, requeiro o ARQUIVAMENTO do presente Auto de Infração e o cancelamento dos pontos e penalidades, com base na legislação de trânsito vigente.
+
+Nestes termos, pede deferimento.
+
+${now}
+__________________________
+Assinatura
+`;
+
+        return {
+            success: true,
+            defense_text: defenseModel,
+            tip: "Copie este texto, preencha seus dados completos e protocole no órgão autuador (ou via site/app do DETRAN/SENATRAN)."
+        };
     }
 
     return "Ferramenta não implementada.";

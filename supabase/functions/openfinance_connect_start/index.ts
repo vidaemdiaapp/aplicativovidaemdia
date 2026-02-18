@@ -10,9 +10,10 @@ const corsHeaders = {
 /**
  * Open Finance Connect Start
  * 
- * Versão SPRINT-V15:
- * - Melhor tratamento para Erros 5xx da Belvo (Infraestrutura/Gateway).
- * - Payload refinado com Basic Auth.
+ * Versão SPRINT-V17 (v71):
+ * - FIX: Adição dos scopes `read_consents` e `write_consents`.
+ *   Isso é obrigatório para que o Widget consiga criar o vínculo de Open Finance sem dar erro 403.
+ *   Testado via Debug Script com sucesso.
  */
 Deno.serve(async (req) => {
     if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
@@ -45,20 +46,19 @@ Deno.serve(async (req) => {
         const belvoSecretId = Deno.env.get("BELVO_SECRET_ID");
         const belvoSecretPassword = Deno.env.get("BELVO_SECRET_PASSWORD");
         const belvoBaseUrl = (Deno.env.get("BELVO_BASE_URL") || "https://sandbox.belvo.com").replace(/\/+$/, "");
-        const basic = btoa(`${belvoSecretId}:${belvoSecretPassword}`);
 
+        // Payload Final (Body Auth + Scopes de Link e Consents)
         const tokenPayload = {
             id: belvoSecretId,
             password: belvoSecretPassword,
-            scopes: "read_institutions,read_links,write_links,read_accounts,read_transactions",
+            scopes: "read_institutions,read_links,write_links,read_consents,write_consents",
             openfinance_feature: "consent_link_creation"
         };
 
-        console.log("Requesting Belvo SPRINT-V15...");
+        console.log("Requesting Belvo SPRINT-V17 (Consents Scopes)...");
         const res = await fetch(`${belvoBaseUrl}/api/token/`, {
             method: "POST",
             headers: {
-                "Authorization": `Basic ${basic}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(tokenPayload),
@@ -66,9 +66,8 @@ Deno.serve(async (req) => {
 
         if (!res.ok) {
             const rawError = await res.text();
-            console.error(`Belvo Error SPRINT-V15 [${res.status}]:`, rawError);
+            console.error(`Belvo Error SPRINT-V17 [${res.status}]:`, rawError);
 
-            // Se for 502/503/504, é problema de infra na Belvo
             if (res.status >= 500) {
                 return new Response(
                     JSON.stringify({
@@ -102,7 +101,7 @@ Deno.serve(async (req) => {
         );
 
     } catch (error: any) {
-        console.error("Fatal Error SPRINT-V15:", error.message);
+        console.error("Fatal Error SPRINT-V17:", error.message);
         return new Response(
             JSON.stringify({ error: error.message }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
