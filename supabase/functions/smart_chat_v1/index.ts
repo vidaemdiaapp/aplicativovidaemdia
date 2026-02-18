@@ -1866,8 +1866,12 @@ VOCÊ DEVE IMEDIATAMENTE:
                 tool_config: {
                     function_calling_config: {
                         mode: toolCallingMode,
-                        // Se for áudio ou imagem, permitir apenas add_expense para garantir registro
-                        ...(shouldForceToolCall && { allowed_function_names: ["add_expense"] })
+                        // Se for áudio, forçar add_expense. Se for imagem, permitir fine tools também.
+                        ...(shouldForceToolCall && {
+                            allowed_function_names: hasImageBase64
+                                ? ["vision_extract_fine", "add_expense", "generate_defense_model", "create_fine_record"]
+                                : ["add_expense"]
+                        })
                     }
                 }
             })
