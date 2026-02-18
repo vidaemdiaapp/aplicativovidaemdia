@@ -988,14 +988,15 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             });
 
             if (error) {
-                console.error("Traffic fine analysis error:", error);
-                return "Falha ao analisar a imagem da multa.";
+                console.error("Traffic fine analysis error details:", error);
+                // Return the actual error to the model so it can explain to the user
+                return `Erro ao processar imagem: ${typeof error === 'object' ? JSON.stringify(error) : error}`;
             }
 
             return data; // Return the full extraction JSON
         } catch (err) {
-            console.error("Invoke error:", err);
-            return "Erro interno ao processar imagem.";
+            console.error("Invoke error details:", err);
+            return `Erro interno na chamada de análise: ${err.message}`;
         }
     }
 
@@ -1280,7 +1281,7 @@ Deno.serve(async (req) => {
         }
 
         // Domain + inputs
-        const { domain = 'general', image, images, image_url, storage_path, household_id, message_type, audio_base64, audio_mime_type, image_mime_type } = body;
+        let { domain = 'general', image, images, image_url, storage_path, household_id, message_type, audio_base64, audio_mime_type, image_mime_type } = body;
         // NOTE: We ignore 'history' from body because we fetch authoritative history from DB now.
 
         const question = (body.question ?? body.message_text ?? body.message ?? body.text ?? body.input ?? body.prompt ?? body.user_message ?? "").toString().trim();
@@ -1388,6 +1389,41 @@ INSTRUÇÃO CRÍTICA PARA ÁUDIO:
 4. NÃO pergunte confirmação - registre diretamente e depois confirme ao usuário.
 5. Exemplo: se o usuário disser "gastei 50 no mercado", chame add_expense com amount=50, description="Mercado", category="market".
 `;
+        }
+
+        // --- IMAGE HANDLING: AUTO-UPLOAD FOR TOOL USAGE ---
+        // If we have base64 image but no storage_path, we must upload it so tools (vision_extract_fine) can access it.
+        if (hasImageBase64 && !storage_path && user_id) {
+            console.log("[smart_chat_v1] Image provided as base64 but no storage_path. Uploading to 'documents' bucket...");
+            try {
+                const ext = image_mime_type === 'image/png' ? 'png' : 'jpg';
+                const fileName = `${user_id}/${Date.now()}_auto.${ext}`;
+
+                // Convert base64 to Uint8Array
+                const binaryString = atob(image);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
+                    .from('documents')
+                    .upload(fileName, bytes, {
+                        contentType: image_mime_type || 'image/jpeg',
+                        upsert: false
+                    });
+
+                if (uploadError) {
+                    console.error("[smart_chat_v1] Failed to auto-upload image:", uploadError);
+                } else {
+                    storage_path = fileName; // Update the variable for tool usage
+                    // Update body too if needed downstream
+                    body.storage_path = fileName;
+                    console.log(`[smart_chat_v1] Image auto-uploaded to: ${storage_path}`);
+                }
+            } catch (err) {
+                console.error("[smart_chat_v1] Exception during auto-upload:", err);
+            }
         }
 
         // --- SPRINT 2: TRIGGER ENGINE ---
