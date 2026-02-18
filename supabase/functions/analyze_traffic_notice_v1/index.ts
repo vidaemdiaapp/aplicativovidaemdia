@@ -224,7 +224,7 @@ Deno.serve(async (req) => {
         if (rule) {
             extraction.nature = foundNature; // Normalize to standard key
             extraction.points = rule.points;
-            extraction.amount = rule.base_value;
+            // extraction.amount = rule.base_value; // REMOVED: Trust the OCR/LLM extracted amount
         }
 
         // Sprint 22 Decision Logic

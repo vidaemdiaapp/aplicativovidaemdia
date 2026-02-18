@@ -479,8 +479,17 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
         // Get updated daily total for stats if it's today
         let dailyTotal = amount;
         if (date === new Date().toISOString().split('T')[0]) {
-            const { data: stats } = await supabase.rpc('get_daily_total', { target_household_id: household_id, target_date: date });
-            dailyTotal = stats || amount;
+            // DIRECT QUERY for robustness (RPC might be missing or stale)
+            const { data: todaysExpenses } = await supabase
+                .from('tasks')
+                .select('amount')
+                .eq('household_id', household_id)
+                .eq('entry_type', 'expense')
+                .eq('purchase_date', date);
+
+            if (todaysExpenses) {
+                dailyTotal = todaysExpenses.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+            }
         }
 
         return {
