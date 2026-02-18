@@ -80,7 +80,7 @@ PERSONALIDADE:
 
 REGRAS:
 1. **Confirmação de Ação**: Se o usuário pediu pra gastar/pagar, CONFIRME os dados chave.
-2. **Resumo Automático**: Sempre que registrar algo, mostre o impacto (Total do dia ou da Categoria).
+2. **Resumo Automático**: Sempre que registrar algo, mostre o impacto (Total do dia ou da Categoria). USE O VALOR 'daily_total' RETORNADO PELA FERRAMENTA. NÃO CALCULE MENTALMENTE.
 3. **Áudio**: Se receber áudio, transcreva mentalmente e execute. Diga "Ouvi: ..." se estiver incerto.
 4. **IMPORTANTE**: SEMPRE retorne no formato JSON abaixo, mesmo que seja apenas uma conversa ou agradecimento. NÃO use formatação markdown fora do answer_text.
 
@@ -100,16 +100,27 @@ FORMATO DE RESPOSTA (JSON):
 
 [MODO ANÁLISE DE MULTA]:
 Se o usuário enviou uma multa (via vision_extract_fine):
-1. **Analise os Risco**:
+
+1. **EXTRACÃO PRIMÁRIA**:
+   - Assim que receber a imagem, chame 'vision_extract_fine'.
+   - Se a ferramenta falhar ou não retornar nada, peça para o usuário enviar uma foto mais clara ou digitar os dados.
+
+2. **RESUMO OBRIGATÓRIO (MEMÓRIA)**:
+   - APÓS a extracao, inicie a resposta: "Multa de [PLACA] - [DESCRIÇÃO]. Vencimento: [DATA]. Valor: [VALOR]". Mantenha esses dados em mente.
+
+2. **Analise os Risco**:
    - Pontos: Alerte se for grave/gravíssima (5 ou 7 pontos). "⚠️ Cuidado! Essa multa gera 7 pontos."
    - Suspensão: Se a natureza for gravíssima ou acumular muitos pontos.
-2. **Verifique Inconsistências (Checklist)**:
+
+3. **Verifique Inconsistências (Checklist)**:
    - Olhe o campo formal_checklist retornado pela vision. Se houver falhas (ex: prazo > 30 dias), sugira defesa.
-3. **Oferta de Agendamento/Desconto**:
-   - Calcule o valor com desconto de 20% e 40% (SNE).
-   - Verifique a data de vencimento. Se futura, pergunte:
-     "Deseja agendar o pagamento para [VENCIMENTO] com desconto de 20% (R$ [VALOR_20])?"
-4. **Oferta de Defesa**:
+
+4. **Oferta de Agendamento/Desconto (LÓGICA RIGOROSA)**:
+   - Compare a DATA DE VENCIMENTO com a DATA DE HOJE.
+   - **SE VENCIDA**: "⚠️ Esta multa venceu em [DATA]. O pagamento agora terá juros e sem desconto." (NÃO OFEREÇA DESCONTO).
+   - **SE NO PRAZO**: "Deseja agendar o pagamento para [VENCIMENTO] com desconto de 20% (R$ [VALOR_20])?"
+
+5. **Oferta de Defesa**:
    - Se houver inconsistências ou o usuário reclamar, ofereça: "Posso gerar um modelo de defesa para você. Quer tentar?"
 `;
 
@@ -718,7 +729,9 @@ async function handleToolCall(toolName: string, args: any, supabase: any, househ
             status: 'pending',
             health_status: 'risk',
             impact_level: 'high',
-            household_id: household_id
+            household_id: household_id,
+            user_id: user_id,
+            owner_user_id: user_id
         }).select().single();
 
         if (error) throw new Error(`Error saving fine: ${error.message}`);
