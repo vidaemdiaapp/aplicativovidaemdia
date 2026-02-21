@@ -1074,7 +1074,7 @@ Assinatura
         console.log(`[smart_chat_v1] Calling vehicle_consultation_proxy_v1 for plate: ${plate}`);
         try {
             const { data, error } = await supabase.functions.invoke('vehicle_consultation_proxy_v1', {
-                body: { endpoint: 'consulta_veicular_placa_v2', plate }
+                body: { endpoint: 'consulta-veículos-placa', plate }
             });
 
             if (error) {
@@ -1082,50 +1082,117 @@ Assinatura
                 return `Erro ao consultar placa: ${typeof error === 'object' ? JSON.stringify(error) : error}`;
             }
 
+            // supabase invoke returns data as parsed JSON, but just in case:
+            let parsedInvoke = data;
+            if (typeof data === 'string') {
+                try { parsedInvoke = JSON.parse(data); } catch (e) { console.error("Could not parse data string", data); }
+            }
+
             // Supabase invoke wraps in { data }, and API wraps in { status: 'ok', data: { data: { response: {...} } } }
-            const rootData = data?.data || data; // -> { status, data: { data: { response... } } }
+            const rootData = parsedInvoke?.data || parsedInvoke; // -> { status, data: { data: { response... } } }
             // Extrai até chegar no node "response" ou "extra"
             const level1 = rootData?.data || rootData; // -> { data: { response... } } (para v2) OU { marca_modelo: ... } (para v1)
             const level2 = level1?.data || level1; // -> { response: {...} } (v2) OU ainda o v1 se não tiver "data"
 
-            const responseData = level2?.response || level2;
-            const ex = rootData?.extra || level1?.extra || level2?.extra || {};
-
-            if (!responseData || Object.keys(responseData).length === 0) {
+            if (!rootData || (typeof rootData === 'object' && Object.keys(rootData).length === 0)) {
                 return "Não encontrei dados retornados para essa placa.";
             }
 
-            const debts = [];
-            // Handle different API formats
-            if (responseData.multas && responseData.multas !== '-' && responseData.multas !== '0') debts.push(`Multas: ${responseData.multas}`);
-            if (ex.ipva && ex.ipva !== '-' && ex.ipva !== '0') debts.push(`IPVA: ${ex.ipva}`);
-            if (ex.licenciamento && ex.licenciamento !== '-' && ex.licenciamento !== '0') debts.push(`Licenciamento: ${ex.licenciamento}`);
-            if (ex.autuacoes && ex.autuacoes !== '-' && ex.autuacoes !== '0') debts.push(`Autuações: ${ex.autuacoes}`);
-            if (ex.dpvat && ex.dpvat !== '-' && ex.dpvat !== '0') debts.push(`DPVAT: ${ex.dpvat}`);
+            // Helper robusto para buscar campos ignorando case
+            const getField = (nodes: any[], fieldNames: string[]) => {
+                for (const node of nodes) {
+                    if (!node || typeof node !== 'object') continue;
+                    for (const name of fieldNames) {
+                        const lowName = name.toLowerCase();
+                        for (const key of Object.keys(node)) {
+                            if (key.toLowerCase() === lowName) {
+                                const val = node[key];
+                                if (val !== null && val !== undefined && val !== '' && val !== '-' && val !== '0') return val;
+                            }
+                        }
+                    }
+                }
+                return 'N/A';
+            };
+
+            const ex = rootData?.extra || level1?.extra || level2?.extra || {};
+            const nodes = [level2, level1, rootData, ex].filter(n => n && typeof n === 'object');
+
+            const plate_val = getField(nodes, ['placa', 'PLACA']);
+            const renavam = getField(nodes, ['renavam', 'RENAVAM']);
+            const marca = getField(nodes, ['marca', 'MARCA', 'marca_modelo', 'marcamodelo']);
+            const modelo = getField(nodes, ['modelo', 'MODELO', 'marca_modelo', 'marcamodelo']);
+            const chassi = getField(nodes, ['chassi', 'CHASSI']);
+            const cor = getField(nodes, ['cor', 'COR', 'cor_veiculo', 'COR_VEICULO', 'cor_predominante']);
+            const combustivel = getField(nodes, ['combustivel', 'COMBUSTIVEL', 'tipo_combustivel']);
+            const ano_fab = getField(nodes, ['ano_fabricacao', 'anofabricacao', 'ano_fab', 'anofab', 'ano', 'ANO_FABRICACAO']);
+            const ano_mod = getField(nodes, ['ano_modelo', 'anomodelo', 'ano_mod', 'anomod', 'anoModelo', 'ANO_MODELO']);
+
+            const getFipeValue = () => {
+                for (const node of nodes) {
+                    const fipe = node.fipe || node.FIPE || node.tabelaFipe || node.TABELA_FIPE || node.preco_fipe;
+                    if (fipe) {
+                        if (typeof fipe === 'object') {
+                            const val = fipe.texto_valor || fipe.valor || fipe.VALOR || (fipe.dados?.[0]?.valor) || (fipe.dados?.[0]?.texto_valor);
+                            if (val) return val;
+                        } else if (typeof fipe === 'string' && fipe.length > 2) {
+                            return fipe;
+                        }
+                    }
+                }
+                return 'N/A';
+            };
+
+            const fipe = getFipeValue();
+
+            // Tratamento de Marca/Modelo juntos
+            let modelStr = 'N/A';
+            if (marca !== 'N/A' && modelo !== 'N/A') {
+                if (modelo.includes(marca)) {
+                    modelStr = modelo;
+                } else if (marca.includes('/')) {
+                    modelStr = marca;
+                } else {
+                    modelStr = `${marca}/${modelo}`;
+                }
+            } else if (modelo !== 'N/A') {
+                modelStr = modelo;
+            } else if (marca !== 'N/A') {
+                modelStr = marca;
+            }
+
+            // Garantir formato MARCA/MODELO se possível
+            if (modelStr !== 'N/A' && !modelStr.includes('/')) {
+                if (marca !== 'N/A' && modelo !== 'N/A' && marca !== modelo) {
+                    modelStr = `${marca}/${modelo}`;
+                }
+            }
 
             const restrictions = [];
-            if (ex.restricao && ex.restricao !== '-' && ex.restricao !== '0' && ex.restricao !== 'NADA CONSTA') restrictions.push(ex.restricao);
-            if (ex.restricaofinan && ex.restricaofinan !== '-' && ex.restricaofinan !== '0' && ex.restricaofinan !== 'NADA CONSTA') restrictions.push(ex.restricaofinan);
-            if (responseData.restricoes && responseData.restricoes !== '-' && responseData.restricoes !== 'NADA CONSTA') restrictions.push(responseData.restricoes);
+            const r1 = getField(nodes, ['restricao', 'RESTRICAO', 'restricoes', 'RESTRICOES']);
+            const r2 = getField(nodes, ['restricao_1', 'restricao_2', 'restricao_3']);
+            const situacao = getField(nodes, ['situacao', 'SITUACAO', 'descricaoSituacao', 'situacao_veiculo']);
 
-            const getMarca = () => responseData.marca_modelo || responseData.marcamodelo || responseData.marca_mod || 'N/A';
-            const getAnoFab = () => responseData.ano_fabricacao || responseData.anofabricacao || responseData.ano_fab || 'N/A';
-            const getAnoMod = () => responseData.ano_modelo || responseData.anomodelo || responseData.ano_mod || 'N/A';
-            const getMunicipio = () => responseData.municipio || responseData.municipio_emplacamento || 'N/A';
-            const getUF = () => responseData.uf_emplacamento || responseData.uf || 'N/A';
+            if (r1 !== 'N/A' && r1 !== 'NADA CONSTA' && r1 !== 'NENHUMA') restrictions.push(r1);
+            if (r2 !== 'N/A') restrictions.push(r2);
+            if (situacao !== 'N/A' && situacao !== 'REGULAR' && situacao !== '0') restrictions.push(situacao);
+
+            const card = `🚗 *Veículo Encontrado*
+*Placa:* ${plate_val !== 'N/A' ? plate_val.toUpperCase() : plate.toUpperCase()}
+*Renavam:* ${renavam}
+*Marca/Modelo:* ${modelStr}
+*Chassi:* ${chassi}
+*Cor:* ${cor}
+*Combustivel:* ${combustivel}
+*Ano:* ${ano_fab} / ${ano_mod}
+*FIPE:* ${fipe}
+
+⚠️ *Restrições*
+${restrictions.length > 0 ? Array.from(new Set(restrictions)).map(r => '• ' + r).join('\n') : 'Nenhuma restrição'}`;
 
             return {
-                mensagem_sucesso: "Dados da placa recuperados com sucesso. Apresente um resumo curto e pontual para o usuário (evite textos longos, use markdown/emojis).",
-                placa: plate.toUpperCase(),
-                marca_modelo: getMarca(),
-                ano_fabricacao_modelo: `${getAnoFab()} / ${getAnoMod()}`,
-                cor: responseData.cor || 'N/A',
-                municipio_uf: `${getMunicipio()} - ${getUF()}`,
-                chassi: responseData.chassi || 'N/A',
-                renavam: responseData.renavam || 'N/A',
-                motor: responseData.motor || responseData.n_motor || 'N/A',
-                debitos_identificados: debts.length > 0 ? debts : "Nenhum débito pendente",
-                restricoes_identificadas: restrictions.length > 0 ? restrictions : "Nenhuma restrição"
+                instrucao_sistema: "MUITO IMPORTANTE: Copie EXATAMENTE o texto fornecido no campo 'resultado_pronto' e devolva ele INTACTO como sua resposta final para o usuário.",
+                resultado_pronto: card
             };
         } catch (err) {
             console.error("Invoke error details:", err);
@@ -1180,7 +1247,8 @@ function classifyIntentByKeywords(text: string): AppIntent {
         return 'MULTA';
 
     // VEHICLE (Consulta Placa)
-    if (t.match(/placa|ve[ií]culo|puxar placa|consultar placa/))
+    const plateRegexStr = /[A-Za-z]{3}\d[A-Za-z\d]\d{2}/;
+    if (t.match(/placa|ve[ií]culo|puxar placa|consultar placa/) || t.replace(/[-\s]/g, '').match(plateRegexStr))
         return 'VEHICLE';
 
     // INVESTMENTS
@@ -1657,6 +1725,7 @@ INSTRUÇÃO CRÍTICA PARA ÁUDIO:
         // --- ROUTER & DATA INJECTION (EXPANDED) ---
         // Block LLM from generic answers - force data-driven responses for app intents
 
+        let forceVehicleTool = false;
         let routerContext = "";
         // Use resolved targetHouseholdId
         const targetId = targetHouseholdId || user_id;
@@ -1978,20 +2047,12 @@ VOCÊ DEVE IMEDIATAMENTE:
             const plate = match ? match[0] : null;
 
             if (plate) {
+                forceVehicleTool = true;
                 routerContext = `
 [CONTEXTO OBRIGATÓRIO - CONSULTA DE VEÍCULO/PLACA]:
 O usuário quer consultar a placa: ${plate}
 
-[SUA AÇÃO IMEDIATA E OBRIGATÓRIA]:
-1. VOCÊ DEVE OBRIGATORIAMENTE chamar a ferramenta 'vehicle_consultation' passando o parâmetro plate="${plate}".
-2. Quando a ferramenta retornar, VOCÊ DEVE criar a sua resposta final em FORMATO JSON ESTRITO contendo a chave "answer_text".
-3. Dentro do "answer_text", coloque RIGOROSAMENTE o layout abaixo. NÃO diga "Aqui estão os dados". SÓ devolva a ficha.
-
-\`\`\`json
-{
-  "answer_text": "🚗 *Veículo Encontrado*\\n*Placa:* [PREENCHA]\\n*Marca/Modelo:* [PREENCHA]\\n*Ano:* [PREENCHA]\\n*Cor:* [PREENCHA]\\n*Chassi:* [PREENCHA]\\n*Renavam:* [PREENCHA]\\n*Município:* [PREENCHA]\\n\\n🔴 *Débitos*\\n[Liste os débitos]\\n\\n⚠️ *Restrições*\\n[Liste as restrições]"
-}
-\`\`\`
+AÇÃO: VOCÊ DEVE OBRIGATORIAMENTE ACIONAR a ferramenta 'vehicle_consultation' passando APENAS o parâmetro plate="${plate}". NÃO INVENTE PARÂMETROS ADICIONAIS.
 `;
             } else {
                 routerContext = `
@@ -2045,10 +2106,21 @@ Peça gentilmente para o usuário informar a placa no formato convencional ou Me
 
         console.log(`[smart_chat_v1] Step 1: Calling Gemini...`);
 
-        // Configuração de ferramentas: forçar chamada quando há áudio OU imagem
-        const shouldForceToolCall = hasAudio || hasImageBase64;
+        // Configuração de ferramentas: forçar chamada quando há áudio OU imagem OU forceVehicleTool
+        const shouldForceToolCall = hasAudio || hasImageBase64 || forceVehicleTool;
         const toolCallingMode = shouldForceToolCall ? "ANY" : "AUTO";
-        console.log(`[smart_chat_v1] Tool calling mode: ${toolCallingMode} (hasAudio: ${hasAudio}, hasImageBase64: ${hasImageBase64})`);
+        console.log(`[smart_chat_v1] Tool calling mode: ${toolCallingMode} (hasAudio: ${hasAudio}, hasImageBase64: ${hasImageBase64}, forceVehicleTool: ${forceVehicleTool})`);
+
+        let allowedFnNames = undefined;
+        if (shouldForceToolCall) {
+            if (forceVehicleTool) {
+                allowedFnNames = ["vehicle_consultation"];
+            } else if (hasImageBase64) {
+                allowedFnNames = ["vision_extract_fine", "add_expense", "generate_defense_model", "create_fine_record"];
+            } else {
+                allowedFnNames = ["add_expense"];
+            }
+        }
 
         const firstResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
             method: "POST",
@@ -2059,12 +2131,7 @@ Peça gentilmente para o usuário informar a placa no formato convencional ou Me
                 tool_config: {
                     function_calling_config: {
                         mode: toolCallingMode,
-                        // Se for áudio, forçar add_expense. Se for imagem, permitir fine tools também.
-                        ...(shouldForceToolCall && {
-                            allowed_function_names: hasImageBase64
-                                ? ["vision_extract_fine", "add_expense", "generate_defense_model", "create_fine_record"]
-                                : ["add_expense"]
-                        })
+                        ...(allowedFnNames && { allowed_function_names: allowedFnNames })
                     }
                 }
             })

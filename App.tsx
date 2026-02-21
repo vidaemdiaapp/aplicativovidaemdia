@@ -42,6 +42,7 @@ import { NotificationCenterScreen } from './screens/NotificationCenterScreen';
 import { SubscriptionsScreen } from './screens/SubscriptionsScreen';
 import { AchievementsScreen } from './screens/AchievementsScreen';
 import { CoupleConnectScreen } from './screens/CoupleConnectScreen';
+import { VehicleConsultationScreen } from './screens/VehicleConsultationScreen';
 
 // Components
 import { Layout } from './components/Layout';
@@ -131,6 +132,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/update-phone" element={<ProtectedRoute><UpdatePhoneScreen /></ProtectedRoute>} />
         <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionsScreen /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute><AchievementsScreen /></ProtectedRoute>} />
+        <Route path="/vehicle-consultation" element={<ProtectedRoute><VehicleConsultationScreen /></ProtectedRoute>} />
 
         {/* Aliases */}
         <Route path="/finance" element={<Navigate to="/financial-dashboard" replace />} />
