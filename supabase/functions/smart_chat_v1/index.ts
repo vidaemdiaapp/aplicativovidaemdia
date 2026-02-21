@@ -1082,10 +1082,14 @@ Assinatura
                 return `Erro ao consultar placa: ${typeof error === 'object' ? JSON.stringify(error) : error}`;
             }
 
-            const rootData = data?.data || data;
-            const d = rootData?.data || rootData;
-            const responseData = d?.response || d; // Handles v2 deep structure
-            const ex = rootData?.extra || d?.extra || {};
+            // Supabase invoke wraps in { data }, and API wraps in { status: 'ok', data: { data: { response: {...} } } }
+            const rootData = data?.data || data; // -> { status, data: { data: { response... } } }
+            // Extrai até chegar no node "response" ou "extra"
+            const level1 = rootData?.data || rootData; // -> { data: { response... } } (para v2) OU { marca_modelo: ... } (para v1)
+            const level2 = level1?.data || level1; // -> { response: {...} } (v2) OU ainda o v1 se não tiver "data"
+
+            const responseData = level2?.response || level2;
+            const ex = rootData?.extra || level1?.extra || level2?.extra || {};
 
             if (!responseData || Object.keys(responseData).length === 0) {
                 return "Não encontrei dados retornados para essa placa.";
