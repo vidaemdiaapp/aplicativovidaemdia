@@ -79,6 +79,7 @@ export const Sidebar: React.FC = () => {
                     <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                         Patrimônio
                     </p>
+                    <NavItem path="/assets" icon={Home} label="Meus Bens" />
                     <NavItem path="/vehicle-central" icon={Car} label="Veículos" />
                 </div>
 

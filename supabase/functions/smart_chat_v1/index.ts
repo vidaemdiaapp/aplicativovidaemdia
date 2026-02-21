@@ -316,6 +316,17 @@ const TOOLS_SCHEMA = [
             },
             required: ["plate", "auto_number", "organ_issuer", "infraction_description", "defense_strategy"]
         }
+    },
+    {
+        name: "vehicle_consultation",
+        description: "Consulta dados básicos de um veículo pela placa (marca, modelo, ano, chassi, renavam, débitos, etc). Use quando o usuário pedir para verificar, consultar ou puxar dados de uma placa de veículo.",
+        parameters: {
+            type: "object",
+            properties: {
+                plate: { type: "string", description: "Placa do veículo a ser consultada (ex: ABC1234)" }
+            },
+            required: ["plate"]
+        }
     }
 ];
 
@@ -1055,11 +1066,74 @@ Assinatura
         };
     }
 
+    // --- NEW TOOL: vehicle_consultation ---
+    if (toolName === "vehicle_consultation") {
+        const plate = args.plate;
+        if (!plate) return "Placa do veículo não informada.";
+
+        console.log(`[smart_chat_v1] Calling vehicle_consultation_proxy_v1 for plate: ${plate}`);
+        try {
+            const { data, error } = await supabase.functions.invoke('vehicle_consultation_proxy_v1', {
+                body: { endpoint: 'consulta_veicular_placa_v2', plate }
+            });
+
+            if (error) {
+                console.error("Vehicle consultation error details:", error);
+                return `Erro ao consultar placa: ${typeof error === 'object' ? JSON.stringify(error) : error}`;
+            }
+
+            const rootData = data?.data || data;
+            const d = rootData?.data || rootData;
+            const responseData = d?.response || d; // Handles v2 deep structure
+            const ex = rootData?.extra || d?.extra || {};
+
+            if (!responseData || Object.keys(responseData).length === 0) {
+                return "Não encontrei dados retornados para essa placa.";
+            }
+
+            const debts = [];
+            // Handle different API formats
+            if (responseData.multas && responseData.multas !== '-' && responseData.multas !== '0') debts.push(`Multas: ${responseData.multas}`);
+            if (ex.ipva && ex.ipva !== '-' && ex.ipva !== '0') debts.push(`IPVA: ${ex.ipva}`);
+            if (ex.licenciamento && ex.licenciamento !== '-' && ex.licenciamento !== '0') debts.push(`Licenciamento: ${ex.licenciamento}`);
+            if (ex.autuacoes && ex.autuacoes !== '-' && ex.autuacoes !== '0') debts.push(`Autuações: ${ex.autuacoes}`);
+            if (ex.dpvat && ex.dpvat !== '-' && ex.dpvat !== '0') debts.push(`DPVAT: ${ex.dpvat}`);
+
+            const restrictions = [];
+            if (ex.restricao && ex.restricao !== '-' && ex.restricao !== '0' && ex.restricao !== 'NADA CONSTA') restrictions.push(ex.restricao);
+            if (ex.restricaofinan && ex.restricaofinan !== '-' && ex.restricaofinan !== '0' && ex.restricaofinan !== 'NADA CONSTA') restrictions.push(ex.restricaofinan);
+            if (responseData.restricoes && responseData.restricoes !== '-' && responseData.restricoes !== 'NADA CONSTA') restrictions.push(responseData.restricoes);
+
+            const getMarca = () => responseData.marca_modelo || responseData.marcamodelo || responseData.marca_mod || 'N/A';
+            const getAnoFab = () => responseData.ano_fabricacao || responseData.anofabricacao || responseData.ano_fab || 'N/A';
+            const getAnoMod = () => responseData.ano_modelo || responseData.anomodelo || responseData.ano_mod || 'N/A';
+            const getMunicipio = () => responseData.municipio || responseData.municipio_emplacamento || 'N/A';
+            const getUF = () => responseData.uf_emplacamento || responseData.uf || 'N/A';
+
+            return {
+                mensagem_sucesso: "Dados da placa recuperados com sucesso. Apresente um resumo curto e pontual para o usuário (evite textos longos, use markdown/emojis).",
+                placa: plate.toUpperCase(),
+                marca_modelo: getMarca(),
+                ano_fabricacao_modelo: `${getAnoFab()} / ${getAnoMod()}`,
+                cor: responseData.cor || 'N/A',
+                municipio_uf: `${getMunicipio()} - ${getUF()}`,
+                chassi: responseData.chassi || 'N/A',
+                renavam: responseData.renavam || 'N/A',
+                motor: responseData.motor || responseData.n_motor || 'N/A',
+                debitos_identificados: debts.length > 0 ? debts : "Nenhum débito pendente",
+                restricoes_identificadas: restrictions.length > 0 ? restrictions : "Nenhuma restrição"
+            };
+        } catch (err) {
+            console.error("Invoke error details:", err);
+            return `Erro interno na consulta de veículo: ${err.message}`;
+        }
+    }
+
     return "Ferramenta não implementada.";
 }
 
 // --- HELPER: INTENT CLASSIFICATION (EXPANDED) ---
-const AppIntentValues = ['ADD_EXPENSE', 'SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'MULTA', 'INVESTMENTS', 'tax_rule', 'tax_deadline', 'interest_rate', 'government_program', 'general'] as const;
+const AppIntentValues = ['ADD_EXPENSE', 'SALDO', 'CONTAS', 'GASTOS', 'PROJECAO', 'IRPF', 'MULTA', 'VEHICLE', 'INVESTMENTS', 'tax_rule', 'tax_deadline', 'interest_rate', 'government_program', 'general'] as const;
 type AppIntent = typeof AppIntentValues[number];
 
 function classifyIntentByKeywords(text: string): AppIntent {
@@ -1100,6 +1174,10 @@ function classifyIntentByKeywords(text: string): AppIntent {
     // MULTA
     if (t.match(/multa|infração|auto de infração|notificação de multa/))
         return 'MULTA';
+
+    // VEHICLE (Consulta Placa)
+    if (t.match(/placa|ve[ií]culo|puxar placa|consultar placa/))
+        return 'VEHICLE';
 
     // INVESTMENTS
     if (t.match(/investimento|patrimônio|ações|bolsa|tesouro|bitcoin|cripto|ouro|fii|porfólio|carteira|open finance/))
@@ -1393,9 +1471,6 @@ INSTRUÇÃO CRÍTICA PARA ÁUDIO:
         if (hasImageBase64 && !storage_path && user_id) {
             console.log("[smart_chat_v1] Image provided as base64 but no storage_path. Uploading to 'documents' bucket...");
             try {
-                const ext = image_mime_type === 'image/png' ? 'png' : 'jpg';
-                const fileName = `${user_id}/${Date.now()}_auto.${ext}`;
-
                 // Convert base64 to Uint8Array
                 const binaryString = atob(image);
                 const bytes = new Uint8Array(binaryString.length);
@@ -1403,10 +1478,33 @@ INSTRUÇÃO CRÍTICA PARA ÁUDIO:
                     bytes[i] = binaryString.charCodeAt(i);
                 }
 
+                // Detect MIME based on first bytes (magic numbers)
+                const header = bytes.subarray(0, 4).reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
+                let finalMime = image_mime_type;
+                let finalExt = 'jpg';
+
+                if (header.startsWith('89504e47')) {
+                    finalMime = 'image/png';
+                    finalExt = 'png';
+                } else if (header.startsWith('ffd8ff')) {
+                    finalMime = 'image/jpeg';
+                    finalExt = 'jpg';
+                } else if (header.startsWith('52494646') && header.endsWith('57454250')) { // RIFF...WEBP
+                    finalMime = 'image/webp';
+                    finalExt = 'webp';
+                }
+
+                // Fallback if not detected but provided in body
+                if (!finalMime) finalMime = 'image/jpeg';
+
+                console.log(`[smart_chat_v1] Auto-uploading image. Detected MIME: ${finalMime}, Ext: ${finalExt}`);
+
+                const fileName = `${user_id}/${Date.now()}_auto.${finalExt}`;
+
                 const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
                     .from('documents')
                     .upload(fileName, bytes, {
-                        contentType: image_mime_type || 'image/jpeg',
+                        contentType: finalMime,
                         upsert: false
                     });
 
@@ -1862,6 +1960,42 @@ VOCÊ DEVE IMEDIATAMENTE:
 4. Se for outro tipo de documento, descreva o que foi identificado.
 5. NÃO peça o caminho do arquivo - você JÁ TEM: ${storage_path}
 `;
+        }
+
+        // =====================================================
+        // ROUTER: VEHICLE - "puxar placa", "consultar placa"
+        // =====================================================
+        else if (detectedIntent === 'VEHICLE') {
+            console.log(`[smart_chat_v1] ROUTER: Intent is 'VEHICLE'`);
+
+            // Try to extract a Brazilian plate (AAA1234 or AAA1A23)
+            const plateRegex = /[A-Za-z]{3}\d[A-Za-z\d]\d{2}/;
+            const match = question.replace(/[-\s]/g, '').match(plateRegex);
+            const plate = match ? match[0] : null;
+
+            if (plate) {
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - CONSULTA DE VEÍCULO/PLACA]:
+O usuário quer consultar a placa: ${plate}
+
+[SUA AÇÃO IMEDIATA E OBRIGATÓRIA]:
+1. VOCÊ DEVE OBRIGATORIAMENTE chamar a ferramenta 'vehicle_consultation' passando o parâmetro plate="${plate}".
+2. Quando a ferramenta retornar, VOCÊ DEVE criar a sua resposta final em FORMATO JSON ESTRITO contendo a chave "answer_text".
+3. Dentro do "answer_text", coloque RIGOROSAMENTE o layout abaixo. NÃO diga "Aqui estão os dados". SÓ devolva a ficha.
+
+\`\`\`json
+{
+  "answer_text": "🚗 *Veículo Encontrado*\\n*Placa:* [PREENCHA]\\n*Marca/Modelo:* [PREENCHA]\\n*Ano:* [PREENCHA]\\n*Cor:* [PREENCHA]\\n*Chassi:* [PREENCHA]\\n*Renavam:* [PREENCHA]\\n*Município:* [PREENCHA]\\n\\n🔴 *Débitos*\\n[Liste os débitos]\\n\\n⚠️ *Restrições*\\n[Liste as restrições]"
+}
+\`\`\`
+`;
+            } else {
+                routerContext = `
+[CONTEXTO OBRIGATÓRIO - CONSULTA DE VEÍCULO/PLACA]:
+O usuário quer consultar dados de um veículo, mas não forneceu a placa, ou a placa está em formato inválido.
+Peça gentilmente para o usuário informar a placa no formato convencional ou Mercosul. Não use nenhuma ferramenta ainda.
+`;
+            }
         }
 
         // =====================================================

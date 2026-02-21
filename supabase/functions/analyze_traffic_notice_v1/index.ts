@@ -202,11 +202,23 @@ Deno.serve(async (req) => {
         }
 
         const result = await response.json();
-        const content = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        let content = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
-        if (!content) throw new Error("Empty response from AI");
+        if (!content) {
+            console.error("Gemini returned empty content.");
+            throw new Error("Não consegui ler nada na imagem via IA.");
+        }
 
-        const extraction = JSON.parse(content);
+        // Sanitize Markdown if present (Gemini loves wrapping in ```json ... ```)
+        content = content.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/```$/, '').trim();
+
+        let extraction;
+        try {
+            extraction = JSON.parse(content);
+        } catch (e) {
+            console.error("JSON Parse Error on content:", content);
+            throw new Error(`Falha ao entender a resposta da IA: ${content.substring(0, 50)}...`);
+        }
 
         // 3. Post-processing lookup & recommendation logic
         const natureText = (extraction.nature || "").toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "");
