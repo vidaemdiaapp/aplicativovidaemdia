@@ -71,27 +71,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             )}
 
             <aside className={`
-                fixed inset-y-0 left-0 w-72 bg-white border-r border-slate-200 z-[101] shadow-2xl transition-transform duration-300 lg:shadow-sm lg:translate-x-0 lg:static lg:flex lg:flex-col lg:min-h-screen lg:z-0
+                fixed inset-y-0 left-0 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-[101] shadow-2xl transition-all duration-300 lg:shadow-sm lg:translate-x-0 lg:static lg:flex lg:flex-col lg:min-h-screen lg:z-0
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
                 {/* Brand Header */}
                 <div
-                    className="p-6 border-b border-slate-100 cursor-pointer flex items-center justify-between hover:bg-slate-50 transition-colors"
+                    className="p-6 border-b border-slate-100 dark:border-slate-800 cursor-pointer flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
                     <div className="flex items-center gap-3" onClick={() => handleNavigate('/home')}>
                         <img
                             src="/assets/logo.png"
                             alt="Vida em Dia"
-                            className="h-8 w-auto object-contain"
+                            className="h-9 w-auto object-contain"
                         />
                         <div>
-                            <h1 className="text-lg font-bold text-slate-900">Vida em Dia</h1>
+                            <h1 className="text-lg font-bold text-slate-900 dark:text-white">Vida em Dia</h1>
                             <p className="text-xs text-slate-400">Organize sua vida</p>
                         </div>
                     </div>
 
                     {/* Close Button Mobile */}
-                    <button onClick={onClose} className="p-2 lg:hidden text-slate-400 hover:text-slate-900">
+                    <button onClick={onClose} className="p-2 lg:hidden text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -104,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
                     {/* Seção Patrimônio */}
                     <div className="pt-5 pb-2">
-                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Patrimônio
                         </p>
                         <NavItem path="/assets" icon={Home} label="Meus Bens" />
@@ -114,7 +114,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
                     {/* Seção Fiscal */}
                     <div className="pt-5 pb-2">
-                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Fiscal & Documentos
                         </p>
                         <NavItem path="/tax-declaration" icon={ShieldCheck} label="Imposto de Renda" />
@@ -123,7 +123,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
                     {/* Ferramentas */}
                     <div className="pt-5 pb-2">
-                        <p className="px-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                        <p className="px-4 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Ferramentas
                         </p>
                         <NavItem path="/assistant" icon={MessageSquare} label="Assistente IA" />
@@ -132,9 +132,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 </nav>
 
                 {/* User Profile Footer */}
-                <div className="p-4 border-t border-slate-100">
+                <div className="p-4 border-t border-slate-100 dark:border-slate-800">
                     <div
-                        className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                         onClick={() => handleNavigate('/settings')}
                     >
                         <div className="flex items-center gap-3">
@@ -142,11 +142,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                                 {userName.charAt(0).toUpperCase()}
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-sm font-semibold text-slate-900">{userName}</span>
+                                <span className="text-sm font-semibold text-slate-900 dark:text-white">{userName}</span>
                                 <span className="text-xs text-slate-400 truncate max-w-[120px]">{userEmail}</span>
                             </div>
                         </div>
-                        <Settings className="w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors" />
+                        <Settings className="w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors" />
                     </div>
                 </div>
             </aside>
