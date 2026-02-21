@@ -227,18 +227,27 @@ Deno.serve(async (req) => {
             // extraction.amount = rule.base_value; // REMOVED: Trust the OCR/LLM extracted amount
         }
 
+        extraction.sne_discount_40 = extraction.amount ? (extraction.amount * 0.6).toFixed(2) : null;
+        extraction.sne_discount_20 = extraction.amount ? (extraction.amount * 0.8).toFixed(2) : null;
+
         // Sprint 22 Decision Logic
         const isSerious = extraction.nature === 'grave' || extraction.nature === 'gravissima';
+        const today = new Date().toISOString().split('T')[0];
+        const dueDate = extraction.payment_deadline || extraction.defense_deadline; // Fallback
+        const isOverdue = dueDate && dueDate < today;
+
         if (isSerious) {
             extraction.recommendation = "analyze_defense";
             extraction.recommendation_text = "Esta é uma infração séria. Recomendamos analisar se há inconsistências para uma possível defesa antes de pagar.";
+        } else if (isOverdue) {
+            extraction.recommendation = "pay_full";
+            extraction.recommendation_text = `Esta multa está VENCIDA (Vencimento: ${dueDate}). O desconto não é mais aplicável.`;
+            extraction.sne_discount_40 = null;
+            extraction.sne_discount_20 = null;
         } else {
             extraction.recommendation = "pay";
-            extraction.recommendation_text = "Esta infração é leve/média. Geralmente vale mais a pena pagar com o desconto de 20% ou 40% (via SNE) do que recorrer.";
+            extraction.recommendation_text = "Esta infração é leve/média e está no prazo. Geralmente vale a pena pagar com o desconto de 20% ou 40% (via SNE).";
         }
-
-        extraction.sne_discount_40 = extraction.amount ? (extraction.amount * 0.6).toFixed(2) : null;
-        extraction.sne_discount_20 = extraction.amount ? (extraction.amount * 0.8).toFixed(2) : null;
 
         // Checklist de inconsistências formais (Sprint 22)
         extraction.formal_checklist = [

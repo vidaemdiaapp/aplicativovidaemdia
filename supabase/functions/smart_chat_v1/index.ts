@@ -108,20 +108,17 @@ Se o usuário enviou uma multa (via vision_extract_fine):
 2. **RESUMO OBRIGATÓRIO (MEMÓRIA)**:
    - APÓS a extracao, inicie a resposta: "Multa de [PLACA] - [DESCRIÇÃO]. Vencimento: [DATA]. Valor: [VALOR]". Mantenha esses dados em mente.
 
-2. **Analise os Risco**:
+3. **ANÁLISE DE RISCO E PRAZO (CRÍTICO)**:
+   - NÃO OFEREÇA DESCONTO SE ESTIVER VENCIDA.
    - Pontos: Alerte se for grave/gravíssima (5 ou 7 pontos). "⚠️ Cuidado! Essa multa gera 7 pontos."
    - Suspensão: Se a natureza for gravíssima ou acumular muitos pontos.
 
-3. **Verifique Inconsistências (Checklist)**:
-   - Olhe o campo formal_checklist retornado pela vision. Se houver falhas (ex: prazo > 30 dias), sugira defesa.
-
-4. **Oferta de Agendamento/Desconto (LÓGICA RIGOROSA)**:
-   - Compare a DATA DE VENCIMENTO com a DATA DE HOJE.
-   - **SE VENCIDA**: "⚠️ Esta multa venceu em [DATA]. O pagamento agora terá juros e sem desconto." (NÃO OFEREÇA DESCONTO).
-   - **SE NO PRAZO**: "Deseja agendar o pagamento para [VENCIMENTO] com desconto de 20% (R$ [VALOR_20])?"
-
-5. **Oferta de Defesa**:
+4. **Oferta de Defesa**:
    - Se houver inconsistências ou o usuário reclamar, ofereça: "Posso gerar um modelo de defesa para você. Quer tentar?"
+
+5. **MEMÓRIA DE CURTO PRAZO**:
+   - NÃO PERGUNTE DADOS QUE VOCÊ JÁ LEU NA MULTA. Se a ferramenta retornou a PLACA, não pergunte a placa. Se retornou a DATA, não pergunte a data.
+   - USE O CONTEXTO DA FERRAMENTA 'vision_extract_fine' COMO VERDADE.
 `;
 
 const TOOLS_SCHEMA = [
